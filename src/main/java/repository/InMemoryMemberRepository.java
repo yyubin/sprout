@@ -1,6 +1,7 @@
 package repository;
 
 import domain.Member;
+import dto.MemberRegisterDTO;
 import dto.MemberUpdateDTO;
 
 import java.util.ArrayList;
@@ -10,7 +11,14 @@ import java.util.Optional;
 public class InMemoryMemberRepository {
     private List<Member> members = new ArrayList<>();
 
-    public void save(Member member) {
+    public void save(MemberRegisterDTO memberRegisterDTO) {
+        Member member = new Member(
+                memberRegisterDTO.getId(),
+                memberRegisterDTO.getName(),
+                memberRegisterDTO.getEmail(),
+                memberRegisterDTO.getJoinDate(),
+                memberRegisterDTO.getPassword()
+        );
         members.add(member);
     }
 
