@@ -37,4 +37,8 @@ public class MemberRegisterDTO {
     public LocalDate getJoinDate() {
         return joinDate;
     }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
 }

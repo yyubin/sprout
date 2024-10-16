@@ -8,7 +8,9 @@ import exception.MemberIdAlreadyExistsException;
 import exception.MemberNotFoundException;
 import message.ExceptionMessage;
 import repository.InMemoryMemberRepository;
+import util.PasswordUtil;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,7 +21,15 @@ public class MemberService {
         checkIdExists(memberRegisterDTO.getId());
         checkEmailExists(memberRegisterDTO.getEmail());
 
-        memberRepository.save(memberRegisterDTO);
+        String encryptedPassword = PasswordUtil.encryptPassword(memberRegisterDTO.getPassword());
+        Member newMember = new Member(
+                memberRegisterDTO.getId(),
+                memberRegisterDTO.getName(),
+                memberRegisterDTO.getEmail(),
+                LocalDate.now(),
+                encryptedPassword
+        );
+        memberRepository.save(newMember);
     }
 
     public Optional<Member> getMemberById(String memberId) {
@@ -36,6 +46,9 @@ public class MemberService {
 
     public void updateMember(String memberId, MemberUpdateDTO memberUpdateDTO) throws MemberNotFoundException{
         checkIdDoesNotExists(memberId);
+        if (memberUpdateDTO.getPassword() != null) {
+            memberUpdateDTO.setPassword(PasswordUtil.encryptPassword(memberUpdateDTO.getPassword()));
+        }
         memberRepository.update(memberId, memberUpdateDTO);
     }
 

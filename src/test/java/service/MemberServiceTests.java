@@ -8,6 +8,7 @@ import exception.MemberIdAlreadyExistsException;
 import message.ExceptionMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import util.PasswordUtil;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -91,14 +92,13 @@ public class MemberServiceTests {
 
         Optional<Member> retrievedMember = memberService.getMemberById(registerDTO.getId());
         assertEquals("yubin2@gmail.com", retrievedMember.orElseThrow().getEmail());
-        assertEquals("qwer", retrievedMember.orElseThrow().getEncryptedPassword());
 
         MemberUpdateDTO memberUpdateDTO2 = new MemberUpdateDTO(null, "tyui");
         memberService.updateMember(registerDTO.getId(), memberUpdateDTO2);
 
         retrievedMember = memberService.getMemberById(registerDTO.getId());
         assertEquals("yubin2@gmail.com", retrievedMember.orElseThrow().getEmail());
-        assertEquals("tyui", retrievedMember.orElseThrow().getEncryptedPassword());
+        assertTrue(PasswordUtil.matchPassword("tyui", retrievedMember.get().getEncryptedPassword()));
     }
 
     @Test

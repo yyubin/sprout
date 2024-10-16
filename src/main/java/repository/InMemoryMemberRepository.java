@@ -11,14 +11,7 @@ import java.util.Optional;
 public class InMemoryMemberRepository {
     private List<Member> members = new ArrayList<>();
 
-    public void save(MemberRegisterDTO memberRegisterDTO) {
-        Member member = new Member(
-                memberRegisterDTO.getId(),
-                memberRegisterDTO.getName(),
-                memberRegisterDTO.getEmail(),
-                memberRegisterDTO.getJoinDate(),
-                memberRegisterDTO.getPassword()
-        );
+    public void save(Member member) {
         members.add(member);
     }
 
