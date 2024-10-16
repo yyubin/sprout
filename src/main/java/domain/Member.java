@@ -41,4 +41,8 @@ public class Member {
     public void setEncryptedPassword(String encryptedPassword) {
         this.encryptedPassword = encryptedPassword;
     }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
+    }
 }
