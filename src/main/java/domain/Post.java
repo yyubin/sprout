@@ -15,7 +15,7 @@ public class Post {
     private LocalDateTime updatedDate;
     private boolean deleted;
 
-    public Post(Long postId, String postName, String postContent, Member author, Board board, LocalDateTime createdDate, LocalDateTime updatedDate, boolean deleted) {
+    public Post(Long postId, String postName, String postContent, Member author, Board board, LocalDateTime createdDate) {
         this.postId = board.generatedPostId();
         this.postName = postName;
         this.postContent = postContent;

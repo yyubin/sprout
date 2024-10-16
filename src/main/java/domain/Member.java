@@ -8,22 +8,37 @@ public class Member {
     private String name;
     private String email;
     private LocalDate joinDate;
-    private boolean isWithdrawn;
+    private boolean deleted;
     private String encryptedPassword;
     private MemberGrade grade;
 
-    public Member(String id, String name, String email, LocalDate joinDate, boolean isWithdrawn, String encryptedPassword, MemberGrade grade) {
+    public Member(String id, String name, String email, LocalDate joinDate, String encryptedPassword, MemberGrade grade) {
         this.id = id;
         this.name = name;
         this.email = email;
         this.joinDate = joinDate;
-        this.isWithdrawn = isWithdrawn;
+        this.deleted = false;
         this.encryptedPassword = encryptedPassword;
         this.grade = grade;
+    }
+
+    public String getId() {
+        return id;
     }
 
     public String getName() {
         return name;
     }
 
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public void setEncryptedPassword(String encryptedPassword) {
+        this.encryptedPassword = encryptedPassword;
+    }
 }
