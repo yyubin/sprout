@@ -5,6 +5,7 @@ import dto.MemberRegisterDTO;
 import dto.MemberUpdateDTO;
 import exception.MemberEmailAlreadyExistsException;
 import exception.MemberIdAlreadyExistsException;
+import message.ExceptionMessage;
 import repository.InMemoryMemberRepository;
 
 import java.util.List;
@@ -15,11 +16,11 @@ public class MemberService {
 
     public void registerMember(MemberRegisterDTO memberRegisterDTO) throws MemberIdAlreadyExistsException, MemberEmailAlreadyExistsException {
         if (getMemberById(memberRegisterDTO.getId()).isPresent()) {
-            throw new MemberIdAlreadyExistsException();
+            throw new MemberIdAlreadyExistsException(ExceptionMessage.MEMBER_ID_ALREADY_EXISTS);
         }
 
         if (getMemberById(memberRegisterDTO.getEmail()).isPresent()) {
-            throw new MemberEmailAlreadyExistsException();
+            throw new MemberEmailAlreadyExistsException(ExceptionMessage.MEMBER_EMAIL_ALREADY_EXISTS);
         }
 
         memberRepository.save(memberRegisterDTO);

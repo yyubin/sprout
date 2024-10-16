@@ -5,15 +5,15 @@ import message.ExceptionMessage;
 public class MemberIdAlreadyExistsException extends RuntimeException {
 
     public MemberIdAlreadyExistsException() {
-        super(ExceptionMessage.MEMBER_ID_ALREADY_EXISTS);
+        super();
     }
 
     public MemberIdAlreadyExistsException(String message) {
-        super(ExceptionMessage.MEMBER_ID_ALREADY_EXISTS);
+        super(message);
     }
 
     public MemberIdAlreadyExistsException(String message, Throwable cause) {
-        super(ExceptionMessage.MEMBER_ID_ALREADY_EXISTS, cause);
+        super(message, cause);
     }
 
     public MemberIdAlreadyExistsException(Throwable cause) {
