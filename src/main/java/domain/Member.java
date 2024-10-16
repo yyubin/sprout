@@ -38,6 +38,10 @@ public class Member {
         return email;
     }
 
+    public String getEncryptedPassword() {
+        return encryptedPassword;
+    }
+
     public void setEmail(String email) {
         this.email = email;
     }
