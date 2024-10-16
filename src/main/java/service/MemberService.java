@@ -5,6 +5,7 @@ import dto.MemberRegisterDTO;
 import dto.MemberUpdateDTO;
 import exception.MemberEmailAlreadyExistsException;
 import exception.MemberIdAlreadyExistsException;
+import exception.MemberNotFoundException;
 import message.ExceptionMessage;
 import repository.InMemoryMemberRepository;
 
@@ -15,13 +16,8 @@ public class MemberService {
     private final InMemoryMemberRepository memberRepository = new InMemoryMemberRepository();
 
     public void registerMember(MemberRegisterDTO memberRegisterDTO) throws MemberIdAlreadyExistsException, MemberEmailAlreadyExistsException {
-        if (getMemberById(memberRegisterDTO.getId()).isPresent()) {
-            throw new MemberIdAlreadyExistsException(ExceptionMessage.MEMBER_ID_ALREADY_EXISTS);
-        }
-
-        if (getMemberByEmail(memberRegisterDTO.getEmail()).isPresent()) {
-            throw new MemberEmailAlreadyExistsException(ExceptionMessage.MEMBER_EMAIL_ALREADY_EXISTS);
-        }
+        checkIdExists(memberRegisterDTO.getId());
+        checkEmailExists(memberRegisterDTO.getEmail());
 
         memberRepository.save(memberRegisterDTO);
     }
@@ -38,12 +34,32 @@ public class MemberService {
         return memberRepository.findAll();
     }
 
-    public void updateMember(String memberId, MemberUpdateDTO memberUpdateDTO) {
+    public void updateMember(String memberId, MemberUpdateDTO memberUpdateDTO) throws MemberNotFoundException{
+        checkIdDoesNotExists(memberId);
         memberRepository.update(memberId, memberUpdateDTO);
     }
 
-    public void deleteMember(String memberId) {
+    public void deleteMember(String memberId) throws MemberNotFoundException {
+        checkIdDoesNotExists(memberId);
         memberRepository.delete(memberId);
+    }
+
+    private void checkIdExists(String memberId) throws MemberIdAlreadyExistsException {
+        if (getMemberById(memberId).isPresent()) {
+            throw new MemberIdAlreadyExistsException(ExceptionMessage.MEMBER_ID_ALREADY_EXISTS);
+        }
+    }
+
+    private void checkEmailExists(String email) throws MemberEmailAlreadyExistsException {
+        if (getMemberByEmail(email).isPresent()) {
+            throw new MemberEmailAlreadyExistsException(ExceptionMessage.MEMBER_EMAIL_ALREADY_EXISTS);
+        }
+    }
+
+    private void checkIdDoesNotExists(String memberId) throws MemberNotFoundException {
+        if (getMemberById(memberId).isEmpty()) {
+            throw new MemberNotFoundException(ExceptionMessage.MEMBER_NOT_FOUND);
+        }
     }
 
 }
