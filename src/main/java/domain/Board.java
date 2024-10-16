@@ -1,5 +1,7 @@
 package domain;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class Board {
@@ -10,15 +12,17 @@ public class Board {
     private MemberGrade accessGrade;
 
     private AtomicLong postCounter;
+    private List<Post> posts;
 
     private boolean deleted;
 
-    public Board(Long boardId, String boardName, String description, MemberGrade accessGrade, AtomicLong postCounter) {
+    public Board(Long boardId, String boardName, String description, MemberGrade accessGrade) {
         this.boardId = boardId;
         this.boardName = boardName;
         this.description = description;
         this.accessGrade = accessGrade;
         this.postCounter = new AtomicLong(0);
+        this.posts = new ArrayList<>();
         this.deleted = false;
     }
 

@@ -8,9 +8,7 @@ public class Post {
     private String postName;
     private String postContent;
     private Member author;
-
     private Board board;
-
     private LocalDateTime createdDate;
     private LocalDateTime updatedDate;
     private boolean deleted;
