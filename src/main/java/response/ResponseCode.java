@@ -1,12 +1,14 @@
 package response;
 
+import message.ResponseMessage;
+
 public enum ResponseCode {
-    SUCCESS(200, "OK"),
-    NOT_FOUND(404, "Not Found"),
-    BAD_REQUEST(400, "Bad Request"),
-    UNAUTHORIZED(401, "Unauthorized"),
-    FORBIDDEN(403, "Forbidden"),
-    INTERNAL_SERVER_ERROR(500, "Internal Server Error");
+    SUCCESS(200, ResponseMessage.SUCCESS),
+    NOT_FOUND(404, ResponseMessage.NOT_FOUND),
+    BAD_REQUEST(400, ResponseMessage.BAD_REQUEST),
+    UNAUTHORIZED(401, ResponseMessage.UNAUTHORIZED),
+    FORBIDDEN(403, ResponseMessage.FORBIDDEN),
+    INTERNAL_SERVER_ERROR(500, ResponseMessage.INTERNAL_SERVER_ERROR);
 
     private final int code;
     private final String message;

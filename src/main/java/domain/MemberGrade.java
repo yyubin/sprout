@@ -1,8 +1,10 @@
 package domain;
 
+import message.DescriptionMessage;
+
 public enum MemberGrade {
-    ADMIN("관리자", "admin"),
-    USER("회원", "user");
+    ADMIN(DescriptionMessage.ADMIN_DESCRIPTION, DescriptionMessage.ADMIN_DESCRIPTION_EN),
+    USER(DescriptionMessage.USER_DESCRIPTION, DescriptionMessage.USER_DESCRIPTION_EN),;
 
     private final String description;
     private final String descriptionEn;
