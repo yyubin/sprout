@@ -49,9 +49,9 @@ public class MemberAuthServiceTests {
 
     @Test
     public void testSessionManagementAfterLogin() {
-        MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin@gmail.com", "qwer", LocalDate.now());
+        MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin123", "yubin", "yubin@gmail.com", "qwer", LocalDate.now());
         memberService.registerMember(memberDTO);
-        String sessionId = memberAuthService.login(new MemberLoginDTO("yubin111", "qwer"));
+        String sessionId = memberAuthService.login(new MemberLoginDTO("yubin123", "qwer"));
 
         assertNotNull(sessionId);
 

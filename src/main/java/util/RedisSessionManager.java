@@ -11,15 +11,15 @@ public class RedisSessionManager {
     }
 
     public void createSession(String sessionId, String memberId, int sessionDurationInSeconds) {
-        jedis.set(sessionId, memberId);
+        jedis.set(memberId, sessionId);
         jedis.expire(sessionId, sessionDurationInSeconds);
     }
 
-    public String getSession(String sessionId) {
-        return jedis.get(sessionId);
+    public String getSession(String memberId) {
+        return jedis.get(memberId);
     }
 
-    public void deleteSession(String sessionId) {
-        jedis.del(sessionId);
+    public void deleteSession(String memberId) {
+        jedis.del(memberId);
     }
 }
