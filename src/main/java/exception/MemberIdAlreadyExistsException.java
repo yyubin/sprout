@@ -5,7 +5,7 @@ import message.ExceptionMessage;
 public class MemberIdAlreadyExistsException extends RuntimeException {
 
     public MemberIdAlreadyExistsException() {
-        super();
+        super(ExceptionMessage.MEMBER_ID_ALREADY_EXISTS);
     }
 
     public MemberIdAlreadyExistsException(String message) {

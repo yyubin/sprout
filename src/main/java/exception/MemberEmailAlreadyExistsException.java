@@ -5,7 +5,7 @@ import message.ExceptionMessage;
 public class MemberEmailAlreadyExistsException extends RuntimeException{
 
     public MemberEmailAlreadyExistsException() {
-        super();
+        super(ExceptionMessage.MEMBER_EMAIL_ALREADY_EXISTS);
     }
 
     public MemberEmailAlreadyExistsException(String message) {

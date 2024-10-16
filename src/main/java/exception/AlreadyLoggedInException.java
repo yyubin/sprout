@@ -5,7 +5,7 @@ import message.ExceptionMessage;
 public class AlreadyLoggedInException extends RuntimeException{
 
     public AlreadyLoggedInException() {
-        super();
+        super(ExceptionMessage.ALREADY_LOGGED_IN);
     }
 
     public AlreadyLoggedInException(String message) {

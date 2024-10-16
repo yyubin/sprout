@@ -5,7 +5,7 @@ import message.ExceptionMessage;
 public class NotLoggedInException extends RuntimeException{
 
     public NotLoggedInException() {
-        super();
+        super(ExceptionMessage.NOT_LOGGED_IN);
     }
 
     public NotLoggedInException(String message) {
