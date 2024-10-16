@@ -28,6 +28,12 @@ public class InMemoryMemberRepository {
                 .findFirst();
     }
 
+    public Optional<Member> findByEmail(String email) {
+        return members.stream()
+                .filter(member -> member.getEmail().equals(email) && !member.isDeleted())
+                .findFirst();
+    }
+
     public List<Member> findAll() {
         return members.stream()
                 .filter(member -> !member.isDeleted())

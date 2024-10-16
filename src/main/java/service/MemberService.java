@@ -19,7 +19,7 @@ public class MemberService {
             throw new MemberIdAlreadyExistsException(ExceptionMessage.MEMBER_ID_ALREADY_EXISTS);
         }
 
-        if (getMemberById(memberRegisterDTO.getEmail()).isPresent()) {
+        if (getMemberByEmail(memberRegisterDTO.getEmail()).isPresent()) {
             throw new MemberEmailAlreadyExistsException(ExceptionMessage.MEMBER_EMAIL_ALREADY_EXISTS);
         }
 
@@ -28,6 +28,10 @@ public class MemberService {
 
     public Optional<Member> getMemberById(String memberId) {
         return memberRepository.findById(memberId);
+    }
+
+    public Optional<Member> getMemberByEmail(String email) {
+        return memberRepository.findByEmail(email);
     }
 
     public List<Member> getAllMembers() {

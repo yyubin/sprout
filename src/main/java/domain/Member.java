@@ -34,6 +34,10 @@ public class Member {
         return deleted;
     }
 
+    public String getEmail() {
+        return email;
+    }
+
     public void setEmail(String email) {
         this.email = email;
     }
