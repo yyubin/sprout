@@ -11,7 +11,7 @@ public class RedisSessionManager {
     }
 
     public void createSession(String sessionId, String memberId, int sessionDurationInSeconds) {
-        jedis.set(memberId, sessionId);
+        jedis.set(sessionId, memberId);
         jedis.expire(sessionId, sessionDurationInSeconds);
     }
 

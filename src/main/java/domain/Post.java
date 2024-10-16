@@ -23,4 +23,24 @@ public class Post {
         this.updatedDate = null;
         this.deleted = false;
     }
+
+    public Long getPostId() {
+        return postId;
+    }
+
+    public String getPostName() {
+        return postName;
+    }
+
+    public String getPostContent() {
+        return postContent;
+    }
+
+    public Member getAuthor() {
+        return author;
+    }
+
+    public Board getBoard() {
+        return board;
+    }
 }

@@ -30,7 +30,7 @@ public class MemberAuthService {
         return redisSessionManager;
     }
 
-    public String login(MemberLoginDTO memberLoginDTO) throws MemberNotFoundException, InvalidCredentialsException, AlreadyLoggedInException {
+    public String login(MemberLoginDTO memberLoginDTO) throws MemberNotFoundException, InvalidCredentialsException {
         Optional<Member> member = memberService.getMemberById(memberLoginDTO.getId());
 
         if (member.isEmpty()) {
@@ -41,21 +41,17 @@ public class MemberAuthService {
             throw new InvalidCredentialsException(ExceptionMessage.INVALID_CREDENTIALS);
         }
 
-        if (redisSessionManager.getSession(memberLoginDTO.getId()) != null) {
-            throw new AlreadyLoggedInException(ExceptionMessage.ALREADY_LOGGED_IN);
-        }
-
         String sessionId = UUID.randomUUID().toString();
         redisSessionManager.createSession(sessionId, member.get().getId(), sessionTimeout);
 
-        return member.get().getId();
+        return sessionId;
     }
 
-    public void logout(String memberId) throws NotLoggedInException {
-        if (redisSessionManager.getSession(memberId) == null) {
+    public void logout(String sessionId) throws NotLoggedInException {
+        if (redisSessionManager.getSession(sessionId) == null) {
             throw new NotLoggedInException(ExceptionMessage.NOT_LOGGED_IN);
         }
-        redisSessionManager.deleteSession(memberId);
+        redisSessionManager.deleteSession(sessionId);
     }
 
 }
