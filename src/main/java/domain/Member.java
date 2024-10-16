@@ -12,14 +12,14 @@ public class Member {
     private String encryptedPassword;
     private MemberGrade grade;
 
-    public Member(String id, String name, String email, LocalDate joinDate, String encryptedPassword, MemberGrade grade) {
+    public Member(String id, String name, String email, LocalDate joinDate, String encryptedPassword) {
         this.id = id;
         this.name = name;
         this.email = email;
         this.joinDate = joinDate;
         this.deleted = false;
         this.encryptedPassword = encryptedPassword;
-        this.grade = grade;
+        this.grade = MemberGrade.USER;
     }
 
     public String getId() {
