@@ -1,5 +1,8 @@
 package domain;
 
+import domain.grade.MemberGrade;
+import util.PasswordUtil;
+
 import java.time.LocalDate;
 
 public class Member {
@@ -20,6 +23,16 @@ public class Member {
         this.deleted = false;
         this.encryptedPassword = encryptedPassword;
         this.grade = MemberGrade.USER;
+    }
+
+    private Member() {
+        this.id = "admin";
+        this.name = "admin";
+        this.email = "admin@gmail.com";
+        this.joinDate = LocalDate.now();
+        this.deleted = false;
+        this.encryptedPassword = PasswordUtil.encryptPassword("admin");
+        this.grade = MemberGrade.ADMIN;
     }
 
     public String getId() {
@@ -50,7 +63,15 @@ public class Member {
         this.encryptedPassword = encryptedPassword;
     }
 
+    public MemberGrade getGrade() {
+        return grade;
+    }
+
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
+    }
+
+    public Member makeAdminForTest() {
+        return new Member();
     }
 }

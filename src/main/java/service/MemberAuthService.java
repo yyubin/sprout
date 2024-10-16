@@ -1,6 +1,7 @@
 package service;
 
 import domain.Member;
+import domain.grade.MemberGrade;
 import dto.MemberLoginDTO;
 import exception.AlreadyLoggedInException;
 import exception.InvalidCredentialsException;
@@ -30,8 +31,10 @@ public class MemberAuthService {
         return redisSessionManager;
     }
 
-    public String login(MemberLoginDTO memberLoginDTO) throws MemberNotFoundException, InvalidCredentialsException {
+    public String login(MemberLoginDTO memberLoginDTO, String sessionId) throws MemberNotFoundException, InvalidCredentialsException {
         Optional<Member> member = memberService.getMemberById(memberLoginDTO.getId());
+
+        checkLogin(sessionId);
 
         if (member.isEmpty()) {
             throw new MemberNotFoundException(ExceptionMessage.MEMBER_NOT_FOUND);
@@ -41,17 +44,37 @@ public class MemberAuthService {
             throw new InvalidCredentialsException(ExceptionMessage.INVALID_CREDENTIALS);
         }
 
-        String sessionId = UUID.randomUUID().toString();
-        redisSessionManager.createSession(sessionId, member.get().getId(), sessionTimeout);
+        String newSessionId = UUID.randomUUID().toString();
+        redisSessionManager.createSession(newSessionId, member.get().getId(), sessionTimeout);
 
-        return sessionId;
+        return newSessionId;
     }
 
     public void logout(String sessionId) throws NotLoggedInException {
+        checkLogin(sessionId);
+        redisSessionManager.deleteSession(sessionId);
+    }
+
+    public MemberGrade checkAuthority(String sessionId) throws NotLoggedInException {
+        String memberId = checkLoginAndgetMemberId(sessionId);
+        return memberService.getMemberById(memberId)
+                .map(Member::getGrade)
+                .orElseThrow(() -> new MemberNotFoundException(ExceptionMessage.MEMBER_NOT_FOUND));
+    }
+
+    private void checkLogin(String sessionId) throws NotLoggedInException {
         if (redisSessionManager.getSession(sessionId) == null) {
             throw new NotLoggedInException(ExceptionMessage.NOT_LOGGED_IN);
         }
-        redisSessionManager.deleteSession(sessionId);
     }
+
+    private String checkLoginAndgetMemberId(String sessionId) throws NotLoggedInException {
+        String memberId = redisSessionManager.getSession(sessionId);
+        if (redisSessionManager.getSession(sessionId) == null) {
+            throw new NotLoggedInException(ExceptionMessage.NOT_LOGGED_IN);
+        }
+        return memberId;
+    }
+
 
 }

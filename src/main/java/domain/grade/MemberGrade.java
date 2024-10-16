@@ -1,4 +1,4 @@
-package domain;
+package domain.grade;
 
 import message.DescriptionMessage;
 

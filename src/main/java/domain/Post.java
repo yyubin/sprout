@@ -13,7 +13,7 @@ public class Post {
     private LocalDateTime updatedDate;
     private boolean deleted;
 
-    public Post(Long postId, String postName, String postContent, Member author, Board board, LocalDateTime createdDate) {
+    public Post(String postName, String postContent, Member author, Board board, LocalDateTime createdDate) {
         this.postId = board.generatedPostId();
         this.postName = postName;
         this.postContent = postContent;
@@ -42,5 +42,9 @@ public class Post {
 
     public Board getBoard() {
         return board;
+    }
+
+    public boolean isDeleted() {
+        return deleted;
     }
 }
