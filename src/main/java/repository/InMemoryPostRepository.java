@@ -1,6 +1,8 @@
 package repository;
 
 import domain.Post;
+import exception.NotFoundPostWithPostIdException;
+import message.ExceptionMessage;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,8 +25,18 @@ public class InMemoryPostRepository {
         return new ArrayList<>(posts);
     }
 
-    public void update() {
-
+    public void update(Post post) {
+        posts.set(posts.indexOf(post), post);
+//        Optional<Post> existingPost = findById(post.getPostId());
+//        existingPost.ifPresentOrElse(
+//                p -> {
+//                    int index = posts.indexOf(p);
+//                    posts.set(index, post);
+//                },
+//                () -> {
+//                    throw new NotFoundPostWithPostIdException(ExceptionMessage.NOT_FOUND_POST_WITH_POST_ID, post.getPostId());
+//                }
+//        );
     }
 
 }

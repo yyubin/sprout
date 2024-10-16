@@ -1,5 +1,7 @@
 package domain;
 
+import domain.grade.MemberGrade;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
@@ -9,14 +11,14 @@ public class Board {
     private Long boardId;
     private String boardName;
     private String description;
-    private MemberGrade accessGrade;
+    private List<MemberGrade> accessGrade;
 
     private AtomicLong postCounter;
     private List<Post> posts;
 
     private boolean deleted;
 
-    public Board(Long boardId, String boardName, String description, MemberGrade accessGrade) {
+    public Board(Long boardId, String boardName, String description, List<MemberGrade> accessGrade) {
         this.boardId = boardId;
         this.boardName = boardName;
         this.description = description;
@@ -30,4 +32,19 @@ public class Board {
         return postCounter.incrementAndGet();
     }
 
+    public Long getBoardId() {
+        return boardId;
+    }
+
+    public List<MemberGrade> getAccessGrade() {
+        return accessGrade;
+    }
+
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
+    }
 }
