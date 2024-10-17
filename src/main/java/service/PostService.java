@@ -90,6 +90,14 @@ public class PostService {
         return postRepository.findPostsByName(postName);
     }
 
+    public int getAllPostsSize() {
+        return postRepository.allPostsSize();
+    }
+
+    public int getPostsSizeWithBoardId(Long boardId) {
+        return postRepository.postsSizeWithBoard(boardId);
+    }
+
     private void checkCreateAuthorityWithBoard(Board board, Member author) throws UnauthorizedAccessException {
         if (!board.getAccessGrade().contains(author.getGrade())) {
             throw new UnauthorizedAccessException(ExceptionMessage.UNAUTHORIZED_CREATE_POST);
