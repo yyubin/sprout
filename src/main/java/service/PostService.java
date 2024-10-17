@@ -3,6 +3,7 @@ package service;
 import domain.Board;
 import domain.Member;
 import domain.Post;
+import domain.grade.MemberGrade;
 import dto.PostRegisterDTO;
 import dto.PostUpdateDTO;
 import exception.MemberNotFoundException;
@@ -103,6 +104,13 @@ public class PostService {
     }
 
     private void checkPostOwnership(String memberId, Long postId) throws UnauthorizedAccessException {
+        Optional<Member> member = memberService.getMemberById(memberId);
+        if (member.isEmpty()) {
+            throw new UnauthorizedAccessException(ExceptionMessage.UNAUTHORIZED_CREATE_POST);
+        }
+        if (member.get().getGrade() == MemberGrade.ADMIN) {
+            return;
+        }
         Post post = postRepository.findById(postId).orElseThrow(NotFoundPostWithPostIdException::new);
         if (!post.getAuthor().getId().equals(memberId)) {
             throw new UnauthorizedAccessException(ExceptionMessage.UNAUTHORIZED_POST);
