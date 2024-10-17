@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import redis.clients.jedis.Jedis;
 import util.RedisSessionManager;
+import util.Session;
 
 import java.time.LocalDate;
 
@@ -47,6 +48,17 @@ public class MemberAuthServiceTests {
     }
 
     @Test
+    public void testSuccessfulLogout() {
+        MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin@gmail.com", "qwer", LocalDate.now());
+        memberService.registerMember(memberDTO);
+
+        MemberLoginDTO memberLoginDTO = new MemberLoginDTO("yubin111", "qwer");
+        String sessionId = memberAuthService.login(memberLoginDTO);
+        memberAuthService.logout();
+        assertNull(Session.getSessionId());
+    }
+
+    @Test
     public void testSessionManagementAfterLogin() {
         MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin13", "yubin", "yubin@gmail.com", "qwer", LocalDate.now());
         memberService.registerMember(memberDTO);
@@ -54,7 +66,7 @@ public class MemberAuthServiceTests {
 
         assertNotNull(sessionId);
 
-        memberAuthService.logout(sessionId);
+        memberAuthService.logout();
         assertNull(memberAuthService.getRedisSessionManager().getSession(sessionId));
     }
 
