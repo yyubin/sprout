@@ -8,8 +8,10 @@ import exception.NotFoundBoardWithBoardIdException;
 import exception.UnauthorizedAccessException;
 import message.ExceptionMessage;
 import repository.InMemoryBoardRepository;
+import util.Session;
 
 import java.util.List;
+import java.util.Optional;
 
 public class BoardService {
 
@@ -21,8 +23,8 @@ public class BoardService {
         this.memberAuthService = memberAuthService;
     }
 
-    public void createBoard(BoardRegisterDTO boardRegisterDTO, String sessionId) throws UnauthorizedAccessException {
-        checkAuthority(sessionId);
+    public void createBoard(BoardRegisterDTO boardRegisterDTO) throws UnauthorizedAccessException {
+        checkAdminAuthority(Session.getSessionId());
         Board board = new Board(
                 (long) (boardRepository.size() + 1),
                 boardRegisterDTO.getBoardName(),
@@ -32,17 +34,21 @@ public class BoardService {
         boardRepository.save(board);
     }
 
+    public int getBoardSize() {
+        return boardRepository.size();
+    }
+
     public List<Board> getAllBoards() {
         return boardRepository.findAll();
     }
 
-    public Board getBoardById(long boardId) throws NotFoundBoardWithBoardIdException {
-        return boardRepository.findById(boardId)
-                .orElseThrow(() -> new NotFoundBoardWithBoardIdException(ExceptionMessage.NOT_FOUND_BOARD_WITH_BOARD_ID, boardId));
+    public Optional<Board> getBoardById(long boardId) throws NotFoundBoardWithBoardIdException {
+        return Optional.ofNullable(boardRepository.findById(boardId)
+                .orElseThrow(() -> new NotFoundBoardWithBoardIdException(ExceptionMessage.NOT_FOUND_BOARD_WITH_BOARD_ID, boardId)));
     }
 
-    public void updateBoard(BoardUpdateDTO boardUpdateDTO, String sessionId) throws UnauthorizedAccessException, NotFoundBoardWithBoardIdException {
-        checkAuthority(sessionId);
+    public void updateBoard(BoardUpdateDTO boardUpdateDTO) throws UnauthorizedAccessException, NotFoundBoardWithBoardIdException {
+        checkAdminAuthority(Session.getSessionId());
         if (boardRepository.findById(boardUpdateDTO.getId()).isPresent()) {
             Board board = new Board(
                     boardUpdateDTO.getId(),
@@ -56,14 +62,14 @@ public class BoardService {
         throw new NotFoundBoardWithBoardIdException(ExceptionMessage.NOT_FOUND_BOARD_WITH_BOARD_ID, boardUpdateDTO.getId());
     }
 
-    public void deleteBoard(long boardId, String sessionId) throws NotFoundBoardWithBoardIdException {
-        checkAuthority(sessionId);
+    public void deleteBoard(Long boardId) throws NotFoundBoardWithBoardIdException {
+        checkAdminAuthority(Session.getSessionId());
         if (boardRepository.findById(boardId).isPresent()) {
             boardRepository.delete(boardId);
         }
     }
 
-    private void checkAuthority(String sessionId) throws UnauthorizedAccessException {
+    private void checkAdminAuthority(String sessionId) throws UnauthorizedAccessException {
         MemberGrade memberGrade = memberAuthService.checkAuthority(sessionId);
         if (memberGrade != MemberGrade.ADMIN) {
             throw new UnauthorizedAccessException(ExceptionMessage.UNAUTHORIZED_CREATE_BOARD);

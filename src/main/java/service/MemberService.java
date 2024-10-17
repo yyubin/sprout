@@ -32,6 +32,11 @@ public class MemberService {
         memberRepository.save(newMember);
     }
 
+    public void registerAdminMember() {
+        Member member = Member.makeAdminForTest();
+        memberRepository.save(member);
+    }
+
     public Optional<Member> getMemberById(String memberId) {
         return memberRepository.findById(memberId);
     }

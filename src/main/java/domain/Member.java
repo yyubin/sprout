@@ -71,7 +71,7 @@ public class Member {
         this.deleted = deleted;
     }
 
-    public Member makeAdminForTest() {
+    public static Member makeAdminForTest() {
         return new Member();
     }
 }

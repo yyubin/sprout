@@ -40,6 +40,14 @@ public class Board {
         return accessGrade;
     }
 
+    public String getBoardName() {
+        return boardName;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
     public boolean isDeleted() {
         return deleted;
     }

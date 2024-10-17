@@ -13,7 +13,9 @@ public class InMemoryBoardRepository {
     private final List<Board> boards = new ArrayList<>();
 
     public int size() {
-        return boards.size();
+        return (int) boards.stream()
+                .filter(board -> !board.isDeleted())
+                .count();
     }
 
     public void save(Board board) {
@@ -43,7 +45,7 @@ public class InMemoryBoardRepository {
         boards.set(findBoardIndex(board.getBoardId()), board);
     }
 
-    public void delete(long boardId) {
+    public void delete(Long boardId) {
         boards.get(findBoardIndex(boardId)).setDeleted(true);
     }
 }
