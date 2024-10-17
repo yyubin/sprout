@@ -12,6 +12,7 @@ import redis.clients.jedis.Jedis;
 import repository.InMemoryMemberRepository;
 import util.PasswordUtil;
 import util.RedisSessionManager;
+import util.Session;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -31,10 +32,10 @@ public class MemberAuthService {
         return redisSessionManager;
     }
 
-    public String login(MemberLoginDTO memberLoginDTO, String sessionId) throws MemberNotFoundException, InvalidCredentialsException {
+    public String login(MemberLoginDTO memberLoginDTO) throws MemberNotFoundException, InvalidCredentialsException {
         Optional<Member> member = memberService.getMemberById(memberLoginDTO.getId());
 
-        checkLogin(sessionId);
+        checkNotLogin(Session.getSessionId());
 
         if (member.isEmpty()) {
             throw new MemberNotFoundException(ExceptionMessage.MEMBER_NOT_FOUND);
@@ -65,6 +66,15 @@ public class MemberAuthService {
     private void checkLogin(String sessionId) throws NotLoggedInException {
         if (redisSessionManager.getSession(sessionId) == null) {
             throw new NotLoggedInException(ExceptionMessage.NOT_LOGGED_IN);
+        }
+    }
+
+    private void checkNotLogin(String sessionId) throws AlreadyLoggedInException {
+        if (sessionId == null) {
+            return;
+        }
+        if (redisSessionManager.getSession(sessionId) != null) {
+            throw new AlreadyLoggedInException(ExceptionMessage.ALREADY_LOGGED_IN);
         }
     }
 

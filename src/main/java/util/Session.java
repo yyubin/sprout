@@ -2,17 +2,15 @@ package util;
 
 public class Session {
 
-    private String sessionId;
+    private static String sessionId = null;
 
-    public Session(String sessionId) {
-        this.sessionId = sessionId;
-    }
+    private Session() {}
 
-    public String getSessionId() {
+    public static String getSessionId() {
         return sessionId;
     }
 
-    public void setSessionId(String sessionId) {
-        this.sessionId = sessionId;
+    public static void setSessionId(String sessionId) {
+        Session.sessionId = sessionId;
     }
 }
