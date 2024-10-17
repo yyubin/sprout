@@ -51,9 +51,9 @@ public class MemberAuthService {
         return newSessionId;
     }
 
-    public void logout(String sessionId) throws NotLoggedInException {
-        checkLogin(sessionId);
-        redisSessionManager.deleteSession(sessionId);
+    public void logout() throws NotLoggedInException {
+        checkLogin(Session.getSessionId());
+        redisSessionManager.deleteSession(Session.getSessionId());
     }
 
     public MemberGrade checkAuthority(String sessionId) throws NotLoggedInException {
