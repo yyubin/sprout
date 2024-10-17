@@ -51,4 +51,16 @@ public class Post {
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
     }
+
+    public void setPostName(String postName) {
+        this.postName = postName;
+    }
+
+    public void setPostContent(String postContent) {
+        this.postContent = postContent;
+    }
+
+    public void setUpdatedDate(LocalDateTime updatedDate) {
+        this.updatedDate = updatedDate;
+    }
 }

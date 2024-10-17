@@ -48,20 +48,18 @@ public class PostService {
         postRepository.save(post);
     }
 
-    public void updatePost(PostUpdateDTO postUpdateDTO) throws UnauthorizedAccessException, NotFoundBoardWithBoardIdException {
+    public void updatePost(PostUpdateDTO postUpdateDTO) throws UnauthorizedAccessException, NotFoundBoardWithBoardIdException, NotFoundPostWithPostIdException {
         String memberId = memberAuthService.getRedisSessionManager().getSession(Session.getSessionId());
         Board board = checkExistsBoardAndGetBoard(postUpdateDTO.getBoardId());
         Member author = checkExistsMemberAndGetMemberById(memberId);
         checkCreateAuthorityWithBoard(board, author);
         checkPostOwnership(memberId, postUpdateDTO.getPostId());
 
-        Post post = new Post(
-                postUpdateDTO.getPostName(),
-                postUpdateDTO.getPostContent(),
-                author,
-                board,
-                LocalDateTime.now()
-        );
+        Post post = postRepository.findById(postUpdateDTO.getPostId()).orElseThrow(() -> new NotFoundPostWithPostIdException(ExceptionMessage.NOT_FOUND_POST_WITH_POST_ID, postUpdateDTO.getPostId()));
+
+        post.setPostName(postUpdateDTO.getPostName());
+        post.setPostContent(postUpdateDTO.getPostContent());
+        post.setUpdatedDate(LocalDateTime.now());
         postRepository.update(post);
     }
 
