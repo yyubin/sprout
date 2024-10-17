@@ -1,5 +1,7 @@
 package service;
 
+import config.Container;
+import config.annotations.Service;
 import domain.Member;
 import dto.MemberRegisterDTO;
 import dto.MemberUpdateDTO;
@@ -14,11 +16,12 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+@Service
 public class MemberService {
     private final InMemoryMemberRepository memberRepository;
 
-    public MemberService(InMemoryMemberRepository memberRepository) {
-        this.memberRepository = memberRepository;
+    public MemberService() {
+        this.memberRepository = Container.getInstance().get(InMemoryMemberRepository.class);
     }
 
     public void registerMember(MemberRegisterDTO memberRegisterDTO) throws MemberIdAlreadyExistsException, MemberEmailAlreadyExistsException {

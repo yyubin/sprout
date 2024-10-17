@@ -1,5 +1,7 @@
 package service;
 
+import config.Container;
+import config.annotations.Service;
 import domain.Board;
 import domain.grade.MemberGrade;
 import dto.BoardRegisterDTO;
@@ -14,14 +16,15 @@ import util.Session;
 import java.util.List;
 import java.util.Optional;
 
+@Service
 public class BoardService {
 
     private final InMemoryBoardRepository boardRepository;
     private final MemberAuthService memberAuthService;
 
-    public BoardService(InMemoryBoardRepository boardRepository, MemberAuthService memberAuthService) {
-        this.boardRepository = boardRepository;
-        this.memberAuthService = memberAuthService;
+    public BoardService() {
+        this.boardRepository = Container.getInstance().get(InMemoryBoardRepository.class);
+        this.memberAuthService = Container.getInstance().get(MemberAuthService.class);
     }
 
     public void createBoard(BoardRegisterDTO boardRegisterDTO) throws UnauthorizedAccessException, BoardNameAlreadyExistsException {

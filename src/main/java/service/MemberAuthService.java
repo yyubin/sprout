@@ -1,5 +1,7 @@
 package service;
 
+import config.Container;
+import config.annotations.Service;
 import domain.Member;
 import domain.grade.MemberGrade;
 import dto.MemberLoginDTO;
@@ -17,15 +19,16 @@ import util.Session;
 import java.util.Optional;
 import java.util.UUID;
 
+@Service
 public class MemberAuthService {
 
     private final MemberService memberService;
     private final RedisSessionManager redisSessionManager;
     private final int sessionTimeout = 3600; // 1시간
 
-    public MemberAuthService(MemberService memberService , RedisSessionManager redisSessionManager) {
-        this.memberService = memberService;
-        this.redisSessionManager = redisSessionManager;
+    public MemberAuthService() {
+        this.memberService = Container.getInstance().get(MemberService.class);
+        this.redisSessionManager = Container.getInstance().get(RedisSessionManager.class);
     }
 
     public RedisSessionManager getRedisSessionManager() {

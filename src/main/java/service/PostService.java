@@ -1,5 +1,7 @@
 package service;
 
+import config.Container;
+import config.annotations.Service;
 import domain.Board;
 import domain.Member;
 import domain.Post;
@@ -19,6 +21,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+@Service
 public class PostService {
 
     private final InMemoryPostRepository postRepository;
@@ -26,11 +29,11 @@ public class PostService {
     private final MemberAuthService memberAuthService;
     private final BoardService boardService;
 
-    public PostService(InMemoryPostRepository postRepository, MemberService memberService, MemberAuthService memberAuthService, BoardService boardService) {
-        this.postRepository = postRepository;
-        this.memberService = memberService;
-        this.memberAuthService = memberAuthService;
-        this.boardService = boardService;
+    public PostService() {
+        this.postRepository = Container.getInstance().get(InMemoryPostRepository.class);
+        this.memberService = Container.getInstance().get(MemberService.class);
+        this.memberAuthService = Container.getInstance().get(MemberAuthService.class);
+        this.boardService = Container.getInstance().get(BoardService.class);
     }
 
     public void createPost(PostRegisterDTO postRegisterDTO) throws UnauthorizedAccessException, MemberNotFoundException, NotFoundBoardWithBoardIdException {

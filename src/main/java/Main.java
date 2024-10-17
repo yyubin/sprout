@@ -1,4 +1,5 @@
 import com.fasterxml.jackson.core.JsonProcessingException;
+import config.Container;
 import controller.ExampleController;
 import exception.BadRequestException;
 import http.request.HttpRequest;
@@ -13,18 +14,21 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
 
-        System.out.println("HTTP Request 형식으로 입력해주세요: ");
+        Container container = new Container();
+        container.scan(Main.class.getPackageName());
 
-        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        StringBuilder rawRequest = new StringBuilder();
-        String line;
-
-        while (!(line = reader.readLine()).isEmpty()) {
-            rawRequest.append(line).append("\n");
-        }
-
-        RequestHandler handler = new RequestHandler(new ExampleController());
-        handler.handleRequest(rawRequest.toString());
+//        System.out.println("HTTP Request 형식으로 입력해주세요: ");
+//
+//        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+//        StringBuilder rawRequest = new StringBuilder();
+//        String line;
+//
+//        while (!(line = reader.readLine()).isEmpty()) {
+//            rawRequest.append(line).append("\n");
+//        }
+//
+//        RequestHandler handler = new RequestHandler(new ExampleController());
+//        handler.handleRequest(rawRequest.toString());
     }
 
 }
