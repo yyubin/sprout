@@ -7,6 +7,7 @@ import dto.BoardRegisterDTO;
 import dto.BoardUpdateDTO;
 import dto.MemberLoginDTO;
 import dto.MemberRegisterDTO;
+import exception.BoardNameAlreadyExistsException;
 import exception.NotFoundBoardWithBoardIdException;
 import exception.UnauthorizedAccessException;
 import org.junit.jupiter.api.BeforeEach;
@@ -158,5 +159,22 @@ public class BoardServiceTests {
         assertEquals(2, boards.size());
     }
 
-
+    @Test
+    void testDuplicateBoardNameFail() throws UnauthorizedAccessException, BoardNameAlreadyExistsException {
+        memberService.registerAdminMember();
+        MemberLoginDTO loginDTO = new MemberLoginDTO("admin", "admin");
+        String sessionId = memberAuthService.login(loginDTO);
+        BoardRegisterDTO boardRegisterDTO1 = new BoardRegisterDTO(
+                "Test Baord",
+                "This is test-board",
+                List.of(MemberGrade.ADMIN, MemberGrade.USER)
+        );
+        BoardRegisterDTO boardRegisterDTO2 = new BoardRegisterDTO(
+                "Test Baord",
+                "This is test-board",
+                List.of(MemberGrade.ADMIN, MemberGrade.USER)
+        );
+        boardService.createBoard(boardRegisterDTO1);
+        assertThrows(BoardNameAlreadyExistsException.class, () -> boardService.createBoard(boardRegisterDTO2));
+    }
 }
