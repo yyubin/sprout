@@ -15,7 +15,11 @@ import java.util.List;
 import java.util.Optional;
 
 public class MemberService {
-    private final InMemoryMemberRepository memberRepository = new InMemoryMemberRepository();
+    private final InMemoryMemberRepository memberRepository;
+
+    public MemberService(InMemoryMemberRepository memberRepository) {
+        this.memberRepository = memberRepository;
+    }
 
     public void registerMember(MemberRegisterDTO memberRegisterDTO) throws MemberIdAlreadyExistsException, MemberEmailAlreadyExistsException {
         checkIdExists(memberRegisterDTO.getId());

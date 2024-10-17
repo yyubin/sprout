@@ -13,6 +13,7 @@ import exception.UnauthorizedAccessException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import repository.InMemoryBoardRepository;
+import repository.InMemoryMemberRepository;
 import util.RedisSessionManager;
 
 import java.time.LocalDate;
@@ -32,7 +33,8 @@ public class BoardServiceTests {
     @BeforeEach
     void setUp() {
         RedisSessionManager redisSessionManager = new RedisSessionManager();
-        memberService = new MemberService();
+        InMemoryMemberRepository memberRepository = new InMemoryMemberRepository();
+        memberService = new MemberService(memberRepository);
         boardRepository = new InMemoryBoardRepository();
         memberAuthService = new MemberAuthService(memberService, redisSessionManager);
         boardService = new BoardService(boardRepository, memberAuthService);
