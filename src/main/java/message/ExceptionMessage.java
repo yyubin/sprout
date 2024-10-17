@@ -19,4 +19,6 @@ public class ExceptionMessage {
     public static final String UNAUTHORIZED_POST = "해당 글에 대한 권한이 없습니다.";
 
     public static final String ALREADY_USED_BOARD_NAME = "이미 사용중인 게시판 이름입니다.";
+
+    public static final String BAD_REQUEST = "잘못된 요청입니다.";
 }
