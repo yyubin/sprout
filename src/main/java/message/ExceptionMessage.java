@@ -16,6 +16,7 @@ public class ExceptionMessage {
 
     public static final String UNAUTHORIZED_CREATE_BOARD = "게시판 생성 권한이 없습니다.";
     public static final String UNAUTHORIZED_CREATE_POST = "게시글 생성 권한이 없습니다.";
+    public static final String UNAUTHORIZED_POST = "해당 글에 대한 권한이 없습니다.";
 
     public static final String ALREADY_USED_BOARD_NAME = "이미 사용중인 게시판 이름입니다.";
 }

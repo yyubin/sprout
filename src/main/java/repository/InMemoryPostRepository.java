@@ -15,28 +15,56 @@ public class InMemoryPostRepository {
         posts.add(post);
     }
 
+    public int allPostsSize() {
+        return (int) posts.stream()
+                .filter(post -> !post.isDeleted())
+                .count();
+    }
+
+    public int postsSizeWithBoard(Long boardId) {
+        return (int) posts.stream()
+                .filter(post -> post.getBoard().getBoardId().equals(boardId) && !post.isDeleted())
+                .count();
+    }
+
     public Optional<Post> findById(Long postId) {
         return posts.stream()
-                .filter(post -> post.getPostId().equals(postId))
+                .filter(post -> post.getPostId().equals(postId) && !post.isDeleted())
                 .findFirst();
     }
 
     public List<Post> findAll() {
-        return new ArrayList<>(posts);
+        return posts.stream()
+                .filter(post -> !post.isDeleted())
+                .toList();
+    }
+
+    public List<Post> findPostsByName(String postName) {
+        return posts.stream()
+                .filter(post -> post.getPostName().equals(postName) && !post.isDeleted())
+                .toList();
+    }
+
+    public List<Post> findPostsByAuthor(String author) {
+        return posts.stream()
+                .filter(post -> post.getAuthor().getName().equals(author) && !post.isDeleted())
+                .toList();
+    }
+
+    public List<Post> findPostsByBoardId(Long boardId) {
+        return posts.stream()
+                .filter(post -> post.getBoard().getBoardId().equals(boardId) && !post.isDeleted())
+                .toList();
     }
 
     public void update(Post post) {
         posts.set(posts.indexOf(post), post);
-//        Optional<Post> existingPost = findById(post.getPostId());
-//        existingPost.ifPresentOrElse(
-//                p -> {
-//                    int index = posts.indexOf(p);
-//                    posts.set(index, post);
-//                },
-//                () -> {
-//                    throw new NotFoundPostWithPostIdException(ExceptionMessage.NOT_FOUND_POST_WITH_POST_ID, post.getPostId());
-//                }
-//        );
+    }
+
+    public void deleteById(Long postId) {
+        findById(postId).ifPresent(post -> {
+            post.setDeleted(true);
+        });
     }
 
 }

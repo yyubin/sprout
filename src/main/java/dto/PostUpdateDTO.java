@@ -2,11 +2,13 @@ package dto;
 
 public class PostUpdateDTO {
     private Long postId;
+    private Long boardId;
     private String postName;
     private String postContent;
 
-    public PostUpdateDTO(Long postId, String postName, String postContent) {
+    public PostUpdateDTO(Long postId, Long boardId, String postName, String postContent) {
         this.postId = postId;
+        this.boardId = boardId;
         this.postName = postName;
         this.postContent = postContent;
     }
@@ -23,5 +25,7 @@ public class PostUpdateDTO {
         return postContent;
     }
 
-
+    public Long getBoardId() {
+        return boardId;
+    }
 }

@@ -44,7 +44,7 @@ public class BoardService {
         return boardRepository.findAll();
     }
 
-    public Optional<Board> getBoardById(long boardId) throws NotFoundBoardWithBoardIdException {
+    public Optional<Board> getBoardById(Long boardId) throws NotFoundBoardWithBoardIdException {
         return Optional.ofNullable(boardRepository.findById(boardId)
                 .orElseThrow(() -> new NotFoundBoardWithBoardIdException(ExceptionMessage.NOT_FOUND_BOARD_WITH_BOARD_ID, boardId)));
     }
