@@ -21,7 +21,9 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-core:2.15.2'
     implementation 'com.fasterxml.jackson.core:jackson-annotations:2.15.2'
 
-    implementation 'org.reflections:reflections:0.9.12'
+    implementation 'org.reflections:reflections:0.10.2'
+
+    implementation 'ch.qos.logback:logback-classic:1.2.6'
 
 }
 

@@ -1,5 +1,6 @@
 package repository;
 
+import config.annotations.Repository;
 import domain.Member;
 import dto.MemberRegisterDTO;
 import dto.MemberUpdateDTO;
@@ -8,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@Repository
 public class InMemoryMemberRepository {
     private List<Member> members = new ArrayList<>();
 

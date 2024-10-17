@@ -1,5 +1,6 @@
 package repository;
 
+import config.annotations.Repository;
 import domain.Board;
 import exception.NotFoundBoardWithBoardIdException;
 import message.ExceptionMessage;
@@ -9,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
+@Repository
 public class InMemoryBoardRepository {
     private final List<Board> boards = new ArrayList<>();
 

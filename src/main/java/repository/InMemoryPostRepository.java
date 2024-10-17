@@ -1,5 +1,6 @@
 package repository;
 
+import config.annotations.Repository;
 import domain.Post;
 import exception.NotFoundPostWithPostIdException;
 import message.ExceptionMessage;
@@ -8,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@Repository
 public class InMemoryPostRepository {
     private final List<Post> posts = new ArrayList<>();
 

@@ -1,5 +1,7 @@
 package service;
 
+import com.sun.tools.javac.Main;
+import config.Container;
 import domain.Board;
 import domain.Member;
 import domain.grade.MemberGrade;
@@ -25,19 +27,20 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class BoardServiceTests {
 
-    private InMemoryBoardRepository boardRepository;
     private MemberAuthService memberAuthService;
     private BoardService boardService;
     private MemberService memberService;
 
     @BeforeEach
-    void setUp() {
-        RedisSessionManager redisSessionManager = new RedisSessionManager();
-        InMemoryMemberRepository memberRepository = new InMemoryMemberRepository();
-        memberService = new MemberService(memberRepository);
-        boardRepository = new InMemoryBoardRepository();
-        memberAuthService = new MemberAuthService(memberService, redisSessionManager);
-        boardService = new BoardService(boardRepository, memberAuthService);
+    void setUp() throws Exception {
+        Container container = Container.getInstance();
+        container.scan("controller");
+        container.scan("repository");
+        container.scan("service");
+
+        memberAuthService = new MemberAuthService();
+        memberService = new MemberService();
+        boardService = new BoardService();
     }
 
     @Test

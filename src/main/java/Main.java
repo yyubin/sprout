@@ -15,7 +15,10 @@ public class Main {
     public static void main(String[] args) throws Exception {
 
         Container container = new Container();
-        container.scan(Main.class.getPackageName());
+        container.scan("config");
+        container.scan("controller");
+        container.scan("repository");
+        container.scan("service");
 
 //        System.out.println("HTTP Request 형식으로 입력해주세요: ");
 //

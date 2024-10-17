@@ -2,6 +2,8 @@ package config;
 
 import config.annotations.Component;
 import config.annotations.Controller;
+import config.annotations.Repository;
+import config.annotations.Service;
 import org.reflections.Reflections;
 
 import java.io.File;
@@ -13,7 +15,9 @@ public class ComponentScanner {
 
     public void scan(String basePackage) throws Exception {
         Reflections reflections = new Reflections(basePackage);
-        Set<Class<?>> scanComponents = reflections.getTypesAnnotatedWith(Component.class);
+        Set<Class<?>> scanComponents = reflections.getTypesAnnotatedWith(Controller.class);
+        scanComponents.addAll(reflections.getTypesAnnotatedWith(Service.class));
+        scanComponents.addAll(reflections.getTypesAnnotatedWith(Repository.class));
         for (Class<?> componentClass : scanComponents) {
             components.add(componentClass.getDeclaredConstructor().newInstance());
         }
