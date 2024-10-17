@@ -7,6 +7,7 @@ import exception.InvalidCredentialsException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import redis.clients.jedis.Jedis;
+import repository.InMemoryMemberRepository;
 import util.RedisSessionManager;
 import util.Session;
 
@@ -21,7 +22,8 @@ public class MemberAuthServiceTests {
 
     @BeforeEach
     public void setup() {
-        memberService = new MemberService();
+        InMemoryMemberRepository memberRepository = new InMemoryMemberRepository();
+        memberService = new MemberService(memberRepository);
         RedisSessionManager redisSessionManager = new RedisSessionManager();
         memberAuthService = new MemberAuthService(memberService, redisSessionManager);
     }

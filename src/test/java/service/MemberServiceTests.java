@@ -8,6 +8,7 @@ import exception.MemberIdAlreadyExistsException;
 import message.ExceptionMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import repository.InMemoryMemberRepository;
 import util.PasswordUtil;
 
 import java.time.LocalDate;
@@ -21,7 +22,8 @@ public class MemberServiceTests {
 
     @BeforeEach
     public void setUp() {
-        memberService = new MemberService();
+        InMemoryMemberRepository memberRepository = new InMemoryMemberRepository();
+        memberService = new MemberService(memberRepository);
     }
 
     @Test
