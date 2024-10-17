@@ -4,6 +4,7 @@ import controller.annotations.GetMapping;
 import controller.annotations.PostMapping;
 import http.request.HttpRequest;
 
+@config.annotations.Controller
 public class ExampleController implements Controller {
 
     @GetMapping(path = "/example")
