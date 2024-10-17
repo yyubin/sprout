@@ -48,4 +48,9 @@ public class InMemoryBoardRepository {
     public void delete(Long boardId) {
         boards.get(findBoardIndex(boardId)).setDeleted(true);
     }
+
+    public boolean existByName(String boardName) {
+        return boards.stream()
+                .anyMatch(board -> board.getBoardName().equals(boardName) && !board.isDeleted());
+    }
 }

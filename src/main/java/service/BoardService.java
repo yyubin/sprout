@@ -4,6 +4,7 @@ import domain.Board;
 import domain.grade.MemberGrade;
 import dto.BoardRegisterDTO;
 import dto.BoardUpdateDTO;
+import exception.BoardNameAlreadyExistsException;
 import exception.NotFoundBoardWithBoardIdException;
 import exception.UnauthorizedAccessException;
 import message.ExceptionMessage;
@@ -23,8 +24,9 @@ public class BoardService {
         this.memberAuthService = memberAuthService;
     }
 
-    public void createBoard(BoardRegisterDTO boardRegisterDTO) throws UnauthorizedAccessException {
+    public void createBoard(BoardRegisterDTO boardRegisterDTO) throws UnauthorizedAccessException, BoardNameAlreadyExistsException {
         checkAdminAuthority(Session.getSessionId());
+        checkDuplicateBoardName(boardRegisterDTO.getBoardName());
         Board board = new Board(
                 (long) (boardRepository.size() + 1),
                 boardRegisterDTO.getBoardName(),
@@ -47,8 +49,9 @@ public class BoardService {
                 .orElseThrow(() -> new NotFoundBoardWithBoardIdException(ExceptionMessage.NOT_FOUND_BOARD_WITH_BOARD_ID, boardId)));
     }
 
-    public void updateBoard(BoardUpdateDTO boardUpdateDTO) throws UnauthorizedAccessException, NotFoundBoardWithBoardIdException {
+    public void updateBoard(BoardUpdateDTO boardUpdateDTO) throws UnauthorizedAccessException, NotFoundBoardWithBoardIdException, BoardNameAlreadyExistsException {
         checkAdminAuthority(Session.getSessionId());
+        checkDuplicateBoardName(boardUpdateDTO.getBoardName());
         if (boardRepository.findById(boardUpdateDTO.getId()).isPresent()) {
             Board board = new Board(
                     boardUpdateDTO.getId(),
@@ -73,6 +76,12 @@ public class BoardService {
         MemberGrade memberGrade = memberAuthService.checkAuthority(sessionId);
         if (memberGrade != MemberGrade.ADMIN) {
             throw new UnauthorizedAccessException(ExceptionMessage.UNAUTHORIZED_CREATE_BOARD);
+        }
+    }
+
+    private void checkDuplicateBoardName(String boardName) throws BoardNameAlreadyExistsException {
+        if (boardRepository.existByName(boardName)) {
+            throw new BoardNameAlreadyExistsException(ExceptionMessage.ALREADY_USED_BOARD_NAME);
         }
     }
 }
