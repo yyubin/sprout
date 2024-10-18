@@ -24,7 +24,6 @@ import java.util.Map;
 public class MemberController implements ControllerInterface {
 
     private final MemberService memberService;
-    private final JSONParser jsonParser = new JSONParser();
 
     public MemberController(MemberService memberService) {
         this.memberService = memberService;
@@ -41,7 +40,6 @@ public class MemberController implements ControllerInterface {
                 LocalDate.now()
         );
         memberService.registerMember(memberRegisterDTO);
-        System.out.println(memberService.getAllMembers());
         return new HttpResponse<>();
     }
 
