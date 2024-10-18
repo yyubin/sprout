@@ -50,6 +50,11 @@ public class ComponentScanner {
 
 
     public void scan(String basePackage) throws Exception {
+        if (PackageName.view.getPackageName().equals(basePackage)) {
+            scan(basePackage, Component.class, false, true);
+            return;
+        }
+
         if (PackageName.http_request.getPackageName().equals(basePackage)) {
             scan(basePackage, Component.class, false, false);
             return;

@@ -10,6 +10,7 @@ import http.request.HttpRequestParser;
 import http.request.RequestHandler;
 import repository.InMemoryMemberRepository;
 import service.MemberService;
+import view.InputHandler;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -25,25 +26,19 @@ public class Main {
         Container.getInstance().scan(PackageName.util.getPackageName());
         Container.getInstance().scan(PackageName.service.getPackageName());
         Container.getInstance().scan(PackageName.controller.getPackageName());
+        Container.getInstance().scan(PackageName.view.getPackageName());
 
         Collection<Object> components = Container.getInstance().getComponents();
         for (Object component : components) {
             System.out.println(component.getClass().getName());
         }
 
-        System.out.println("HTTP Request 형식으로 입력해주세요: ");
-
-        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        StringBuilder rawRequest = new StringBuilder();
-        String line;
-
-        while (!(line = reader.readLine()).isEmpty()) {
-            rawRequest.append(line).append("\n");
-        }
-
         RequestHandler handler = Container.getInstance().get(RequestHandler.class);
         handler.setControllers(Container.getInstance().scanControllers());
-        handler.handleRequest(rawRequest.toString());
+
+        InputHandler inputHandler = Container.getInstance().get(InputHandler.class);
+        inputHandler.startInputLoop();
+
     }
 
 }
