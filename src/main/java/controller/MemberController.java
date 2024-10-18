@@ -10,27 +10,29 @@ import controller.annotations.PutMapping;
 import dto.MemberRegisterDTO;
 import http.request.HttpRequest;
 import http.response.HttpResponse;
-import org.json.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
+import http.response.ResponseCode;
+import message.PrintResultMessage;
+
 import service.MemberService;
+import view.PrintHandler;
 
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.Map;
 
 @Controller
-@Requires(dependsOn = {MemberService.class})
+@Requires(dependsOn = {MemberService.class, PrintHandler.class})
 public class MemberController implements ControllerInterface {
 
     private final MemberService memberService;
+    private final PrintHandler printHandler;
 
-    public MemberController(MemberService memberService) {
+    public MemberController(MemberService memberService, PrintHandler printHandler) {
         this.memberService = memberService;
+        this.printHandler = printHandler;
     }
 
     @PostMapping(path = "/accounts/signup")
-    public HttpResponse<?> signup(HttpRequest<Map<String, Object>> request) {
+    public void signup(HttpRequest<Map<String, Object>> request) throws RuntimeException {
         Map<String, Object> body = request.getBody();
         MemberRegisterDTO memberRegisterDTO = new MemberRegisterDTO(
                 (String) body.get("id"),
@@ -40,7 +42,12 @@ public class MemberController implements ControllerInterface {
                 LocalDate.now()
         );
         memberService.registerMember(memberRegisterDTO);
-        return new HttpResponse<>();
+        HttpResponse<?> response = new HttpResponse<>(
+                PrintResultMessage.ACCOUNTS_SIGNUP_SUCCESS,
+                ResponseCode.SUCCESS,
+                null
+        );
+        printHandler.printSuccessWithResponseCodeAndCustomMessage(response);
     }
 
     @PostMapping(path = "/accounts/signin")

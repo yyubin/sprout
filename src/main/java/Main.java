@@ -25,8 +25,8 @@ public class Main {
         Container.getInstance().scan(PackageName.http_request.getPackageName());
         Container.getInstance().scan(PackageName.util.getPackageName());
         Container.getInstance().scan(PackageName.service.getPackageName());
-        Container.getInstance().scan(PackageName.controller.getPackageName());
         Container.getInstance().scan(PackageName.view.getPackageName());
+        Container.getInstance().scan(PackageName.controller.getPackageName());
 
         Collection<Object> components = Container.getInstance().getComponents();
         for (Object component : components) {

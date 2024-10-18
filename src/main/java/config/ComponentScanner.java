@@ -27,20 +27,18 @@ public class ComponentScanner {
                 : new ArrayList<>(componentClasses);
 
         for (Class<?> componentClass : sortedComponentClasses) {
-            if (requiresDependencies) {
-                Requires requires = componentClass.getAnnotation(Requires.class);
-                if (requires != null) {
-                    Object[] parameters = new Object[requires.dependsOn().length];
+            Requires requires = componentClass.getAnnotation(Requires.class);
+            if (requiresDependencies && requires != null) {
+                Object[] parameters = new Object[requires.dependsOn().length];
 
-                    for (int i = 0; i < requires.dependsOn().length; i++) {
-                        Object dependencyInstance = Container.getInstance().getByName(requires.dependsOn()[i].getName());
-                        parameters[i] = dependencyInstance;
-                    }
-
-                    Constructor<?> constructor = componentClass.getDeclaredConstructor(getParameterTypes(requires.dependsOn()));
-                    Object serviceInstance = constructor.newInstance(parameters);
-                    Container.getInstance().register(componentClass, serviceInstance);
+                for (int i = 0; i < requires.dependsOn().length; i++) {
+                    Object dependencyInstance = Container.getInstance().getByName(requires.dependsOn()[i].getName());
+                    parameters[i] = dependencyInstance;
                 }
+
+                Constructor<?> constructor = componentClass.getDeclaredConstructor(getParameterTypes(requires.dependsOn()));
+                Object serviceInstance = constructor.newInstance(parameters);
+                Container.getInstance().register(componentClass, serviceInstance);
             } else {
                 Object instance = componentClass.getDeclaredConstructor().newInstance();
                 Container.getInstance().register(componentClass, instance);
