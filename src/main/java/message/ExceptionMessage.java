@@ -21,4 +21,6 @@ public class ExceptionMessage {
     public static final String ALREADY_USED_BOARD_NAME = "이미 사용중인 게시판 이름입니다.";
 
     public static final String BAD_REQUEST = "잘못된 요청입니다.";
+    public static final String UNSUPPORTED_HTTP_METHOD = "지원하지 않는 http 메서드입니다.";
+    public static final String NO_MATCHING_PATH = "지원하지 않는 path 입니다.";
 }

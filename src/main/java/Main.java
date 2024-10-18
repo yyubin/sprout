@@ -22,25 +22,18 @@ public class Main {
         Container.getInstance().scan(PackageName.service.getPackageName());
 
 
-//        InMemoryMemberRepository memberRepository = container.get(InMemoryMemberRepository.class);
-//        MemberService memberService = new MemberService(memberRepository);
-//
-//        container.register(MemberService.class, memberService);
+        System.out.println("HTTP Request 형식으로 입력해주세요: ");
 
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        StringBuilder rawRequest = new StringBuilder();
+        String line;
 
+        while (!(line = reader.readLine()).isEmpty()) {
+            rawRequest.append(line).append("\n");
+        }
 
-//        System.out.println("HTTP Request 형식으로 입력해주세요: ");
-//
-//        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-//        StringBuilder rawRequest = new StringBuilder();
-//        String line;
-//
-//        while (!(line = reader.readLine()).isEmpty()) {
-//            rawRequest.append(line).append("\n");
-//        }
-//
-//        RequestHandler handler = new RequestHandler(new ExampleController());
-//        handler.handleRequest(rawRequest.toString());
+        RequestHandler handler = new RequestHandler(new ExampleController());
+        handler.handleRequest(rawRequest.toString());
     }
 
 }
