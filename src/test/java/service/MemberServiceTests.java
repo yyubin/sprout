@@ -14,6 +14,7 @@ import repository.InMemoryMemberRepository;
 import util.PasswordUtil;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,12 +25,17 @@ public class MemberServiceTests {
 
     @BeforeEach
     public void setUp() throws Exception {
-        Container container = new Container();
-        container.scan("repository");
-        container.scan("util");
 
-        InMemoryMemberRepository memberRepository = container.get(InMemoryMemberRepository.class);
-        memberService = new MemberService(memberRepository);
+        Container.getInstance().scan("repository");
+        Container.getInstance().scan("util");
+        Container.getInstance().scan("service");
+
+        memberService = Container.getInstance().get(MemberService.class);
+//        InMemoryMemberRepository memberRepository = container.get(InMemoryMemberRepository.class);
+//        memberService = new MemberService(memberRepository);
+
+        Collection<Object> registeredComponents = Container.getInstance().getComponents();
+        registeredComponents.forEach(component -> System.out.println(component.getClass().getName()));
     }
 
     @Test
