@@ -26,9 +26,9 @@ public class MemberAuthService {
     private final RedisSessionManager redisSessionManager;
     private final int sessionTimeout = 3600; // 1시간
 
-    public MemberAuthService() {
-        this.memberService = Container.getInstance().get(MemberService.class);
-        this.redisSessionManager = Container.getInstance().get(RedisSessionManager.class);
+    public MemberAuthService(MemberService memberService, RedisSessionManager redisSessionManager) {
+        this.memberService = memberService;
+        this.redisSessionManager = redisSessionManager;
     }
 
     public RedisSessionManager getRedisSessionManager() {

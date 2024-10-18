@@ -1,5 +1,7 @@
 package service;
 
+import com.sun.tools.javac.Main;
+import config.Container;
 import domain.Post;
 import domain.grade.MemberGrade;
 import dto.*;
@@ -24,15 +26,22 @@ public class PostServiceTests {
     private MemberService memberService;
 
     @BeforeEach
-    void setUp() {
-        InMemoryPostRepository inMemoryPostRepository = new InMemoryPostRepository();
-        InMemoryBoardRepository inMemoryBoardRepository = new InMemoryBoardRepository();
-        InMemoryMemberRepository inMemoryMemberRepository = new InMemoryMemberRepository();
-        RedisSessionManager redisSessionManager = new RedisSessionManager();
-        memberService = new MemberService(inMemoryMemberRepository);
+    void setUp() throws Exception {
+        Container container = Container.getInstance();
+        container.scan("repository");
+        container.scan("util");
+        container.scan("service");
+        container.scan("controller");
+
+        InMemoryMemberRepository memberRepository = container.get(InMemoryMemberRepository.class);
+        InMemoryBoardRepository boardRepository = container.get(InMemoryBoardRepository.class);
+        InMemoryPostRepository postRepository = container.get(InMemoryPostRepository.class);
+        RedisSessionManager redisSessionManager = container.get(RedisSessionManager.class);
+
+        memberService = new MemberService(memberRepository);
         memberAuthService = new MemberAuthService(memberService, redisSessionManager);
-        boardService = new BoardService(inMemoryBoardRepository, memberAuthService);
-        postService = new PostService(inMemoryPostRepository, memberService, memberAuthService, boardService);
+        boardService = new BoardService(boardRepository, memberAuthService);
+        postService = new PostService(postRepository, memberService, memberAuthService, boardService);
     }
 
     @Test

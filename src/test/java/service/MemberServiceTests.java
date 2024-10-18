@@ -1,5 +1,7 @@
 package service;
 
+import com.sun.tools.javac.Main;
+import config.Container;
 import domain.Member;
 import dto.MemberRegisterDTO;
 import dto.MemberUpdateDTO;
@@ -21,8 +23,12 @@ public class MemberServiceTests {
     private MemberService memberService;
 
     @BeforeEach
-    public void setUp() {
-        InMemoryMemberRepository memberRepository = new InMemoryMemberRepository();
+    public void setUp() throws Exception {
+        Container container = new Container();
+        container.scan("repository");
+        container.scan("util");
+
+        InMemoryMemberRepository memberRepository = container.get(InMemoryMemberRepository.class);
         memberService = new MemberService(memberRepository);
     }
 

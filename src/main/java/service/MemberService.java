@@ -20,8 +20,8 @@ import java.util.Optional;
 public class MemberService {
     private final InMemoryMemberRepository memberRepository;
 
-    public MemberService() {
-        this.memberRepository = Container.getInstance().get(InMemoryMemberRepository.class);
+    public MemberService(InMemoryMemberRepository memberRepository) {
+        this.memberRepository = memberRepository;
     }
 
     public void registerMember(MemberRegisterDTO memberRegisterDTO) throws MemberIdAlreadyExistsException, MemberEmailAlreadyExistsException {

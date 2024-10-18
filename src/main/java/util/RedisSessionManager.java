@@ -1,7 +1,9 @@
 package util;
 
+import config.annotations.Component;
 import redis.clients.jedis.Jedis;
 
+@Component
 public class RedisSessionManager {
 
     private final Jedis jedis;

@@ -29,11 +29,11 @@ public class PostService {
     private final MemberAuthService memberAuthService;
     private final BoardService boardService;
 
-    public PostService() {
-        this.postRepository = Container.getInstance().get(InMemoryPostRepository.class);
-        this.memberService = Container.getInstance().get(MemberService.class);
-        this.memberAuthService = Container.getInstance().get(MemberAuthService.class);
-        this.boardService = Container.getInstance().get(BoardService.class);
+    public PostService(InMemoryPostRepository postRepository, MemberService memberService, MemberAuthService memberAuthService, BoardService boardService) {
+        this.postRepository = postRepository;
+        this.memberService = memberService;
+        this.memberAuthService = memberAuthService;
+        this.boardService = boardService;
     }
 
     public void createPost(PostRegisterDTO postRegisterDTO) throws UnauthorizedAccessException, MemberNotFoundException, NotFoundBoardWithBoardIdException {

@@ -34,13 +34,18 @@ public class BoardServiceTests {
     @BeforeEach
     void setUp() throws Exception {
         Container container = Container.getInstance();
-        container.scan("controller");
         container.scan("repository");
+        container.scan("util");
         container.scan("service");
+        container.scan("controller");
 
-        memberAuthService = new MemberAuthService();
-        memberService = new MemberService();
-        boardService = new BoardService();
+        InMemoryMemberRepository memberRepository = container.get(InMemoryMemberRepository.class);
+        InMemoryBoardRepository boardRepository = container.get(InMemoryBoardRepository.class);
+        RedisSessionManager redisSessionManager = container.get(RedisSessionManager.class);
+
+        memberService = new MemberService(memberRepository);
+        memberAuthService = new MemberAuthService(memberService, redisSessionManager);
+        boardService = new BoardService(boardRepository, memberAuthService);
     }
 
     @Test

@@ -1,5 +1,7 @@
 package service;
 
+import com.sun.tools.javac.Main;
+import config.Container;
 import domain.Member;
 import dto.MemberLoginDTO;
 import dto.MemberRegisterDTO;
@@ -7,6 +9,7 @@ import exception.InvalidCredentialsException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import redis.clients.jedis.Jedis;
+import repository.InMemoryBoardRepository;
 import repository.InMemoryMemberRepository;
 import util.RedisSessionManager;
 import util.Session;
@@ -21,10 +24,18 @@ public class MemberAuthServiceTests {
     private MemberService memberService;
 
     @BeforeEach
-    public void setup() {
-        InMemoryMemberRepository memberRepository = new InMemoryMemberRepository();
+    public void setup() throws Exception {
+        Container container = Container.getInstance();
+        container.scan("repository");
+        container.scan("util");
+        container.scan("service");
+        container.scan("controller");
+
+        InMemoryMemberRepository memberRepository = container.get(InMemoryMemberRepository.class);
+        InMemoryBoardRepository boardRepository = container.get(InMemoryBoardRepository.class);
+        RedisSessionManager redisSessionManager = container.get(RedisSessionManager.class);
+
         memberService = new MemberService(memberRepository);
-        RedisSessionManager redisSessionManager = new RedisSessionManager();
         memberAuthService = new MemberAuthService(memberService, redisSessionManager);
     }
 

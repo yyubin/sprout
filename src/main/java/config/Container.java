@@ -32,5 +32,7 @@ public class Container {
         for (Object component: componentScanner.getComponents()) {
             register(component.getClass(), component);
         }
+
+        System.out.println(objectMap.size());
     }
 }

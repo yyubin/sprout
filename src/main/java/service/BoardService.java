@@ -22,9 +22,9 @@ public class BoardService {
     private final InMemoryBoardRepository boardRepository;
     private final MemberAuthService memberAuthService;
 
-    public BoardService() {
-        this.boardRepository = Container.getInstance().get(InMemoryBoardRepository.class);
-        this.memberAuthService = Container.getInstance().get(MemberAuthService.class);
+    public BoardService(InMemoryBoardRepository boardRepository, MemberAuthService memberAuthService) {
+        this.boardRepository = boardRepository;
+        this.memberAuthService = memberAuthService;
     }
 
     public void createBoard(BoardRegisterDTO boardRegisterDTO) throws UnauthorizedAccessException, BoardNameAlreadyExistsException {

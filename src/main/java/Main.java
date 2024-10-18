@@ -5,6 +5,8 @@ import exception.BadRequestException;
 import http.request.HttpRequest;
 import http.request.HttpRequestParser;
 import http.request.RequestHandler;
+import repository.InMemoryMemberRepository;
+import service.MemberService;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -15,10 +17,15 @@ public class Main {
     public static void main(String[] args) throws Exception {
 
         Container container = new Container();
-        container.scan("config");
-        container.scan("controller");
         container.scan("repository");
-        container.scan("service");
+        container.scan("util");
+
+        InMemoryMemberRepository memberRepository = container.get(InMemoryMemberRepository.class);
+        MemberService memberService = new MemberService(memberRepository);
+
+        container.register(MemberService.class, memberService);
+
+
 
 //        System.out.println("HTTP Request 형식으로 입력해주세요: ");
 //
