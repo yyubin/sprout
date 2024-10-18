@@ -3,6 +3,7 @@ package repository;
 import config.annotations.Repository;
 import domain.Board;
 import exception.NotFoundBoardWithBoardIdException;
+import exception.NotFoundBoardWithBoardNameException;
 import message.ExceptionMessage;
 
 import java.util.ArrayList;
@@ -49,6 +50,14 @@ public class InMemoryBoardRepository {
 
     public void delete(Long boardId) {
         boards.get(findBoardIndex(boardId)).setDeleted(true);
+    }
+
+    public Long findByName(String boardName) {
+        return boards.stream()
+                .filter(board -> board.getBoardName().equals(boardName) && !board.isDeleted())
+                .findFirst()
+                .map(Board::getBoardId)
+                .orElseThrow(() -> new NotFoundBoardWithBoardNameException(ExceptionMessage.NOT_FOUND_BOARD_WITH_BOARD_NAME));
     }
 
     public boolean existByName(String boardName) {

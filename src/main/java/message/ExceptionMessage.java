@@ -13,6 +13,7 @@ public class ExceptionMessage {
 
     public static final String NOT_FOUND_POST_WITH_POST_ID = "글 번호에 해당하는 글이 없습니다! 글번호 :";
     public static final String NOT_FOUND_BOARD_WITH_BOARD_ID = "게시판 번호에 해당하는 게신판을 찾을 수 없습니다! 게시판 번호 : ";
+    public static final String NOT_FOUND_BOARD_WITH_BOARD_NAME = "유효하지 않은 게시판 이름 입니다.";
 
     public static final String UNAUTHORIZED_CREATE_BOARD = "게시판 생성 권한이 없습니다.";
     public static final String UNAUTHORIZED_CREATE_POST = "게시글 생성 권한이 없습니다.";

@@ -9,4 +9,8 @@ public class PrintResultMessage {
     public static final String ACCOUNTS_LOGOUT_SUCCESS = "로그아웃에 성공했습니다.";
     public static final String ACCOUNTS_MEMBER_EDIT = "회원 수정이 완료되었습니다.";
     public static final String ACCOUNTS_DELETE_SUCCESS = "회원 탈퇴가 완료되었습니다.";
+
+    public static final String BOARD_CREATE_SUCCESS = "게시판 생성이 성공하였습니다.";
+    public static final String BOARD_UPDATE_SUCCESS = "게시판 수정이 성공하였습니다.";
+    public static final String BOARD_DELETE_SUCCESS = "게시판 삭제가 성공하였습니다.";
 }
