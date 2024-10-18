@@ -57,7 +57,11 @@ public class RequestHandler {
                     try {
                         String path = (String) mappingClass.getMethod(Constants.path.getConstantsName()).invoke(method.getAnnotation(mappingClass));
                         if (path.equals(httpRequest.getPath())) {
-                            method.invoke(controller, httpRequest);
+                            if (method.getParameterCount() == 0) {
+                                method.invoke(controller);
+                            } else {
+                                method.invoke(controller, httpRequest);
+                            }
                             return;
                         }
                     } catch (NoSuchMethodException | IllegalAccessException e) {
