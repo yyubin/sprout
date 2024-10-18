@@ -1,5 +1,6 @@
 package config;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,13 +27,28 @@ public class Container {
         return clazz.cast(objectMap.get(clazz));
     }
 
+    public Object getByName(String className) {
+        for (Class<?> clazz : objectMap.keySet()) {
+            if (clazz.getName().equals(className)) {
+                return objectMap.get(clazz);
+            }
+        }
+        return null;
+    }
+
     public void scan(String packageName) throws Exception {
         ComponentScanner componentScanner = new ComponentScanner();
         componentScanner.scan(packageName);
         for (Object component: componentScanner.getComponents()) {
+            System.out.println(component.getClass().getName());
             register(component.getClass(), component);
         }
 
         System.out.println(objectMap.size());
+        System.out.println();
+    }
+
+    public Collection<Object> getComponents() {
+        return objectMap.values();
     }
 }

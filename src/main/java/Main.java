@@ -16,10 +16,9 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
 
-        Container container = new Container();
-        container.scan("repository");
-        container.scan("util");
-        container.scan("service");
+        Container.getInstance().scan("repository");
+        Container.getInstance().scan("util");
+        Container.getInstance().scan("service");
 
 
 //        InMemoryMemberRepository memberRepository = container.get(InMemoryMemberRepository.class);

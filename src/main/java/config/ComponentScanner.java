@@ -33,13 +33,15 @@ public class ComponentScanner {
             Requires requires = serviceClass.getAnnotation(Requires.class);
             if (requires != null) {
                 Object[] parameters = new Object[requires.dependsOn().length];
+
                 for (int i = 0; i < requires.dependsOn().length; i++) {
-                    parameters[i] = Container.getInstance().get(requires.dependsOn()[i]);
+                    Object dependencyInstance = Container.getInstance().getByName(requires.dependsOn()[i].getName());
+                    parameters[i] = dependencyInstance;
                 }
 
                 Constructor<?> constructor = serviceClass.getDeclaredConstructor(getParameterTypes(requires.dependsOn()));
                 Object serviceInstance = constructor.newInstance(parameters);
-                components.add(serviceInstance);
+                Container.getInstance().register(serviceClass, serviceInstance);
             }
         }
 
