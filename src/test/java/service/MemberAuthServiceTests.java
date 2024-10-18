@@ -28,13 +28,8 @@ public class MemberAuthServiceTests {
         Container.getInstance().scan("repository");
         Container.getInstance().scan("util");
         Container.getInstance().scan("service");
-
-        InMemoryMemberRepository memberRepository = Container.getInstance().get(InMemoryMemberRepository.class);
-        InMemoryBoardRepository boardRepository = Container.getInstance().get(InMemoryBoardRepository.class);
-        RedisSessionManager redisSessionManager = Container.getInstance().get(RedisSessionManager.class);
-
-        memberService = new MemberService(memberRepository);
-        memberAuthService = new MemberAuthService(memberService, redisSessionManager);
+        memberService = Container.getInstance().get(MemberService.class);
+        memberAuthService = Container.getInstance().get(MemberAuthService.class);
     }
 
     @Test

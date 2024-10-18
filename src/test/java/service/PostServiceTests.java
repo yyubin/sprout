@@ -31,15 +31,10 @@ public class PostServiceTests {
         Container.getInstance().scan("util");
         Container.getInstance().scan("service");
 
-        InMemoryMemberRepository memberRepository = Container.getInstance().get(InMemoryMemberRepository.class);
-        InMemoryBoardRepository boardRepository = Container.getInstance().get(InMemoryBoardRepository.class);
-        InMemoryPostRepository postRepository = Container.getInstance().get(InMemoryPostRepository.class);
-        RedisSessionManager redisSessionManager = Container.getInstance().get(RedisSessionManager.class);
-
-        memberService = new MemberService(memberRepository);
-        memberAuthService = new MemberAuthService(memberService, redisSessionManager);
-        boardService = new BoardService(boardRepository, memberAuthService);
-        postService = new PostService(postRepository, memberService, memberAuthService, boardService);
+        memberService = Container.getInstance().get(MemberService.class);
+        memberAuthService = Container.getInstance().get(MemberAuthService.class);
+        boardService = Container.getInstance().get(BoardService.class);
+        postService = Container.getInstance().get(PostService.class);
     }
 
     @Test

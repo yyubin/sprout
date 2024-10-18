@@ -31,11 +31,6 @@ public class MemberServiceTests {
         Container.getInstance().scan("service");
 
         memberService = Container.getInstance().get(MemberService.class);
-//        InMemoryMemberRepository memberRepository = container.get(InMemoryMemberRepository.class);
-//        memberService = new MemberService(memberRepository);
-
-        Collection<Object> registeredComponents = Container.getInstance().getComponents();
-        registeredComponents.forEach(component -> System.out.println(component.getClass().getName()));
     }
 
     @Test
