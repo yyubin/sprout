@@ -1,6 +1,7 @@
 package service;
 
 import config.Container;
+import config.annotations.Requires;
 import config.annotations.Service;
 import domain.Member;
 import domain.grade.MemberGrade;
@@ -19,7 +20,8 @@ import util.Session;
 import java.util.Optional;
 import java.util.UUID;
 
-@Service
+@Service(value = 1)
+@Requires(dependsOn = {MemberService.class, RedisSessionManager.class})
 public class MemberAuthService {
 
     private final MemberService memberService;

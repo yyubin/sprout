@@ -19,11 +19,13 @@ public class Main {
         Container container = new Container();
         container.scan("repository");
         container.scan("util");
+        container.scan("service");
 
-        InMemoryMemberRepository memberRepository = container.get(InMemoryMemberRepository.class);
-        MemberService memberService = new MemberService(memberRepository);
 
-        container.register(MemberService.class, memberService);
+//        InMemoryMemberRepository memberRepository = container.get(InMemoryMemberRepository.class);
+//        MemberService memberService = new MemberService(memberRepository);
+//
+//        container.register(MemberService.class, memberService);
 
 
 

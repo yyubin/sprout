@@ -1,6 +1,7 @@
 package service;
 
 import config.Container;
+import config.annotations.Requires;
 import config.annotations.Service;
 import domain.Member;
 import dto.MemberRegisterDTO;
@@ -16,7 +17,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-@Service
+@Service(value = 0)
+@Requires(dependsOn = {InMemoryMemberRepository.class})
 public class MemberService {
     private final InMemoryMemberRepository memberRepository;
 
