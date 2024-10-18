@@ -9,6 +9,10 @@ import http.response.HttpResponse;
 @Requires(dependsOn = {})
 public class PrintHandler {
 
+    public void printCustomMessage(String message) {
+        System.out.println(message);
+    }
+
     public <T> void printSuccessWithResponseCodeAndCustomMessage(HttpResponse<T> response) {
         System.out.println(response.getResponseCode().getCode() + " " + response.getDescription());
     }

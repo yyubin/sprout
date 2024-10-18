@@ -7,27 +7,37 @@ import controller.annotations.DeleteMapping;
 import controller.annotations.GetMapping;
 import controller.annotations.PostMapping;
 import controller.annotations.PutMapping;
+import domain.Member;
+import dto.MemberLoginDTO;
 import dto.MemberRegisterDTO;
+import dto.MemberUpdateDTO;
+import exception.MemberNotFoundException;
 import http.request.HttpRequest;
 import http.response.HttpResponse;
 import http.response.ResponseCode;
+import javassist.NotFoundException;
+import message.ExceptionMessage;
 import message.PrintResultMessage;
 
+import service.MemberAuthService;
 import service.MemberService;
 import view.PrintHandler;
 
 import java.time.LocalDate;
 import java.util.Map;
+import java.util.Optional;
 
 @Controller
-@Requires(dependsOn = {MemberService.class, PrintHandler.class})
+@Requires(dependsOn = {MemberService.class, MemberAuthService.class, PrintHandler.class})
 public class MemberController implements ControllerInterface {
 
     private final MemberService memberService;
+    private final MemberAuthService memberAuthService;
     private final PrintHandler printHandler;
 
-    public MemberController(MemberService memberService, PrintHandler printHandler) {
+    public MemberController(MemberService memberService, MemberAuthService memberAuthService, PrintHandler printHandler) {
         this.memberService = memberService;
+        this.memberAuthService = memberAuthService;
         this.printHandler = printHandler;
     }
 
@@ -50,29 +60,49 @@ public class MemberController implements ControllerInterface {
         printHandler.printSuccessWithResponseCodeAndCustomMessage(response);
     }
 
-    @PostMapping(path = "/accounts/signin")
-    public void signin() {
-
-    }
-
-    @GetMapping(path = "/accounts/signout")
-    public void signout() {
-
-    }
-
     @GetMapping(path = "/accounts/detail")
-    public void detail() {
-
+    public void detail(HttpRequest<Map<String, Object>> request) throws RuntimeException {
+        String id = request.getQueryParams().get("accountId");
+        Optional<Member> memberById = memberService.getMemberById(id);
+        if (memberById.isPresent()) {
+            String message = id + " 회원" + "\n" +
+                    "계정 : " + memberById.get().getName() + "\n" +
+                    "이메일 : " + memberById.get().getEmail() + "\n" +
+                    "가입일 : " + memberById.get().getJoinDate();
+            printHandler.printCustomMessage(message);
+            return;
+        }
+        throw new MemberNotFoundException(ExceptionMessage.MEMBER_NOT_FOUND);
     }
 
     @PutMapping(path = "/accounts/edit")
-    public void edit() {
-
+    public void edit(HttpRequest<Map<String, Object>> request) throws RuntimeException {
+        String id = request.getQueryParams().get("accountId");
+        Map<String, Object> body = request.getBody();
+        MemberUpdateDTO memberUpdateDTO = new MemberUpdateDTO(
+                (String) body.get("email"),
+                (String) body.get("password")
+        );
+        memberService.updateMember(id, memberUpdateDTO);
+        HttpResponse<?> response = new HttpResponse<>(
+                PrintResultMessage.ACCOUNTS_MEMBER_EDIT,
+                ResponseCode.SUCCESS,
+                null
+        );
+        printHandler.printSuccessWithResponseCodeAndCustomMessage(response);
     }
 
     @DeleteMapping(path = "/accounts/remove")
-    public void remove() {
-
+    public void remove(HttpRequest<Map<String, Object>> request) {
+        String id = request.getQueryParams().get("accountId");
+        memberAuthService.logout();
+        memberService.deleteMember(id);
+        HttpResponse<?> response = new HttpResponse<>(
+                PrintResultMessage.ACCOUNTS_DELETE_SUCCESS,
+                ResponseCode.SUCCESS,
+                null
+        );
+        printHandler.printSuccessWithResponseCodeAndCustomMessage(response);
     }
 
 }

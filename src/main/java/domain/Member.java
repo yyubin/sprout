@@ -55,6 +55,10 @@ public class Member {
         return encryptedPassword;
     }
 
+    public LocalDate getJoinDate() {
+        return joinDate;
+    }
+
     public void setEmail(String email) {
         this.email = email;
     }
