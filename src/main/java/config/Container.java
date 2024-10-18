@@ -39,9 +39,6 @@ public class Container {
     public void scan(String packageName) throws Exception {
         ComponentScanner componentScanner = new ComponentScanner();
         componentScanner.scan(packageName);
-        for (Object component: componentScanner.getComponents()) {
-            register(component.getClass(), component);
-        }
     }
 
     public Collection<Object> getComponents() {
