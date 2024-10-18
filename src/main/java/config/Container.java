@@ -43,9 +43,6 @@ public class Container {
             System.out.println(component.getClass().getName());
             register(component.getClass(), component);
         }
-
-        System.out.println(objectMap.size());
-        System.out.println();
     }
 
     public Collection<Object> getComponents() {
