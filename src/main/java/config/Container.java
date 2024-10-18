@@ -8,7 +8,7 @@ public class Container {
     private static Container instance;
     private Map<Class<?>, Object> objectMap;
 
-    public Container() {
+    private Container() {
         objectMap = new HashMap<>();
     }
 
@@ -40,7 +40,6 @@ public class Container {
         ComponentScanner componentScanner = new ComponentScanner();
         componentScanner.scan(packageName);
         for (Object component: componentScanner.getComponents()) {
-            System.out.println(component.getClass().getName());
             register(component.getClass(), component);
         }
     }

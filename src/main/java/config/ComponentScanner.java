@@ -13,15 +13,45 @@ public class ComponentScanner {
     private List<Object> components = new ArrayList<>();
 
     public void scan(String basePackage) throws Exception {
+        if (PackageName.repository.getPackageName().equals(basePackage)) {
+            scanRepositoryPackage(basePackage);
+            return;
+        }
+
+        if (PackageName.util.getPackageName().equals(basePackage)) {
+            scanUtilPackage(basePackage);
+            return;
+        }
+
+        if (PackageName.controller.getPackageName().equals(basePackage)) {
+            scanControllerPackage(basePackage);
+            return;
+        }
+
+        if (PackageName.service.getPackageName().equals(basePackage)) {
+            scanServicePackage(basePackage);
+            return;
+        }
+    }
+
+    public void scanControllerPackage(String basePackage) throws Exception {
         Reflections reflections = new Reflections(basePackage);
-        Set<Class<?>> scanComponents = new HashSet<>();
-
-        scanComponents.addAll(reflections.getTypesAnnotatedWith(Repository.class));
-        scanComponents.addAll(reflections.getTypesAnnotatedWith(Component.class));
-
+        Set<Class<?>> scanComponents = new HashSet<>(reflections.getTypesAnnotatedWith(Controller.class));
         for (Class<?> componentClass : scanComponents) {
             components.add(componentClass.getDeclaredConstructor().newInstance());
         }
+    }
+
+    public void scanRepositoryPackage(String basePackage) throws Exception {
+        Reflections reflections = new Reflections(basePackage);
+        Set<Class<?>> scanComponents = new HashSet<>(reflections.getTypesAnnotatedWith(Repository.class));
+        for (Class<?> componentClass : scanComponents) {
+            components.add(componentClass.getDeclaredConstructor().newInstance());
+        }
+    }
+
+    public void scanServicePackage(String basePackage) throws Exception {
+        Reflections reflections = new Reflections(basePackage);
         List<Class<?>> sortedServiceComponents = reflections.getTypesAnnotatedWith(Service.class).stream()
                 .sorted(Comparator.comparingInt(c -> {
                     Service priority = c.getAnnotation(Service.class);
@@ -44,15 +74,14 @@ public class ComponentScanner {
                 Container.getInstance().register(serviceClass, serviceInstance);
             }
         }
+    }
 
-        scanComponents.clear();
-        scanComponents.addAll(reflections.getTypesAnnotatedWith(Controller.class));
-
+    public void scanUtilPackage(String basePackage) throws Exception {
+        Reflections reflections = new Reflections(basePackage);
+        Set<Class<?>> scanComponents = new HashSet<>(reflections.getTypesAnnotatedWith(Component.class));
         for (Class<?> componentClass : scanComponents) {
             components.add(componentClass.getDeclaredConstructor().newInstance());
         }
-
-
     }
 
     private Class<?>[] getParameterTypes(Class<?>[] classes) {

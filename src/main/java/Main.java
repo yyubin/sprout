@@ -1,5 +1,6 @@
 import com.fasterxml.jackson.core.JsonProcessingException;
 import config.Container;
+import config.PackageName;
 import controller.ExampleController;
 import exception.BadRequestException;
 import http.request.HttpRequest;
@@ -16,9 +17,9 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
 
-        Container.getInstance().scan("repository");
-        Container.getInstance().scan("util");
-        Container.getInstance().scan("service");
+        Container.getInstance().scan(PackageName.repository.getPackageName());
+        Container.getInstance().scan(PackageName.util.getPackageName());
+        Container.getInstance().scan(PackageName.service.getPackageName());
 
 
 //        InMemoryMemberRepository memberRepository = container.get(InMemoryMemberRepository.class);

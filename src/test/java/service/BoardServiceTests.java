@@ -2,6 +2,7 @@ package service;
 
 import com.sun.tools.javac.Main;
 import config.Container;
+import config.PackageName;
 import domain.Board;
 import domain.Member;
 import domain.grade.MemberGrade;
@@ -33,9 +34,9 @@ public class BoardServiceTests {
 
     @BeforeEach
     void setUp() throws Exception {
-        Container.getInstance().scan("repository");
-        Container.getInstance().scan("util");
-        Container.getInstance().scan("service");
+        Container.getInstance().scan(PackageName.repository.getPackageName());
+        Container.getInstance().scan(PackageName.util.getPackageName());
+        Container.getInstance().scan(PackageName.service.getPackageName());
 
         memberService = Container.getInstance().get(MemberService.class);
         memberAuthService = Container.getInstance().get(MemberAuthService.class);
