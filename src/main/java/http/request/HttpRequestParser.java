@@ -1,6 +1,7 @@
 package http.request;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import exception.BadRequestException;
 import http.response.ResponseCode;
@@ -13,14 +14,8 @@ public class HttpRequestParser {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    public static <T> HttpRequest<?> parse(String rawRequest, Class<T> bodyType) throws IllegalAccessError, JsonProcessingException {
-        // GET /example?id=yubin HTTP/1.1
-
-        // POST /example HTTP/1.1
-        // {"id": "id", "password": "pwd"} >> json
-
+    public static HttpRequest<Map<String, Object>> parse(String rawRequest) throws IllegalAccessError, JsonProcessingException {
         String[] requestLines = rawRequest.split("\n");
-        System.out.println(requestLines.length);
         String[] requestParts = requestLines[0].split(" ");
 
         if (requestParts.length < 2) {
@@ -30,7 +25,7 @@ public class HttpRequestParser {
         String method = requestParts[0].toUpperCase();
         String path = requestParts[1];
 
-        T body = null;
+        Map<String, Object> body = null;
         Map<String, String> queryParams = new HashMap<>();
 
         String[] pathParts = path.split("\\?");
@@ -49,7 +44,7 @@ public class HttpRequestParser {
         if (HttpMethod.POST.getMethod().equals(method) || HttpMethod.PUT.getMethod().equals(method) || HttpMethod.DELETE.getMethod().equals(method)) {
             if (requestLines.length > 1) {
                 String jsonBody = requestLines[1].trim();
-                body = objectMapper.readValue(jsonBody, bodyType);
+                body = objectMapper.readValue(jsonBody, new TypeReference<Map<String, Object>>() {});
             }
         }
 

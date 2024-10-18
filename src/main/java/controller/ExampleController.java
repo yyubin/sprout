@@ -1,11 +1,12 @@
 package controller;
 
+import config.annotations.Controller;
 import controller.annotations.GetMapping;
 import controller.annotations.PostMapping;
 import http.request.HttpRequest;
 
-@config.annotations.Controller
-public class ExampleController implements Controller {
+@Controller
+public class ExampleController implements ControllerInterface {
 
     @GetMapping(path = "/example")
     public void getExample(HttpRequest<?> request) {

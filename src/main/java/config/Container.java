@@ -1,8 +1,8 @@
 package config;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import controller.ControllerInterface;
+
+import java.util.*;
 
 public class Container {
     private static Container instance;
@@ -39,6 +39,21 @@ public class Container {
     public void scan(String packageName) throws Exception {
         ComponentScanner componentScanner = new ComponentScanner();
         componentScanner.scan(packageName);
+    }
+
+    public List<ControllerInterface> scanControllers() {
+        List<ControllerInterface> controllers = new ArrayList<>();
+
+        for (Map.Entry<Class<?>, Object> entry : objectMap.entrySet()) {
+            Class<?> clazz = entry.getKey();
+            Object instance = entry.getValue();
+
+            if (ControllerInterface.class.isAssignableFrom(clazz)) {
+                controllers.add((ControllerInterface) instance);
+            }
+        }
+
+        return controllers;
     }
 
     public Collection<Object> getComponents() {

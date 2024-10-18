@@ -8,7 +8,9 @@ public enum PackageName {
     repository("repository"),
     service("service"),
     controller("controller"),
-    view("view");
+    view("view"),
+    http_request("http.request")
+    ;
 
     private String packageName;
 

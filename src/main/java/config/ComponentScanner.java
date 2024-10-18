@@ -50,6 +50,10 @@ public class ComponentScanner {
 
 
     public void scan(String basePackage) throws Exception {
+        if (PackageName.http_request.getPackageName().equals(basePackage)) {
+            scan(basePackage, Component.class, false, false);
+            return;
+        }
         if (PackageName.repository.getPackageName().equals(basePackage)) {
             scan(basePackage, Repository.class, false, false);
             return;
@@ -59,7 +63,7 @@ public class ComponentScanner {
             return;
         }
         if (PackageName.controller.getPackageName().equals(basePackage)) {
-            scan(basePackage, Controller.class, false, false);
+            scan(basePackage, Controller.class, false, true);
             return;
         }
         if (PackageName.service.getPackageName().equals(basePackage)) {
