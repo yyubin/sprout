@@ -2,6 +2,7 @@ package view;
 
 
 import config.annotations.Component;
+import config.annotations.Priority;
 import config.annotations.Requires;
 import http.response.HttpResponse;
 
@@ -9,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 @Component
+@Priority(value = 0)
 @Requires(dependsOn = {})
 public class PrintHandler {
 

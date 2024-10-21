@@ -1,6 +1,7 @@
 package view;
 
 import config.annotations.Component;
+import config.annotations.Priority;
 import config.annotations.Requires;
 import http.request.RequestHandler;
 import message.ExceptionMessage;
@@ -12,24 +13,27 @@ import java.io.InputStreamReader;
 import java.util.Scanner;
 
 @Component
-@Requires(dependsOn = {RequestHandler.class})
+@Priority(value = 1)
+@Requires(dependsOn = {RequestHandler.class, PrintHandler.class})
 public class InputHandler {
 
     private final RequestHandler requestHandler;
+    private final PrintHandler printHandler;
 
-    public InputHandler(RequestHandler requestHandler) {
+    public InputHandler(RequestHandler requestHandler, PrintHandler printHandler) {
         this.requestHandler = requestHandler;
+        this.printHandler = printHandler;
     }
 
     public void startInputLoop() {
-        System.out.println(InputCautionMessage.EXIT_GUIDE_MESSAGE);
+        printHandler.printCustomMessage(InputCautionMessage.EXIT_GUIDE_MESSAGE);
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         StringBuilder rawRequest = new StringBuilder();
         String line;
 
         try {
             while (true) {
-                System.out.println(InputCautionMessage.CAUTION_COMMAND_FOR_HTTP);
+                printHandler.printCustomMessage(InputCautionMessage.CAUTION_COMMAND_FOR_HTTP);
                 rawRequest.setLength(0);
 
                 while (!(line = reader.readLine()).isEmpty()){
