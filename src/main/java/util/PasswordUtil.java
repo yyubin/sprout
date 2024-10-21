@@ -1,7 +1,11 @@
 package util;
 
 public interface PasswordUtil {
-    String encryptPassword(String rawPassword);
+    static String encryptPassword(String rawPassword) {
+        return null;
+    }
 
-    boolean matchPassword(String rawPassword, String hashedPassword);
+    static boolean matchPassword(String rawPassword, String hashedPassword) {
+        return false;
+    }
 }

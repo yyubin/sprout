@@ -2,7 +2,7 @@ package util;
 
 import org.mindrot.jbcrypt.BCrypt;
 
-public class BCryptPasswordUtil {
+public class BCryptPasswordUtil implements PasswordUtil{
 
     public static String encryptPassword(String rawPassword) {
         return BCrypt.hashpw(rawPassword, BCrypt.gensalt());
