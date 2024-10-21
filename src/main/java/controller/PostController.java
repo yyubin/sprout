@@ -68,10 +68,9 @@ public class PostController implements ControllerInterface{
     public void editPost(HttpRequest<Map<String, Object>> request) {
         Map<String, Object> body = request.getBody();
         Map<String, String> queryParams = request.getQueryParams();
-        Long postId = Long.valueOf(queryParams.get("postId"));
         PostUpdateDTO updateDTO = new PostUpdateDTO(
-                postId,
-                Long.valueOf((String) body.get("boardId")),
+                Long.valueOf(queryParams.get("postId")),
+                Long.valueOf(queryParams.get("boardId")),
                 (String) body.get("postName"),
                 (String) body.get("postContent")
         );

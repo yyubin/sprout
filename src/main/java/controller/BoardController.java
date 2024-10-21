@@ -113,9 +113,9 @@ public class BoardController implements ControllerInterface{
         List<Map<String, Object>> postSummaryList = postList.stream()
                 .map(post -> {
                     Map<String, Object> postSummary = new HashMap<>();
-                    postSummary.put("postId", post.getPostId());
-                    postSummary.put("postName", post.getPostName());
-                    postSummary.put("postDate", post.getCreatedDate());
+                    postSummary.put("게시글 번호", post.getPostId());
+                    postSummary.put("게시글 이름", post.getPostName());
+                    postSummary.put("작성일", post.getCreatedDate());
                     return postSummary;
                 })
                 .toList();
