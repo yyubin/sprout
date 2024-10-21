@@ -15,6 +15,7 @@ import exception.NotFoundPostWithPostIdException;
 import exception.UnauthorizedAccessException;
 import message.ExceptionMessage;
 import repository.InMemoryPostRepository;
+import repository.interfaces.PostRepository;
 import util.Session;
 
 import java.time.LocalDate;
@@ -26,7 +27,7 @@ import java.util.Optional;
 @Requires(dependsOn = {InMemoryPostRepository.class, MemberService.class, MemberAuthService.class, BoardService.class})
 public class PostService {
 
-    private final InMemoryPostRepository postRepository;
+    private final PostRepository postRepository;
     private final MemberService memberService;
     private final MemberAuthService memberAuthService;
     private final BoardService boardService;

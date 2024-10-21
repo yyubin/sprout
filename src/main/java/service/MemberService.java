@@ -11,6 +11,7 @@ import exception.MemberIdAlreadyExistsException;
 import exception.MemberNotFoundException;
 import message.ExceptionMessage;
 import repository.InMemoryMemberRepository;
+import repository.interfaces.MemberRepository;
 import util.PasswordUtil;
 
 import java.time.LocalDate;
@@ -20,7 +21,7 @@ import java.util.Optional;
 @Service(value = 0)
 @Requires(dependsOn = {InMemoryMemberRepository.class})
 public class MemberService {
-    private final InMemoryMemberRepository memberRepository;
+    private final MemberRepository memberRepository;
 
     public MemberService(InMemoryMemberRepository memberRepository) {
         this.memberRepository = memberRepository;

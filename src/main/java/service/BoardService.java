@@ -12,6 +12,7 @@ import exception.NotFoundBoardWithBoardIdException;
 import exception.UnauthorizedAccessException;
 import message.ExceptionMessage;
 import repository.InMemoryBoardRepository;
+import repository.interfaces.BoardRepository;
 import util.Session;
 
 import java.util.List;
@@ -21,7 +22,7 @@ import java.util.Optional;
 @Requires(dependsOn = {InMemoryBoardRepository.class, MemberAuthService.class})
 public class BoardService {
 
-    private final InMemoryBoardRepository boardRepository;
+    private final BoardRepository boardRepository;
     private final MemberAuthService memberAuthService;
 
     public BoardService(InMemoryBoardRepository boardRepository, MemberAuthService memberAuthService) {

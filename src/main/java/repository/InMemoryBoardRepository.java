@@ -5,6 +5,7 @@ import domain.Board;
 import exception.NotFoundBoardWithBoardIdException;
 import exception.NotFoundBoardWithBoardNameException;
 import message.ExceptionMessage;
+import repository.interfaces.BoardRepository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +13,7 @@ import java.util.Optional;
 import java.util.stream.IntStream;
 
 @Repository
-public class InMemoryBoardRepository {
+public class InMemoryBoardRepository implements BoardRepository {
     private final List<Board> boards = new ArrayList<>();
 
     public int size() {

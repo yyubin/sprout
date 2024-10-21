@@ -4,13 +4,14 @@ import config.annotations.Repository;
 import domain.Member;
 import dto.MemberRegisterDTO;
 import dto.MemberUpdateDTO;
+import repository.interfaces.MemberRepository;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @Repository
-public class InMemoryMemberRepository {
+public class InMemoryMemberRepository implements MemberRepository {
     private List<Member> members = new ArrayList<>();
 
     public void save(Member member) {
