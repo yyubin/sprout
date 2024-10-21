@@ -27,7 +27,7 @@ import java.util.Optional;
 
 @Service
 @Priority(value = 3)
-@Requires(dependsOn = {InMemoryPostRepository.class, MemberService.class, MemberAuthService.class, BoardService.class})
+@Requires(dependsOn = {PostRepository.class, MemberService.class, MemberAuthService.class, BoardService.class})
 public class PostService implements PostServiceInterface {
 
     private final PostRepository postRepository;
@@ -35,7 +35,7 @@ public class PostService implements PostServiceInterface {
     private final MemberAuthService memberAuthService;
     private final BoardService boardService;
 
-    public PostService(InMemoryPostRepository postRepository, MemberService memberService, MemberAuthService memberAuthService, BoardService boardService) {
+    public PostService(PostRepository postRepository, MemberService memberService, MemberAuthService memberAuthService, BoardService boardService) {
         this.postRepository = postRepository;
         this.memberService = memberService;
         this.memberAuthService = memberAuthService;

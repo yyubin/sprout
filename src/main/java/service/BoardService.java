@@ -23,13 +23,13 @@ import java.util.function.Supplier;
 
 @Service
 @Priority(value = 2)
-@Requires(dependsOn = {InMemoryBoardRepository.class, MemberAuthService.class})
+@Requires(dependsOn = {BoardRepository.class, MemberAuthService.class})
 public class BoardService implements BoardServiceInterface {
 
     private final BoardRepository boardRepository;
     private final MemberAuthService memberAuthService;
 
-    public BoardService(InMemoryBoardRepository boardRepository, MemberAuthService memberAuthService) {
+    public BoardService(BoardRepository boardRepository, MemberAuthService memberAuthService) {
         this.boardRepository = boardRepository;
         this.memberAuthService = memberAuthService;
     }

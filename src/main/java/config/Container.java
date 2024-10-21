@@ -27,6 +27,15 @@ public class Container {
         return clazz.cast(objectMap.get(clazz));
     }
 
+    public Object getByType(Class<?> type) {
+        for (Map.Entry<Class<?>, Object> entry : objectMap.entrySet()) {
+            if (type.isAssignableFrom(entry.getKey())) {
+                return entry.getValue();
+            }
+        }
+        return null;
+    }
+
     public Object getByName(String className) {
         for (Class<?> clazz : objectMap.keySet()) {
             if (clazz.getName().equals(className)) {

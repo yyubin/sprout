@@ -43,7 +43,7 @@ public class ComponentScanner {
     private Object[] resolveDependencies(Class<?>[] dependencies) {
         Object[] parameters = new Object[dependencies.length];
         for (int i = 0; i < dependencies.length; i++) {
-            parameters[i] = Container.getInstance().getByName(dependencies[i].getName());
+            parameters[i] = Container.getInstance().getByType(dependencies[i]);
         }
         return parameters;
     }

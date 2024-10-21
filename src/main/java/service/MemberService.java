@@ -23,11 +23,11 @@ import java.util.function.Supplier;
 
 @Service
 @Priority(value = 0)
-@Requires(dependsOn = {InMemoryMemberRepository.class})
+@Requires(dependsOn = {MemberRepository.class})
 public class MemberService implements MemberServiceInterface {
     private final MemberRepository memberRepository;
 
-    public MemberService(InMemoryMemberRepository memberRepository) {
+    public MemberService(MemberRepository memberRepository) {
         this.memberRepository = memberRepository;
     }
 
