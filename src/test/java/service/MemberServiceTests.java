@@ -1,6 +1,5 @@
 package service;
 
-import com.sun.tools.javac.Main;
 import config.Container;
 import config.PackageName;
 import domain.Member;
@@ -11,11 +10,9 @@ import exception.MemberIdAlreadyExistsException;
 import message.ExceptionMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import repository.InMemoryMemberRepository;
-import util.PasswordUtil;
+import util.BCryptPasswordUtil;
 
 import java.time.LocalDate;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -108,7 +105,7 @@ public class MemberServiceTests {
 
         retrievedMember = memberService.getMemberById(registerDTO.getId());
         assertEquals("yubin2@gmail.com", retrievedMember.orElseThrow().getEmail());
-        assertTrue(PasswordUtil.matchPassword("tyui", retrievedMember.get().getEncryptedPassword()));
+        assertTrue(BCryptPasswordUtil.matchPassword("tyui", retrievedMember.get().getEncryptedPassword()));
     }
 
     @Test

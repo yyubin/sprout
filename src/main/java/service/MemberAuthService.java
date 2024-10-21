@@ -1,6 +1,5 @@
 package service;
 
-import config.Container;
 import config.annotations.Priority;
 import config.annotations.Requires;
 import config.annotations.Service;
@@ -12,10 +11,8 @@ import exception.InvalidCredentialsException;
 import exception.MemberNotFoundException;
 import exception.NotLoggedInException;
 import message.ExceptionMessage;
-import redis.clients.jedis.Jedis;
-import repository.InMemoryMemberRepository;
 import service.interfaces.MemberAuthServiceInterface;
-import util.PasswordUtil;
+import util.BCryptPasswordUtil;
 import util.RedisSessionManager;
 import util.Session;
 
@@ -50,7 +47,7 @@ public class MemberAuthService implements MemberAuthServiceInterface {
             throw new MemberNotFoundException(ExceptionMessage.MEMBER_NOT_FOUND);
         }
 
-        if (!PasswordUtil.matchPassword(memberLoginDTO.getPassword(), member.get().getEncryptedPassword())) {
+        if (!BCryptPasswordUtil.matchPassword(memberLoginDTO.getPassword(), member.get().getEncryptedPassword())) {
             throw new InvalidCredentialsException(ExceptionMessage.INVALID_CREDENTIALS);
         }
 

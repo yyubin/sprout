@@ -1,7 +1,7 @@
 package domain;
 
 import domain.grade.MemberGrade;
-import util.PasswordUtil;
+import util.BCryptPasswordUtil;
 
 import java.time.LocalDate;
 
@@ -31,7 +31,7 @@ public class Member {
         this.email = "admin@gmail.com";
         this.joinDate = LocalDate.now();
         this.deleted = false;
-        this.encryptedPassword = PasswordUtil.encryptPassword("admin");
+        this.encryptedPassword = BCryptPasswordUtil.encryptPassword("admin");
         this.grade = MemberGrade.ADMIN;
     }
 

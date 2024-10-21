@@ -8,7 +8,7 @@ public class PasswordUtilTest {
     @Test
     public void testEncryptPassword() {
         String password = "password";
-        String encryptedPassword = PasswordUtil.encryptPassword(password);
-        assertTrue(PasswordUtil.matchPassword(password, encryptedPassword));
+        String encryptedPassword = BCryptPasswordUtil.encryptPassword(password);
+        assertTrue(BCryptPasswordUtil.matchPassword(password, encryptedPassword));
     }
 }

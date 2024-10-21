@@ -1,6 +1,5 @@
 package service;
 
-import config.Container;
 import config.annotations.Priority;
 import config.annotations.Requires;
 import config.annotations.Service;
@@ -14,7 +13,7 @@ import message.ExceptionMessage;
 import repository.InMemoryMemberRepository;
 import repository.interfaces.MemberRepository;
 import service.interfaces.MemberServiceInterface;
-import util.PasswordUtil;
+import util.BCryptPasswordUtil;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -37,7 +36,7 @@ public class MemberService implements MemberServiceInterface {
         checkIdExists(memberRegisterDTO.getId());
         checkEmailExists(memberRegisterDTO.getEmail());
 
-        String encryptedPassword = PasswordUtil.encryptPassword(memberRegisterDTO.getPassword());
+        String encryptedPassword = BCryptPasswordUtil.encryptPassword(memberRegisterDTO.getPassword());
         Member newMember = new Member(
                 memberRegisterDTO.getId(),
                 memberRegisterDTO.getName(),
@@ -69,7 +68,7 @@ public class MemberService implements MemberServiceInterface {
             throws MemberNotFoundException {
         checkIdDoesNotExists(memberId);
         if (memberUpdateDTO.getPassword() != null) {
-            memberUpdateDTO.setPassword(PasswordUtil.encryptPassword(memberUpdateDTO.getPassword()));
+            memberUpdateDTO.setPassword(BCryptPasswordUtil.encryptPassword(memberUpdateDTO.getPassword()));
         }
         memberRepository.update(memberId, memberUpdateDTO);
     }

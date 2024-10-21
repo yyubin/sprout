@@ -4,7 +4,7 @@ import config.annotations.Component;
 import redis.clients.jedis.Jedis;
 
 @Component
-public class RedisSessionManager {
+public class RedisSessionManager implements SessionManager{
 
     private final Jedis jedis;
 
