@@ -17,20 +17,22 @@ public class HttpRequestParserTests {
         String rawRequest = "POST /posts/add?boardId=1\n" +
                 "{\"postName\":\"Test Post\", \"postContent\":\"This is a test.\"}";
 
-        HttpRequest<Map<String, Object>> request = HttpRequestParser.parse(rawRequest);
+        HttpRequest<String> request = HttpRequestParser.parse(rawRequest);
 
         assertEquals(HttpMethod.POST, request.getMethod());
         assertEquals("/posts/add", request.getPath());
         assertEquals("1", request.getQueryParams().get("boardId"));
-        assertEquals("Test Post", request.getBody().get("postName"));
-        assertEquals("This is a test.", request.getBody().get("postContent"));
+        String expectedBody = "{\"postName\":\"Test Post\", \"postContent\":\"This is a test.\"}";
+        String actualBody = request.getBody();
+
+        assertEquals(expectedBody, actualBody);
     }
 
     @Test
     void testParseValidGetRequest() throws JsonProcessingException {
         String rawRequest = "GET /posts/view?postId=1&boardId=2\n";
 
-        HttpRequest<Map<String, Object>> request = HttpRequestParser.parse(rawRequest);
+        HttpRequest<String> request = HttpRequestParser.parse(rawRequest);
 
         assertEquals(HttpMethod.GET, request.getMethod());
         assertEquals("/posts/view", request.getPath());
@@ -48,18 +50,6 @@ public class HttpRequestParserTests {
         });
 
         assertEquals(ResponseCode.BAD_REQUEST + " " + ExceptionMessage.BAD_REQUEST, exception.getMessage());
-    }
-
-    @Test
-    void testParseInvalidJsonBody() {
-        String rawRequest = "POST /posts/add\n" +
-                "Invalid JSON";
-
-        Exception exception = assertThrows(JsonProcessingException.class, () -> {
-            HttpRequestParser.parse(rawRequest);
-        });
-
-        assertNotNull(exception);
     }
 
 
