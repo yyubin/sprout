@@ -54,12 +54,11 @@ public class MemberController implements ControllerInterface {
     }
 
     @GetMapping(path = "/accounts/detail")
-    public void detail(HttpRequest<Map<String, Object>> request) throws RuntimeException {
-        String id = request.getQueryParams().get("accountId");
-        Optional<Member> memberById = memberService.getMemberById(id);
+    public void detail(String accountId) throws RuntimeException {
+        Optional<Member> memberById = memberService.getMemberById(accountId);
         if (memberById.isPresent()) {
             Map<String, Object> responseBody = new HashMap<>();
-            responseBody.put("계정", id);
+            responseBody.put("계정", accountId);
             responseBody.put("회원", memberById.get().getName());
             responseBody.put("이메일", memberById.get().getEmail());
             responseBody.put("가입일", memberById.get().getJoinDate());
@@ -77,14 +76,8 @@ public class MemberController implements ControllerInterface {
     }
 
     @PutMapping(path = "/accounts/edit")
-    public void edit(HttpRequest<Map<String, Object>> request) throws RuntimeException {
-        String id = request.getQueryParams().get("accountId");
-        Map<String, Object> body = request.getBody();
-        MemberUpdateDTO memberUpdateDTO = new MemberUpdateDTO(
-                (String) body.get("email"),
-                (String) body.get("password")
-        );
-        memberService.updateMember(id, memberUpdateDTO);
+    public void edit(String accountId, MemberUpdateDTO memberUpdateDTO) throws RuntimeException {
+        memberService.updateMember(accountId, memberUpdateDTO);
         HttpResponse<?> response = new HttpResponse<>(
                 PrintResultMessage.ACCOUNTS_MEMBER_EDIT,
                 ResponseCode.SUCCESS,
@@ -94,10 +87,9 @@ public class MemberController implements ControllerInterface {
     }
 
     @DeleteMapping(path = "/accounts/remove")
-    public void remove(HttpRequest<Map<String, Object>> request) throws Throwable {
-        String id = request.getQueryParams().get("accountId");
+    public void remove(String accountId) throws Throwable {
         memberAuthService.logout();
-        memberService.deleteMember(id);
+        memberService.deleteMember(accountId);
         HttpResponse<?> response = new HttpResponse<>(
                 PrintResultMessage.ACCOUNTS_DELETE_SUCCESS,
                 ResponseCode.SUCCESS,

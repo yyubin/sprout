@@ -36,17 +36,13 @@ public class MemberControllerTests {
 
     @Test
     void testSignup() {
-        Map<String, Object> body = new HashMap<>();
-        body.put("id", "testUser");
-        body.put("name", "Test User");
-        body.put("email", "test@example.com");
-        body.put("password", "password123");
+        MemberRegisterDTO memberRegisterDTO = new MemberRegisterDTO("testUser", "Test User", "test@example.com", "password123");
 
         @SuppressWarnings("unchecked")
-        HttpRequest<Map<String, Object>> request = mock(HttpRequest.class);
-        when(request.getBody()).thenReturn(body);
+        HttpRequest<MemberRegisterDTO> request = mock(HttpRequest.class);
+        when(request.getBody()).thenReturn(memberRegisterDTO);
 
-        memberController.signup(request);
+        memberController.signup(memberRegisterDTO);
 
         verify(memberService, times(1)).registerMember(any(MemberRegisterDTO.class));
         verify(printHandler, times(1)).printSuccessWithResponseCodeAndCustomMessage(any(HttpResponse.class));
@@ -60,14 +56,13 @@ public class MemberControllerTests {
         queryParams.put("accountId", accountId);
 
         @SuppressWarnings("unchecked")
-        HttpRequest<Map<String, Object>> request = mock(HttpRequest.class);
+        HttpRequest<Map<String, String>> request = mock(HttpRequest.class);
         when(request.getQueryParams()).thenReturn(queryParams);
 
         Member mockMember = new Member(accountId, "Test User", "test@example.com", LocalDate.now(), "qwer");
         when(memberService.getMemberById(accountId)).thenReturn(Optional.of(mockMember));
 
-        memberController.detail(request);
-
+        memberController.detail(accountId);
 
         verify(printHandler, times(1)).printResponseBodyAsMap(any(HttpResponse.class));
     }
@@ -75,16 +70,14 @@ public class MemberControllerTests {
     @Test
     void testEditMember() {
         String accountId = "testUser";
-        Map<String, Object> body = new HashMap<>();
-        body.put("email", "updated@example.com");
-        body.put("password", "newPassword123");
+        MemberUpdateDTO memberUpdateDTO = new MemberUpdateDTO("updated@example.com", "newPassword123");
 
         @SuppressWarnings("unchecked")
-        HttpRequest<Map<String, Object>> request = mock(HttpRequest.class);
+        HttpRequest<MemberUpdateDTO> request = mock(HttpRequest.class);
         when(request.getQueryParams()).thenReturn(Map.of("accountId", accountId));
-        when(request.getBody()).thenReturn(body);
+        when(request.getBody()).thenReturn(memberUpdateDTO);
 
-        memberController.edit(request);
+        memberController.edit(accountId, memberUpdateDTO);
 
         verify(memberService, times(1)).updateMember(eq(accountId), any(MemberUpdateDTO.class));
         verify(printHandler, times(1)).printSuccessWithResponseCodeAndCustomMessage(any(HttpResponse.class));
@@ -95,10 +88,10 @@ public class MemberControllerTests {
         String accountId = "testUser";
 
         @SuppressWarnings("unchecked")
-        HttpRequest<Map<String, Object>> request = mock(HttpRequest.class);
+        HttpRequest<Map<String, String>> request = mock(HttpRequest.class);
         when(request.getQueryParams()).thenReturn(Map.of("accountId", accountId));
 
-        memberController.remove(request);
+        memberController.remove(accountId);
 
         verify(memberAuthService, times(1)).logout();
         verify(memberService, times(1)).deleteMember(accountId);
