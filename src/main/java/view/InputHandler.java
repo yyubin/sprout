@@ -40,7 +40,8 @@ public class InputHandler {
                     rawRequest.append(line).append("\n");
                 }
 
-                if (rawRequest.toString().trim().isEmpty()){
+                if (rawRequest.toString().trim().isEmpty() || rawRequest.toString().trim().equals(InputKeyword.EXIT.getKeyword()) || rawRequest.toString().trim().equals(InputKeyword.EXIT.getKeywordEn())){
+                    printHandler.printCustomMessage(InputCautionMessage.EXIT_ACCEPT_MESSAGE);
                     break;
                 }
 
