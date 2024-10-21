@@ -34,7 +34,6 @@ public class RequestHandler {
 
     public void handleRequest(String rawRequest) throws Exception, UnsupportedHttpMethod {
         HttpRequest<?> httpRequest = HttpRequestParser.parse(rawRequest);
-        System.out.println(httpRequest.getBody());
         if (httpRequest.getMethod().equals(HttpMethod.GET)) {
             handleRequestByMethod(httpRequest, GetMapping.class);
             return;
@@ -88,8 +87,12 @@ public class RequestHandler {
         for (int i = 0; i < parameterTypes.length; i++) {
             Class<?> parameterType = parameterTypes[i];
             String paramName = parameterNames[i];
-            System.out.println(parameterType);
-            if (parameterType.equals(String.class)) {
+            if (parameterType.equals(Long.class)) {
+                String queryParamValue = httpRequest.getQueryParams().get(paramName);
+                if (queryParamValue != null) {
+                    parameters[i] = Long.valueOf(queryParamValue);
+                }
+            } else if (parameterType.equals(String.class)) {
                 parameters[i] = httpRequest.getQueryParams().get(paramName);
             } else {
                 String body = (String) httpRequest.getBody();
