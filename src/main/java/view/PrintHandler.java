@@ -5,6 +5,7 @@ import config.annotations.Component;
 import config.annotations.Priority;
 import config.annotations.Requires;
 import http.response.HttpResponse;
+import message.ExceptionMessage;
 
 import java.util.List;
 import java.util.Map;
@@ -16,6 +17,14 @@ public class PrintHandler {
 
     public void printCustomMessage(String message) {
         System.out.println(message);
+    }
+
+    public void printExceptionMessage(Throwable e) {
+        if(!e.getCause().getCause().getMessage().isEmpty()) {
+            System.out.println(e.getCause().getMessage());
+            return;
+        }
+        System.out.println(ExceptionMessage.BAD_REQUEST);
     }
 
     public <T> void printSuccessWithResponseCodeAndCustomMessage(HttpResponse<T> response) {

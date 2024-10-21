@@ -43,15 +43,7 @@ public class MemberController implements ControllerInterface {
     }
 
     @PostMapping(path = "/accounts/signup")
-    public void signup(HttpRequest<Map<String, Object>> request) throws RuntimeException {
-        Map<String, Object> body = request.getBody();
-        MemberRegisterDTO memberRegisterDTO = new MemberRegisterDTO(
-                (String) body.get("id"),
-                (String) body.get("name"),
-                (String) body.get("email"),
-                (String) body.get("password"),
-                LocalDate.now()
-        );
+    public void signup(MemberRegisterDTO memberRegisterDTO) throws RuntimeException {
         memberService.registerMember(memberRegisterDTO);
         HttpResponse<?> response = new HttpResponse<>(
                 PrintResultMessage.ACCOUNTS_SIGNUP_SUCCESS,

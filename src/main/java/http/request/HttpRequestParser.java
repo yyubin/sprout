@@ -14,7 +14,7 @@ public class HttpRequestParser {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    public static HttpRequest<Map<String, Object>> parse(String rawRequest) throws IllegalAccessError, JsonProcessingException {
+    public static HttpRequest<String> parse(String rawRequest) throws IllegalAccessError, JsonProcessingException {
         String[] requestLines = rawRequest.split("\n");
         String[] requestParts = requestLines[0].split(" ");
 
@@ -25,11 +25,12 @@ public class HttpRequestParser {
         String method = requestParts[0].toUpperCase();
         String path = requestParts[1];
 
-        Map<String, Object> body = null;
+        String body = null;
         Map<String, String> queryParams = new HashMap<>();
 
         String[] pathParts = path.split("\\?");
         path = pathParts[0];
+
         if (pathParts.length > 1) {
             String queryString = pathParts[1];
             String[] pairs = queryString.split("&");
@@ -43,8 +44,7 @@ public class HttpRequestParser {
 
         if (HttpMethod.POST.getMethod().equals(method) || HttpMethod.PUT.getMethod().equals(method) || HttpMethod.DELETE.getMethod().equals(method)) {
             if (requestLines.length > 1) {
-                String jsonBody = requestLines[1].trim();
-                body = objectMapper.readValue(jsonBody, new TypeReference<Map<String, Object>>() {});
+                body = requestLines[1].trim();
             }
         }
 

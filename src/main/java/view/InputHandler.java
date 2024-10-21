@@ -48,7 +48,7 @@ public class InputHandler {
                 try {
                     requestHandler.handleRequest(rawRequest.toString());
                 } catch (Throwable e) {
-                    printHandler.printCustomMessage(e.getCause().getMessage());
+                    printHandler.printCustomMessage(e.getMessage());
                 }
 
             }

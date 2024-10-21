@@ -1,5 +1,6 @@
 package http.request;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import config.Constants;
 import config.annotations.Component;
 import controller.ControllerInterface;
@@ -7,13 +8,17 @@ import controller.annotations.DeleteMapping;
 import controller.annotations.GetMapping;
 import controller.annotations.PostMapping;
 import controller.annotations.PutMapping;
+import exception.BadRequestException;
 import exception.NoMatchingHandlerException;
 import exception.UnsupportedHttpMethod;
 import message.ExceptionMessage;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class RequestHandler {
@@ -29,7 +34,7 @@ public class RequestHandler {
 
     public void handleRequest(String rawRequest) throws Exception, UnsupportedHttpMethod {
         HttpRequest<?> httpRequest = HttpRequestParser.parse(rawRequest);
-
+        System.out.println(httpRequest.getBody());
         if (httpRequest.getMethod().equals(HttpMethod.GET)) {
             handleRequestByMethod(httpRequest, GetMapping.class);
             return;
@@ -51,25 +56,67 @@ public class RequestHandler {
     }
 
     private void handleRequestByMethod(HttpRequest<?> httpRequest, Class<? extends Annotation> mappingClass) throws Exception {
+        boolean result = false;
         for (ControllerInterface controller : controllers) {
             for (Method method : controller.getClass().getDeclaredMethods()) {
                 if (method.isAnnotationPresent(mappingClass)) {
-                    handleRequestMethod(httpRequest, mappingClass, controller, method);
+                    result = handleRequestMethod(httpRequest, mappingClass, controller, method);
+                }
+                if (result) {
                     return;
                 }
             }
         }
-        throw new NoMatchingHandlerException(ExceptionMessage.NO_MATCHING_PATH);
+        throw new BadRequestException();
     }
 
-    private void handleRequestMethod(HttpRequest<?> httpRequest, Class<? extends Annotation> mappingClass, ControllerInterface controller, Method method) throws Exception {
+    private boolean handleRequestMethod(HttpRequest<?> httpRequest, Class<? extends Annotation> mappingClass, ControllerInterface controller, Method method) throws Exception {
         String path = (String) mappingClass.getMethod(Constants.path.getConstantsName()).invoke(method.getAnnotation(mappingClass));
         if (path.equals(httpRequest.getPath())) {
-            invokeMethod(controller, method, httpRequest);
+            Object[] parameters = resolveParameters(method, httpRequest);
+            invokeMethod(controller, method, parameters);
+            return true;
         }
+        return false;
     }
 
-    private void invokeMethod(ControllerInterface controller, Method method, HttpRequest<?> httpRequest) throws Exception {
+    private Object[] resolveParameters(Method method, HttpRequest<?> httpRequest) throws Exception {
+        Class<?>[] parameterTypes = method.getParameterTypes();
+        Object[] parameters = new Object[parameterTypes.length];
+
+        String[] parameterNames = getParameterNames(method);
+        for (int i = 0; i < parameterTypes.length; i++) {
+            Class<?> parameterType = parameterTypes[i];
+            String paramName = parameterNames[i];
+            System.out.println(parameterType);
+            if (parameterType.equals(String.class)) {
+                parameters[i] = httpRequest.getQueryParams().get(paramName);
+            } else {
+                String body = (String) httpRequest.getBody();
+                try {
+                    parameters[i] = parseBodyToModel(body, parameterType);
+                } catch (Exception e) {
+                    throw new Exception(e);
+                }
+            }
+        }
+        return parameters;
+    }
+
+    private String[] getParameterNames(Method method) {
+        // Java 8 이상에서 -parameters 플래그를 사용해야 함
+        return Arrays.stream(method.getParameters())
+                .map(Parameter::getName)
+                .toArray(String[]::new);
+    }
+
+    private <T> T parseBodyToModel(String body, Class<T> modelClass) throws Exception {
+        ObjectMapper objectMapper = new ObjectMapper();
+        return objectMapper.readValue(body, modelClass);
+    }
+
+
+    private void invokeMethod(ControllerInterface controller, Method method, Object[] httpRequest) throws Exception {
         if (method.getParameterCount() == 0) {
             method.invoke(controller);
         } else {
