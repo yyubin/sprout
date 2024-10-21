@@ -54,23 +54,27 @@ public class RequestHandler {
         for (ControllerInterface controller : controllers) {
             for (Method method : controller.getClass().getDeclaredMethods()) {
                 if (method.isAnnotationPresent(mappingClass)) {
-                    try {
-                        String path = (String) mappingClass.getMethod(Constants.path.getConstantsName()).invoke(method.getAnnotation(mappingClass));
-                        if (path.equals(httpRequest.getPath())) {
-                            if (method.getParameterCount() == 0) {
-                                method.invoke(controller);
-                            } else {
-                                method.invoke(controller, httpRequest);
-                            }
-                            return;
-                        }
-                    } catch (NoSuchMethodException | IllegalAccessException e) {
-                        throw new NoMatchingHandlerException(ExceptionMessage.NO_MATCHING_PATH, e);
-                    }
+                    handleRequestMethod(httpRequest, mappingClass, controller, method);
+                    return;
                 }
             }
         }
         throw new NoMatchingHandlerException(ExceptionMessage.NO_MATCHING_PATH);
+    }
+
+    private void handleRequestMethod(HttpRequest<?> httpRequest, Class<? extends Annotation> mappingClass, ControllerInterface controller, Method method) throws Exception {
+        String path = (String) mappingClass.getMethod(Constants.path.getConstantsName()).invoke(method.getAnnotation(mappingClass));
+        if (path.equals(httpRequest.getPath())) {
+            invokeMethod(controller, method, httpRequest);
+        }
+    }
+
+    private void invokeMethod(ControllerInterface controller, Method method, HttpRequest<?> httpRequest) throws Exception {
+        if (method.getParameterCount() == 0) {
+            method.invoke(controller);
+        } else {
+            method.invoke(controller, httpRequest);
+        }
     }
 
 }
