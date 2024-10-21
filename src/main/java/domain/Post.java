@@ -48,6 +48,10 @@ public class Post {
         return createdDate;
     }
 
+    public LocalDateTime getUpdatedDate() {
+        return updatedDate;
+    }
+
     public boolean isDeleted() {
         return deleted;
     }

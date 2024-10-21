@@ -11,6 +11,7 @@ public interface PostRepository {
     int allPostsSize();
     int postsSizeWithBoard(Long boardId);
     Optional<Post> findById(Long postId);
+    Optional<Post> findByPostIdAndBoardId(Long postId, Long boardId);
     List<Post> findAll();
     List<Post> findPostsByName(String postName);
     List<Post> findPostsByAuthor(String author);

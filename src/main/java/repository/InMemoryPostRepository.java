@@ -36,6 +36,12 @@ public class InMemoryPostRepository implements PostRepository {
                 .findFirst();
     }
 
+    public Optional<Post> findByPostIdAndBoardId(Long postId, Long boardId) {
+        return posts.stream()
+                .filter(post -> post.getPostId().equals(postId) && post.getBoard().getBoardId().equals(boardId) && !post.isDeleted())
+                .findFirst();
+    }
+
     public List<Post> findAll() {
         return posts.stream()
                 .filter(post -> !post.isDeleted())

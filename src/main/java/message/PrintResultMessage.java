@@ -13,4 +13,9 @@ public class PrintResultMessage {
     public static final String BOARD_CREATE_SUCCESS = "게시판 생성이 성공하였습니다.";
     public static final String BOARD_UPDATE_SUCCESS = "게시판 수정이 성공하였습니다.";
     public static final String BOARD_DELETE_SUCCESS = "게시판 삭제가 성공하였습니다.";
+
+    public static final String POST_CREATE_SUCCESS = "게시글 생성이 성공하였습니다.";
+    public static final String POST_UPDATE_SUCCESS = "게시글 수정이 성공하였습니다.";
+    public static final String POST_DELETE_SUCCESS = "게시글 삭제가 성공하였습니다.";
+
 }

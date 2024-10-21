@@ -101,6 +101,11 @@ public class PostService {
                 .toList();
     }
 
+    public Post getPost(Long postId, Long boardId) throws NotFoundPostWithPostIdException {
+        return postRepository.findByPostIdAndBoardId(postId, boardId)
+                .orElseThrow(() -> new NotFoundPostWithPostIdException(ExceptionMessage.NOT_FOUND_POST_WITH_POST_ID, postId));
+    }
+
     public int getAllPostsSize() {
         return postRepository.allPostsSize();
     }
