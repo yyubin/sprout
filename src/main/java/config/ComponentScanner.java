@@ -20,7 +20,7 @@ public class ComponentScanner {
         List<Class<?>> sortedComponentClasses = sorted ?
                 componentClasses.stream()
                         .sorted(Comparator.comparingInt(c -> {
-                            Service priority = c.getAnnotation(Service.class);
+                            Priority priority = c.getAnnotation(Priority.class);
                             return (priority != null) ? priority.value() : Integer.MAX_VALUE;
                         }))
                         .toList()
@@ -49,7 +49,7 @@ public class ComponentScanner {
 
     public void scan(String basePackage) throws Exception {
         if (PackageName.view.getPackageName().equals(basePackage)) {
-            scan(basePackage, Component.class, false, true);
+            scan(basePackage, Component.class, true, true);
             return;
         }
 

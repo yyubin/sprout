@@ -1,6 +1,7 @@
 package service;
 
 import config.Container;
+import config.annotations.Priority;
 import config.annotations.Requires;
 import config.annotations.Service;
 import domain.Board;
@@ -23,7 +24,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-@Service(value = 3)
+@Service
+@Priority(value = 3)
 @Requires(dependsOn = {InMemoryPostRepository.class, MemberService.class, MemberAuthService.class, BoardService.class})
 public class PostService {
 

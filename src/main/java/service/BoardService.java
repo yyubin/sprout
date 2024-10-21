@@ -1,6 +1,7 @@
 package service;
 
 import config.Container;
+import config.annotations.Priority;
 import config.annotations.Requires;
 import config.annotations.Service;
 import domain.Board;
@@ -18,7 +19,8 @@ import util.Session;
 import java.util.List;
 import java.util.Optional;
 
-@Service(value = 2)
+@Service
+@Priority(value = 2)
 @Requires(dependsOn = {InMemoryBoardRepository.class, MemberAuthService.class})
 public class BoardService {
 
