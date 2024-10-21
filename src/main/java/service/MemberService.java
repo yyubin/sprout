@@ -13,6 +13,7 @@ import exception.MemberNotFoundException;
 import message.ExceptionMessage;
 import repository.InMemoryMemberRepository;
 import repository.interfaces.MemberRepository;
+import service.interfaces.MemberServiceInterface;
 import util.PasswordUtil;
 
 import java.time.LocalDate;
@@ -24,7 +25,7 @@ import java.util.function.Supplier;
 @Service
 @Priority(value = 0)
 @Requires(dependsOn = {InMemoryMemberRepository.class})
-public class MemberService {
+public class MemberService implements MemberServiceInterface {
     private final MemberRepository memberRepository;
 
     public MemberService(InMemoryMemberRepository memberRepository) {

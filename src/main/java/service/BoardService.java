@@ -14,6 +14,7 @@ import exception.UnauthorizedAccessException;
 import message.ExceptionMessage;
 import repository.InMemoryBoardRepository;
 import repository.interfaces.BoardRepository;
+import service.interfaces.BoardServiceInterface;
 import util.Session;
 
 import java.util.List;
@@ -23,7 +24,7 @@ import java.util.function.Supplier;
 @Service
 @Priority(value = 2)
 @Requires(dependsOn = {InMemoryBoardRepository.class, MemberAuthService.class})
-public class BoardService {
+public class BoardService implements BoardServiceInterface {
 
     private final BoardRepository boardRepository;
     private final MemberAuthService memberAuthService;

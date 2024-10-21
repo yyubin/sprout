@@ -14,6 +14,7 @@ import exception.NotLoggedInException;
 import message.ExceptionMessage;
 import redis.clients.jedis.Jedis;
 import repository.InMemoryMemberRepository;
+import service.interfaces.MemberAuthServiceInterface;
 import util.PasswordUtil;
 import util.RedisSessionManager;
 import util.Session;
@@ -25,7 +26,7 @@ import java.util.function.Supplier;
 @Service
 @Priority(value = 1)
 @Requires(dependsOn = {MemberService.class, RedisSessionManager.class})
-public class MemberAuthService {
+public class MemberAuthService implements MemberAuthServiceInterface {
 
     private final MemberService memberService;
     private final RedisSessionManager redisSessionManager;

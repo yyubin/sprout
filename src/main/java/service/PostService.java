@@ -17,6 +17,7 @@ import exception.UnauthorizedAccessException;
 import message.ExceptionMessage;
 import repository.InMemoryPostRepository;
 import repository.interfaces.PostRepository;
+import service.interfaces.PostServiceInterface;
 import util.Session;
 
 import java.time.LocalDate;
@@ -27,7 +28,7 @@ import java.util.Optional;
 @Service
 @Priority(value = 3)
 @Requires(dependsOn = {InMemoryPostRepository.class, MemberService.class, MemberAuthService.class, BoardService.class})
-public class PostService {
+public class PostService implements PostServiceInterface {
 
     private final PostRepository postRepository;
     private final MemberService memberService;
