@@ -42,9 +42,9 @@ public class PostService implements PostServiceInterface {
         this.boardService = boardService;
     }
 
-    public void createPost(PostRegisterDTO postRegisterDTO) throws UnauthorizedAccessException, MemberNotFoundException, NotFoundBoardWithBoardIdException {
+    public void createPost(Long boardId, PostRegisterDTO postRegisterDTO) throws UnauthorizedAccessException, MemberNotFoundException, NotFoundBoardWithBoardIdException {
         String memberId = memberAuthService.getRedisSessionManager().getSession(Session.getSessionId());
-        Board board = checkExistsBoardAndGetBoard(postRegisterDTO.getBoardId());
+        Board board = checkExistsBoardAndGetBoard(boardId);
         Member author = checkExistsMemberAndGetMemberById(memberId);
         checkCreateAuthorityWithBoard(board, author);
 
@@ -58,15 +58,14 @@ public class PostService implements PostServiceInterface {
         postRepository.save(post);
     }
 
-    public void updatePost(PostUpdateDTO postUpdateDTO) throws UnauthorizedAccessException, NotFoundBoardWithBoardIdException, NotFoundPostWithPostIdException {
+    public void updatePost(Long boardId, Long postId, PostUpdateDTO postUpdateDTO) throws UnauthorizedAccessException, NotFoundBoardWithBoardIdException, NotFoundPostWithPostIdException {
         String memberId = memberAuthService.getRedisSessionManager().getSession(Session.getSessionId());
-        Board board = checkExistsBoardAndGetBoard(postUpdateDTO.getBoardId());
+        Board board = checkExistsBoardAndGetBoard(boardId);
         Member author = checkExistsMemberAndGetMemberById(memberId);
         checkCreateAuthorityWithBoard(board, author);
-        checkPostOwnership(memberId, postUpdateDTO.getPostId());
+        checkPostOwnership(memberId, postId);
 
-        Post post = postRepository.findById(postUpdateDTO.getPostId()).orElseThrow(() -> new NotFoundPostWithPostIdException(ExceptionMessage.NOT_FOUND_POST_WITH_POST_ID, postUpdateDTO.getPostId()));
-
+        Post post = postRepository.findByPostIdAndBoardId(postId, boardId).orElseThrow(NotFoundPostWithPostIdException::new);
         post.setPostName(postUpdateDTO.getPostName());
         post.setPostContent(postUpdateDTO.getPostContent());
         post.setUpdatedDate(LocalDateTime.now());

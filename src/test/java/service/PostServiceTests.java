@@ -52,11 +52,10 @@ public class PostServiceTests {
 
         PostRegisterDTO postRegisterDTO = new PostRegisterDTO(
                 "test post",
-                "test post content",
-                1L
+                "test post content"
         );
 
-        postService.createPost(postRegisterDTO);
+        postService.createPost(1L, postRegisterDTO);
         assertEquals(1, postService.getAllPosts().size());
     }
 
@@ -81,10 +80,9 @@ public class PostServiceTests {
 
         PostRegisterDTO postRegisterDTO = new PostRegisterDTO(
                 "test post",
-                "test post content",
-                1L
+                "test post content"
         );
-        assertThrows(UnauthorizedAccessException.class, () -> postService.createPost(postRegisterDTO));
+        assertThrows(UnauthorizedAccessException.class, () -> postService.createPost(1L, postRegisterDTO));
     }
 
     @Test
@@ -108,11 +106,10 @@ public class PostServiceTests {
 
         PostRegisterDTO postRegisterDTO = new PostRegisterDTO(
                 "test post",
-                "test post content",
-                1L
+                "test post content"
         );
 
-        postService.createPost(postRegisterDTO);
+        postService.createPost(1L, postRegisterDTO);
         assertEquals(1, postService.getAllPosts().size());
     }
 
@@ -137,20 +134,17 @@ public class PostServiceTests {
 
         PostRegisterDTO postRegisterDTO = new PostRegisterDTO(
                 "test post",
-                "test post content",
-                1L
+                "test post content"
         );
-        postService.createPost(postRegisterDTO);
+        postService.createPost(1L, postRegisterDTO);
 
         Post post = postService.getAllPosts().getFirst();
 
         PostUpdateDTO postUpdateDTO = new PostUpdateDTO(
-                post.getPostId(),
-                post.getBoard().getBoardId(),
                 "test post update",
                 "test post content update"
         );
-        postService.updatePost(postUpdateDTO);
+        postService.updatePost(1L, 1L, postUpdateDTO);
 
         Post updatedPost = postService.getAllPosts().getFirst();
         assertEquals(updatedPost.getPostId(), post.getPostId());
@@ -180,23 +174,20 @@ public class PostServiceTests {
 
         PostRegisterDTO postRegisterDTO = new PostRegisterDTO(
                 "test post",
-                "test post content",
-                1L
+                "test post content"
         );
-        postService.createPost(postRegisterDTO);
+        postService.createPost(1L, postRegisterDTO);
 
         Post post = postService.getAllPosts().getFirst();
 
         PostUpdateDTO postUpdateDTO = new PostUpdateDTO(
-                post.getPostId(),
-                post.getBoard().getBoardId(),
                 "test post update",
                 "test post content update"
         );
 
         memberAuthService.logout();
         memberAuthService.login(loginDTO);
-        postService.updatePost(postUpdateDTO);
+        postService.updatePost(1L,1L, postUpdateDTO);
 
         Post updatedPost = postService.getAllPosts().getFirst();
         assertEquals(updatedPost.getPostId(), post.getPostId());
@@ -226,16 +217,13 @@ public class PostServiceTests {
 
         PostRegisterDTO postRegisterDTO = new PostRegisterDTO(
                 "test post",
-                "test post content",
-                1L
+                "test post content"
         );
-        postService.createPost(postRegisterDTO);
+        postService.createPost(1L, postRegisterDTO);
 
         Post post = postService.getAllPosts().getFirst();
 
         PostUpdateDTO postUpdateDTO = new PostUpdateDTO(
-                post.getPostId(),
-                post.getBoard().getBoardId(),
                 "test post update",
                 "test post content update"
         );
@@ -247,7 +235,7 @@ public class PostServiceTests {
 
         MemberLoginDTO otherMemberLoginDTO = new MemberLoginDTO("yu222", "qwer");
         memberAuthService.login(otherMemberLoginDTO);
-        assertThrows(UnauthorizedAccessException.class, () -> postService.updatePost(postUpdateDTO));
+        assertThrows(UnauthorizedAccessException.class, () -> postService.updatePost(1L, 1L, postUpdateDTO));
     }
 
     @Test
@@ -271,10 +259,9 @@ public class PostServiceTests {
 
         PostRegisterDTO postRegisterDTO = new PostRegisterDTO(
                 "test post",
-                "test post content",
-                1L
+                "test post content"
         );
-        postService.createPost(postRegisterDTO);
+        postService.createPost(1L, postRegisterDTO);
 
         memberAuthService.logout();
         memberAuthService.login(loginDTO);
@@ -305,10 +292,9 @@ public class PostServiceTests {
 
         PostRegisterDTO postRegisterDTO = new PostRegisterDTO(
                 "test post",
-                "test post content",
-                1L
+                "test post content"
         );
-        postService.createPost(postRegisterDTO);
+        postService.createPost(1L, postRegisterDTO);
 
         Post post = postService.getAllPosts().getFirst();
         postService.deletePost(post.getPostId());
@@ -337,10 +323,9 @@ public class PostServiceTests {
 
         PostRegisterDTO postRegisterDTO = new PostRegisterDTO(
                 "test post",
-                "test post content",
-                1L
+                "test post content"
         );
-        postService.createPost(postRegisterDTO);
+        postService.createPost(1L, postRegisterDTO);
         memberAuthService.logout();
 
         MemberRegisterDTO otherMemberRegisterDTO = new MemberRegisterDTO("yubin121", "yubin", "yubi2n@gmail.com", "qwer");

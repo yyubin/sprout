@@ -67,7 +67,7 @@ public class BoardService implements BoardServiceInterface {
                 .orElseThrow(() -> new NotFoundBoardWithBoardIdException(ExceptionMessage.NOT_FOUND_BOARD_WITH_BOARD_ID, boardId)));
     }
 
-    public void updateBoard(BoardUpdateDTO boardUpdateDTO) throws Throwable {
+    public void updateBoard(Long boardId, BoardUpdateDTO boardUpdateDTO) throws Throwable {
         checkAdminAuthority(Session.getSessionId());
         checkDuplicateBoardName(boardUpdateDTO.getBoardName());
 
@@ -81,7 +81,7 @@ public class BoardService implements BoardServiceInterface {
 
         if (boardRepository.findById(boardUpdateDTO.getId()).isPresent()) {
             Board board = new Board(
-                    boardUpdateDTO.getId(),
+                    boardId,
                     boardUpdateDTO.getBoardName(),
                     boardUpdateDTO.getDescription(),
                     gradeList

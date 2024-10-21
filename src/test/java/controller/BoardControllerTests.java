@@ -43,15 +43,9 @@ public class BoardControllerTests {
 
     @Test
     void testAddBoard() throws Throwable {
-        Map<String, Object> body = new HashMap<>();
-        body.put("boardName", "Test Board");
-        body.put("description", "Test Board Description");
-        body.put("grades", MemberGrade.USER.getDescription());
+        BoardRegisterDTO boardRegisterDTO = new BoardRegisterDTO("Test Board", "Test Board Description", MemberGrade.USER.getDescription());
 
-        HttpRequest<Map<String, Object>> request = mock(HttpRequest.class);
-        when(request.getBody()).thenReturn(body);
-
-        boardController.addBoard(request);
+        boardController.addBoard(boardRegisterDTO);
 
         ArgumentCaptor<BoardRegisterDTO> dtoCaptor = ArgumentCaptor.forClass(BoardRegisterDTO.class);
         verify(mockBoardService, times(1)).createBoard(dtoCaptor.capture());
@@ -59,63 +53,41 @@ public class BoardControllerTests {
         BoardRegisterDTO capturedDto = dtoCaptor.getValue();
         assertEquals("Test Board", capturedDto.getBoardName());
         assertEquals("Test Board Description", capturedDto.getDescription());
-        assertTrue(capturedDto.getAccessGrades().contains(MemberGrade.ADMIN));
-        assertTrue(capturedDto.getAccessGrades().contains(MemberGrade.USER));
 
         verify(mockPrintHandler, times(1)).printSuccessWithResponseCodeAndCustomMessage(any(HttpResponse.class));
     }
 
     @Test
     void testEditBoard() throws Throwable {
-        Map<String, Object> body = new HashMap<>();
-        body.put("boardName", "Updated Board");
-        body.put("description", "Updated Description");
-        body.put("grades", MemberGrade.USER.getDescription());
+        Long boardId = 1L;
+        BoardUpdateDTO boardUpdateDTO = new BoardUpdateDTO(boardId, "Updated Board", "Updated Description", MemberGrade.USER.getDescription());
 
-        Map<String, String> queryParams = new HashMap<>();
-        queryParams.put("boardId", "1");
-
-        HttpRequest<Map<String, Object>> request = mock(HttpRequest.class);
-        when(request.getBody()).thenReturn(body);
-        when(request.getQueryParams()).thenReturn(queryParams);
-
-        boardController.editBoard(request);
+        boardController.editBoard(boardId, boardUpdateDTO);
 
         ArgumentCaptor<BoardUpdateDTO> dtoCaptor = ArgumentCaptor.forClass(BoardUpdateDTO.class);
-        verify(mockBoardService, times(1)).updateBoard(dtoCaptor.capture());
+        verify(mockBoardService, times(1)).updateBoard(eq(boardId), dtoCaptor.capture());
 
         BoardUpdateDTO capturedDto = dtoCaptor.getValue();
-        assertEquals(1L, capturedDto.getId());
+        assertEquals(boardId, capturedDto.getId());
         assertEquals("Updated Board", capturedDto.getBoardName());
         assertEquals("Updated Description", capturedDto.getDescription());
-        assertTrue(capturedDto.getAccessGrades().contains(MemberGrade.ADMIN));
-        assertTrue(capturedDto.getAccessGrades().contains(MemberGrade.USER));
 
         verify(mockPrintHandler, times(1)).printSuccessWithResponseCodeAndCustomMessage(any(HttpResponse.class));
     }
 
     @Test
     void testRemoveBoard() throws Throwable {
-        Map<String, String> queryParams = new HashMap<>();
-        queryParams.put("boardId", "1");
+        Long boardId = 1L;
 
-        HttpRequest<Map<String, Object>> request = mock(HttpRequest.class);
-        when(request.getQueryParams()).thenReturn(queryParams);
+        boardController.removeBoard(boardId);
 
-        boardController.removeBoard(request);
-
-        verify(mockBoardService, times(1)).deleteBoard(1L);
+        verify(mockBoardService, times(1)).deleteBoard(boardId);
         verify(mockPrintHandler, times(1)).printSuccessWithResponseCodeAndCustomMessage(any(HttpResponse.class));
     }
 
     @Test
     void testViewBoard() throws Exception {
-        Map<String, String> queryParams = new HashMap<>();
-        queryParams.put("boardName", "Test Board");
-
-        HttpRequest<Map<String, Object>> request = mock(HttpRequest.class);
-        when(request.getQueryParams()).thenReturn(queryParams);
-
+        String boardName = "Test Board";
         Member mockAuthor = mock(Member.class);
         Board mockBoard = mock(Board.class);
         when(mockBoard.generatedPostId()).thenReturn(1L);
@@ -124,11 +96,11 @@ public class BoardControllerTests {
                 new Post("Test Post 1", "Content for Test Post 1", mockAuthor, mockBoard, LocalDateTime.now()),
                 new Post("Test Post 2", "Content for Test Post 2", mockAuthor, mockBoard, LocalDateTime.now())
         );
-        when(mockPostService.getPostsByBoardName("Test Board")).thenReturn(mockPosts);
+        when(mockPostService.getPostsByBoardName(boardName)).thenReturn(mockPosts);
 
-        boardController.viewBoard(request);
+        boardController.viewBoard(boardName);
 
-        verify(mockPostService, times(1)).getPostsByBoardName("Test Board");
+        verify(mockPostService, times(1)).getPostsByBoardName(boardName);
 
         ArgumentCaptor<HttpResponse<List<Map<String, Object>>>> responseCaptor = ArgumentCaptor.forClass(HttpResponse.class);
         verify(mockPrintHandler, times(1)).printResponseBodyAsMapList(responseCaptor.capture());

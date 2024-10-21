@@ -39,21 +39,7 @@ public class BoardController implements ControllerInterface{
     }
 
     @PostMapping(path = "/boards/add")
-    public void addBoard(HttpRequest<Map<String, Object>> request) throws Throwable {
-        Map<String, Object> body = request.getBody();
-        List<MemberGrade> gradeList = new ArrayList<>();
-        gradeList.add(MemberGrade.ADMIN);
-
-        String grades = body.get("grades").toString();
-        if (grades.equals(MemberGrade.USER.getDescription()) || grades.equals(MemberGrade.USER.getDescriptionEn())) {
-            gradeList.add(MemberGrade.USER);
-        }
-
-        BoardRegisterDTO boardRegisterDTO = new BoardRegisterDTO(
-                (String) body.get("boardName"),
-                (String) body.get("description"),
-                gradeList
-        );
+    public void addBoard(BoardRegisterDTO boardRegisterDTO) throws Throwable {
         boardService.createBoard(boardRegisterDTO);
 
         HttpResponse<?> response = new HttpResponse<>(
@@ -65,25 +51,8 @@ public class BoardController implements ControllerInterface{
     }
 
     @PutMapping(path = "/boards/edit")
-    public void editBoard(HttpRequest<Map<String, Object>> request) throws Throwable {
-        Long id = Long.valueOf(request.getQueryParams().get("boardId"));
-        Map<String, Object> body = request.getBody();
-
-        List<MemberGrade> gradeList = new ArrayList<>();
-        gradeList.add(MemberGrade.ADMIN);
-
-        String grades = body.get("grades").toString();
-        if (grades.equals(MemberGrade.USER.getDescription()) || grades.equals(MemberGrade.USER.getDescriptionEn())) {
-            gradeList.add(MemberGrade.USER);
-        }
-
-        BoardUpdateDTO boardUpdateDTO = new BoardUpdateDTO(
-                id,
-                (String) body.get("boardName"),
-                (String) body.get("description"),
-                gradeList
-        );
-        boardService.updateBoard(boardUpdateDTO);
+    public void editBoard(Long boardId, BoardUpdateDTO boardUpdateDTO) throws Throwable {
+        boardService.updateBoard(boardId, boardUpdateDTO);
 
         HttpResponse<?> response = new HttpResponse<>(
                 PrintResultMessage.BOARD_UPDATE_SUCCESS,
@@ -94,9 +63,8 @@ public class BoardController implements ControllerInterface{
     }
 
     @DeleteMapping(path = "/boards/remove")
-    public void removeBoard(HttpRequest<Map<String, Object>> request) throws Throwable {
-        Long id = Long.valueOf(request.getQueryParams().get("boardId"));
-        boardService.deleteBoard(id);
+    public void removeBoard(Long boardId) throws Throwable {
+        boardService.deleteBoard(boardId);
         HttpResponse<?> response = new HttpResponse<>(
                 PrintResultMessage.BOARD_DELETE_SUCCESS,
                 ResponseCode.SUCCESS,
@@ -106,8 +74,7 @@ public class BoardController implements ControllerInterface{
     }
 
     @GetMapping(path = "/boards/view")
-    public void viewBoard(HttpRequest<Map<String, Object>> request) throws Exception {
-        String boardName = request.getQueryParams().get("boardName");
+    public void viewBoard(String boardName) throws Exception {
         List<Post> postList = postService.getPostsByBoardName(boardName);
 
         List<Map<String, Object>> postSummaryList = postList.stream()

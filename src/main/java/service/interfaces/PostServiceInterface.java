@@ -11,9 +11,9 @@ import exception.UnauthorizedAccessException;
 import java.util.List;
 
 public interface PostServiceInterface {
-    void createPost(PostRegisterDTO postRegisterDTO) throws UnauthorizedAccessException, MemberNotFoundException, NotFoundBoardWithBoardIdException;
+    void createPost(Long boardId, PostRegisterDTO postRegisterDTO) throws UnauthorizedAccessException, MemberNotFoundException, NotFoundBoardWithBoardIdException;
 
-    void updatePost(PostUpdateDTO postUpdateDTO) throws UnauthorizedAccessException, NotFoundBoardWithBoardIdException, NotFoundPostWithPostIdException;
+    void updatePost(Long boardId, Long postId, PostUpdateDTO postUpdateDTO) throws UnauthorizedAccessException, NotFoundBoardWithBoardIdException, NotFoundPostWithPostIdException;
 
     void deletePost(Long postId) throws NotFoundPostWithPostIdException;
 

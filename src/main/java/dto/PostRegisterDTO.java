@@ -6,12 +6,10 @@ public class PostRegisterDTO {
 
     private String postName;
     private String postContent;
-    private Long boardId;
 
-    public PostRegisterDTO(String postName, String postContent, Long boardId) {
+    public PostRegisterDTO(String postName, String postContent) {
         this.postName = postName;
         this.postContent = postContent;
-        this.boardId = boardId;
     }
 
     public String getPostName() {
@@ -22,7 +20,11 @@ public class PostRegisterDTO {
         return postContent;
     }
 
-    public Long getBoardId() {
-        return boardId;
+    public void setPostName(String postName) {
+        this.postName = postName;
+    }
+
+    public void setPostContent(String postContent) {
+        this.postContent = postContent;
     }
 }

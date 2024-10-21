@@ -32,16 +32,8 @@ public class PostController implements ControllerInterface{
     }
 
     @PostMapping(path = "/posts/add")
-    public void addPost(HttpRequest<Map<String, Object>> request) {
-        Map<String, Object> body = request.getBody();
-        Map<String, String> queryParams = request.getQueryParams();
-        Long boardId = Long.valueOf(queryParams.get("boardId"));
-        PostRegisterDTO registerDTO = new PostRegisterDTO(
-                (String) body.get("postName"),
-                (String) body.get("postContent"),
-                boardId
-        );
-        postService.createPost(registerDTO);
+    public void addPost(Long boardId, PostRegisterDTO postRegisterDTO) {
+        postService.createPost(boardId, postRegisterDTO);
 
         HttpResponse<?> response = new HttpResponse<>(
                 PrintResultMessage.POST_CREATE_SUCCESS,
@@ -52,9 +44,7 @@ public class PostController implements ControllerInterface{
     }
 
     @DeleteMapping(path = "/posts/remove")
-    public void removePost(HttpRequest<Map<String, Object>> request) {
-        Map<String, String> queryParams = request.getQueryParams();
-        Long postId = Long.valueOf(queryParams.get("postId"));
+    public void removePost(Long postId) {
         postService.deletePost(postId);
         HttpResponse<?> response = new HttpResponse<>(
                 PrintResultMessage.POST_DELETE_SUCCESS,
@@ -65,22 +55,21 @@ public class PostController implements ControllerInterface{
     }
 
     @PutMapping(path = "/posts/edit")
-    public void editPost(HttpRequest<Map<String, Object>> request) {
-        Map<String, Object> body = request.getBody();
-        Map<String, String> queryParams = request.getQueryParams();
-        PostUpdateDTO updateDTO = new PostUpdateDTO(
-                Long.valueOf(queryParams.get("postId")),
-                Long.valueOf(queryParams.get("boardId")),
-                (String) body.get("postName"),
-                (String) body.get("postContent")
+    public void editPost(Long boardId, Long postId, PostUpdateDTO postUpdateDTO) {
+        postService.updatePost(boardId, postId, postUpdateDTO);
+
+        HttpResponse<?> response = new HttpResponse<>(
+                PrintResultMessage.POST_UPDATE_SUCCESS,
+                ResponseCode.SUCCESS,
+                null
         );
-        postService.updatePost(updateDTO);
+        printHandler.printSuccessWithResponseCodeAndCustomMessage(response);
     }
 
     @GetMapping(path = "/posts/view")
-    public void viewPost(HttpRequest<Map<String, Object>> request) {
-        Map<String, String> queryParams = request.getQueryParams();
-        Post post = postService.getPost(Long.valueOf(queryParams.get("postId")), Long.valueOf(queryParams.get("boardId")));
+    public void viewPost(Long boardId, Long postId) {
+
+        Post post = postService.getPost(postId, boardId);
 
         Map<String, Object> responseBody = new HashMap<>();
         responseBody.put("게시글 번호", post.getPostId());

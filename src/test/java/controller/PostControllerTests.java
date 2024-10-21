@@ -37,75 +37,53 @@ public class PostControllerTests {
 
     @Test
     public void testAddPost() {
-        Map<String, Object> body = new HashMap<>();
-        body.put("postName", "Test Post");
-        body.put("postContent", "This is a test post.");
+        Long boardId = 1L; // Sample board ID
+        PostRegisterDTO postRegisterDTO = new PostRegisterDTO("Test Post", "This is a test post.");
 
-        Map<String, String> queryParams = new HashMap<>();
-        queryParams.put("boardId", "1");
+        postController.addPost(boardId, postRegisterDTO);
 
-        HttpRequest<Map<String, Object>> request = mock(HttpRequest.class);
-        when(request.getBody()).thenReturn(body);
-        when(request.getQueryParams()).thenReturn(queryParams);
-
-        postController.addPost(request);
-
-        verify(postService, times(1)).createPost(any(PostRegisterDTO.class));
+        verify(postService, times(1)).createPost(eq(boardId), any(PostRegisterDTO.class));
         verify(printHandler, times(1)).printSuccessWithResponseCodeAndCustomMessage(any(HttpResponse.class));
     }
 
     @Test
     public void testRemovePost() {
-        Map<String, String> queryParams = new HashMap<>();
-        queryParams.put("postId", "1");
+        Long postId = 1L; // Sample post ID
 
-        HttpRequest<Map<String, Object>> request = mock(HttpRequest.class);
-        when(request.getQueryParams()).thenReturn(queryParams);
+        postController.removePost(postId);
 
-        postController.removePost(request);
-
-        verify(postService, times(1)).deletePost(1L);
+        verify(postService, times(1)).deletePost(postId);
         verify(printHandler, times(1)).printSuccessWithResponseCodeAndCustomMessage(any(HttpResponse.class));
     }
 
     @Test
     public void testEditPost() {
-        Map<String, Object> body = new HashMap<>();
-        body.put("postName", "Updated Post");
-        body.put("postContent", "Updated Content");
+        Long boardId = 2L; // Sample board ID
+        Long postId = 1L; // Sample post ID
+        PostUpdateDTO postUpdateDTO = new PostUpdateDTO("Updated Post", "Updated Content"); // Adjusted constructor parameters
 
-        Map<String, String> queryParams = new HashMap<>();
-        queryParams.put("postId", "1");
-        queryParams.put("boardId", "2");
+        postController.editPost(boardId, postId, postUpdateDTO);
 
-        HttpRequest<Map<String, Object>> request = mock(HttpRequest.class);
-        when(request.getBody()).thenReturn(body);
-        when(request.getQueryParams()).thenReturn(queryParams);
-
-        postController.editPost(request);
-
-        verify(postService, times(1)).updatePost(any(PostUpdateDTO.class));
+        verify(postService, times(1)).updatePost(eq(boardId), eq(postId), any(PostUpdateDTO.class));
+        verify(printHandler, times(1)).printSuccessWithResponseCodeAndCustomMessage(any(HttpResponse.class));
     }
+
 
     @Test
     public void testViewPost() {
-        Map<String, String> queryParams = new HashMap<>();
-        queryParams.put("postId", "1");
-        queryParams.put("boardId", "2");
+        Long boardId = 2L; // Sample board ID
+        Long postId = 1L; // Sample post ID
 
         Post mockPost = mock(Post.class);
-        when(mockPost.getPostId()).thenReturn(1L);
+        when(mockPost.getPostId()).thenReturn(postId);
         when(mockPost.getCreatedDate()).thenReturn(LocalDateTime.now());
         when(mockPost.getUpdatedDate()).thenReturn(LocalDateTime.now());
         when(mockPost.getPostName()).thenReturn("Test Post");
         when(mockPost.getPostContent()).thenReturn("Test Content");
 
-        HttpRequest<Map<String, Object>> request = mock(HttpRequest.class);
-        when(request.getQueryParams()).thenReturn(queryParams);
+        when(postService.getPost(postId, boardId)).thenReturn(mockPost);
 
-        when(postService.getPost(1L, 2L)).thenReturn(mockPost);
-
-        postController.viewPost(request);
+        postController.viewPost(boardId, postId);
 
         verify(printHandler, times(1)).printResponseBodyAsMap(any(HttpResponse.class));
     }

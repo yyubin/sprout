@@ -27,12 +27,7 @@ public class MemberAuthController implements ControllerInterface{
     }
 
     @PostMapping(path = "/accounts/signin")
-    public void signin(HttpRequest<Map<String, Object>> request) throws Throwable {
-        Map<String, Object> body = request.getBody();
-        MemberLoginDTO memberLoginDTO = new MemberLoginDTO(
-                (String) body.get("id"),
-                (String) body.get("password")
-        );
+    public void signin(MemberLoginDTO memberLoginDTO) throws Throwable {
         String sessionId = memberAuthService.login(memberLoginDTO);
         HttpResponse<?> response = new HttpResponse<>(
                 PrintResultMessage.ACCOUNTS_LOGIN_SUCCESS + sessionId,

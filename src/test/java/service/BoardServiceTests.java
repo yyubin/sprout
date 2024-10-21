@@ -92,7 +92,7 @@ public class BoardServiceTests {
                 "Update board description",
                 "USER"
         );
-        boardService.updateBoard(boardUpdateDTO);
+        boardService.updateBoard(1L, boardUpdateDTO);
         Optional<Board> board = boardService.getBoardById(1L);
         assertTrue(board.isPresent());
         assertEquals("Test Board2", board.get().getBoardName());
@@ -114,7 +114,7 @@ public class BoardServiceTests {
                 "ADMIN"
         );
 
-        assertThrows(UnauthorizedAccessException.class, () -> boardService.updateBoard(boardUpdateDTO));
+        assertThrows(UnauthorizedAccessException.class, () -> boardService.updateBoard(1L, boardUpdateDTO));
     }
 
     @Test

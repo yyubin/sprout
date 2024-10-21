@@ -33,18 +33,12 @@ public class MemberAuthControllerTests {
 
     @Test
     void testSignin() throws Throwable {
-        // Prepare request
         String sessionId = "mockSessionId";
-        Map<String, Object> body = new HashMap<>();
-        body.put("id", "testUser");
-        body.put("password", "password123");
+        MemberLoginDTO memberLoginDTO = new MemberLoginDTO("testUser", "password123");
 
-        @SuppressWarnings("unchecked")
-        HttpRequest<Map<String, Object>> request = mock(HttpRequest.class);
-        when(request.getBody()).thenReturn(body);
         when(mockMemberAuthService.login(any(MemberLoginDTO.class))).thenReturn(sessionId);
 
-        memberAuthController.signin(request);
+        memberAuthController.signin(memberLoginDTO);
 
         verify(mockMemberAuthService, times(1)).login(any(MemberLoginDTO.class));
         verify(mockPrintHandler, times(1)).printSuccessWithResponseCodeAndCustomMessage(any(HttpResponse.class));
