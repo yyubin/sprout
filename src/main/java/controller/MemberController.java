@@ -114,4 +114,9 @@ public class MemberController implements ControllerInterface {
         printHandler.printSuccessWithResponseCodeAndCustomMessage(response);
     }
 
+    @GetMapping(path = "/accounts/testadmin")
+    public void createTestAdmin() {
+        memberService.registerAdminMember();
+    }
+
 }
