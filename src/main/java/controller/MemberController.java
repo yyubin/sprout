@@ -24,6 +24,7 @@ import service.MemberService;
 import view.PrintHandler;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -65,11 +66,19 @@ public class MemberController implements ControllerInterface {
         String id = request.getQueryParams().get("accountId");
         Optional<Member> memberById = memberService.getMemberById(id);
         if (memberById.isPresent()) {
-            String message = id + " 회원" + "\n" +
-                    "계정 : " + memberById.get().getName() + "\n" +
-                    "이메일 : " + memberById.get().getEmail() + "\n" +
-                    "가입일 : " + memberById.get().getJoinDate();
-            printHandler.printCustomMessage(message);
+            Map<String, Object> responseBody = new HashMap<>();
+            responseBody.put("계정", id);
+            responseBody.put("회원", memberById.get().getName());
+            responseBody.put("이메일", memberById.get().getEmail());
+            responseBody.put("가입일", memberById.get().getJoinDate());
+
+            HttpResponse<Map<String, Object>> response = new HttpResponse<>(
+                    ResponseCode.SUCCESS.getMessage(),
+                    ResponseCode.SUCCESS,
+                    responseBody
+            );
+
+            printHandler.printResponseBodyAsMap(response);
             return;
         }
         throw new MemberNotFoundException(ExceptionMessage.MEMBER_NOT_FOUND);

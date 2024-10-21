@@ -5,6 +5,8 @@ import config.annotations.Component;
 import config.annotations.Requires;
 import http.response.HttpResponse;
 
+import java.util.Map;
+
 @Component
 @Requires(dependsOn = {})
 public class PrintHandler {
@@ -20,4 +22,14 @@ public class PrintHandler {
     public <T> void printSuccessWithResponseCodeAndDefaultMessage(HttpResponse<T> httpResponse) {
         System.out.println(httpResponse.getResponseCode().getCode() + " " + httpResponse.getResponseCode().getMessage());
     }
+
+    public void printResponseBodyAsMap(HttpResponse<Map<String, Object>> response) {
+        Map<String, Object> body = response.getBody();
+        if (body != null) {
+            body.forEach((key, value) -> {
+                System.out.println(key + " : " + value);
+            });
+        }
+    }
+
 }
