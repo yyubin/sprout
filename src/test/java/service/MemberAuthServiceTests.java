@@ -34,7 +34,7 @@ public class MemberAuthServiceTests {
     }
 
     @Test
-    public void testSuccessfulLogin() {
+    public void testSuccessfulLogin() throws Throwable {
         MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin@gmail.com", "qwer", LocalDate.now());
         memberService.registerMember(memberDTO);
 
@@ -55,7 +55,7 @@ public class MemberAuthServiceTests {
     }
 
     @Test
-    public void testSuccessfulLogout() {
+    public void testSuccessfulLogout() throws Throwable {
         MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin@gmail.com", "qwer", LocalDate.now());
         memberService.registerMember(memberDTO);
 
@@ -66,7 +66,7 @@ public class MemberAuthServiceTests {
     }
 
     @Test
-    public void testSessionManagementAfterLogin() {
+    public void testSessionManagementAfterLogin() throws Throwable {
         MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin13", "yubin", "yubin@gmail.com", "qwer", LocalDate.now());
         memberService.registerMember(memberDTO);
         String sessionId = memberAuthService.login(new MemberLoginDTO("yubin13", "qwer"));

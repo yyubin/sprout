@@ -123,25 +123,26 @@ public class PostService {
     }
 
     private void checkPostOwnership(String memberId, Long postId) throws UnauthorizedAccessException {
-        Optional<Member> member = memberService.getMemberById(memberId);
-        if (member.isEmpty()) {
-            throw new UnauthorizedAccessException(ExceptionMessage.UNAUTHORIZED_CREATE_POST);
+        Member member = checkExistsMemberAndGetMemberById(memberId);
+        if (member.getGrade() == MemberGrade.ADMIN) {
+            return; // ADMIN은 모든 포스트에 대한 접근 가능
         }
-        if (member.get().getGrade() == MemberGrade.ADMIN) {
-            return;
-        }
-        Post post = postRepository.findById(postId).orElseThrow(NotFoundPostWithPostIdException::new);
+
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new NotFoundPostWithPostIdException(ExceptionMessage.NOT_FOUND_POST_WITH_POST_ID, postId));
         if (!post.getAuthor().getId().equals(memberId)) {
             throw new UnauthorizedAccessException(ExceptionMessage.UNAUTHORIZED_POST);
         }
     }
 
     private Board checkExistsBoardAndGetBoard(Long boardId) throws NotFoundBoardWithBoardIdException {
-        return boardService.getBoardById(boardId).orElseThrow(NotFoundBoardWithBoardIdException::new);
+        return boardService.getBoardById(boardId)
+                .orElseThrow(() -> new NotFoundBoardWithBoardIdException(ExceptionMessage.NOT_FOUND_BOARD_WITH_BOARD_ID, boardId));
     }
 
     private Member checkExistsMemberAndGetMemberById(String memberId) throws MemberNotFoundException {
-        return memberService.getMemberById(memberId).orElseThrow(MemberNotFoundException::new);
+        return memberService.getMemberById(memberId)
+                .orElseThrow(() -> new MemberNotFoundException(ExceptionMessage.MEMBER_NOT_FOUND));
     }
 
 

@@ -43,7 +43,13 @@ public class InputHandler {
                 if (rawRequest.toString().trim().isEmpty()){
                     break;
                 }
-                requestHandler.handleRequest(rawRequest.toString());
+
+                try {
+                    requestHandler.handleRequest(rawRequest.toString());
+                } catch (Throwable e) {
+                    printHandler.printCustomMessage(e.getCause().getMessage());
+                }
+
             }
         } catch (Exception e) {
             throw new RuntimeException(e);

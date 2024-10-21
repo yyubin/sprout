@@ -44,7 +44,7 @@ public class BoardServiceTests {
     }
 
     @Test
-    void createBoardWithAdminSuccess() throws UnauthorizedAccessException {
+    void createBoardWithAdminSuccess() throws Throwable {
         memberService.registerAdminMember();
         MemberLoginDTO loginDTO = new MemberLoginDTO("admin", "admin");
         BoardRegisterDTO boardRegisterDTO = new BoardRegisterDTO(
@@ -58,7 +58,7 @@ public class BoardServiceTests {
     }
 
     @Test
-    void createBoardWithMemberFail() throws UnauthorizedAccessException {
+    void createBoardWithMemberFail() throws Throwable {
         MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin@gmail.com", "qwer", LocalDate.now());
         memberService.registerMember(memberDTO);
 
@@ -75,7 +75,7 @@ public class BoardServiceTests {
     }
 
     @Test
-    void updateBoardWithAdminSuccess() throws UnauthorizedAccessException, NotFoundBoardWithBoardIdException {
+    void updateBoardWithAdminSuccess() throws Throwable {
         memberService.registerAdminMember();
         MemberLoginDTO loginDTO = new MemberLoginDTO("admin", "admin");
         BoardRegisterDTO boardRegisterDTO = new BoardRegisterDTO(
@@ -100,7 +100,7 @@ public class BoardServiceTests {
     }
 
     @Test
-    void updateBoardWithMemberFail() throws UnauthorizedAccessException, NotFoundBoardWithBoardIdException {
+    void updateBoardWithMemberFail() throws Throwable {
         MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin@gmail.com", "qwer", LocalDate.now());
         memberService.registerMember(memberDTO);
 
@@ -118,7 +118,7 @@ public class BoardServiceTests {
     }
 
     @Test
-    void deleteBoardWithAdminSuccess() throws UnauthorizedAccessException, NotFoundBoardWithBoardIdException {
+    void deleteBoardWithAdminSuccess() throws Throwable {
         memberService.registerAdminMember();
         MemberLoginDTO loginDTO = new MemberLoginDTO("admin", "admin");
         BoardRegisterDTO boardRegisterDTO = new BoardRegisterDTO(
@@ -133,7 +133,7 @@ public class BoardServiceTests {
     }
 
     @Test
-    void deleteBoardWithMemberFail() throws UnauthorizedAccessException, NotFoundBoardWithBoardIdException {
+    void deleteBoardWithMemberFail() throws Throwable {
         MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin@gmail.com", "qwer", LocalDate.now());
         memberService.registerMember(memberDTO);
 
@@ -144,7 +144,7 @@ public class BoardServiceTests {
     }
 
     @Test
-    void getAllBoards() {
+    void getAllBoards() throws Throwable {
         memberService.registerAdminMember();
         MemberLoginDTO loginDTO = new MemberLoginDTO("admin", "admin");
         String sessionId = memberAuthService.login(loginDTO);
@@ -165,7 +165,7 @@ public class BoardServiceTests {
     }
 
     @Test
-    void testDuplicateBoardNameFail() throws UnauthorizedAccessException, BoardNameAlreadyExistsException {
+    void testDuplicateBoardNameFail() throws Throwable {
         memberService.registerAdminMember();
         MemberLoginDTO loginDTO = new MemberLoginDTO("admin", "admin");
         String sessionId = memberAuthService.login(loginDTO);

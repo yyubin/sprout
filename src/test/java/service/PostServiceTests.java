@@ -39,7 +39,7 @@ public class PostServiceTests {
     }
 
     @Test
-    void testCreatePostSuccessfullyWithAdmin() {
+    void testCreatePostSuccessfullyWithAdmin() throws Throwable {
         memberService.registerAdminMember();
         MemberLoginDTO loginDTO = new MemberLoginDTO("admin", "admin");
         BoardRegisterDTO boardRegisterDTO = new BoardRegisterDTO(
@@ -61,7 +61,7 @@ public class PostServiceTests {
     }
 
     @Test
-    void testCreatePostFailWithUser() {
+    void testCreatePostFailWithUser() throws Throwable {
         memberService.registerAdminMember();
         MemberLoginDTO loginDTO = new MemberLoginDTO("admin", "admin");
         BoardRegisterDTO boardRegisterDTO = new BoardRegisterDTO(
@@ -88,7 +88,7 @@ public class PostServiceTests {
     }
 
     @Test
-    void testCreatePostSuccessfullyWithMember() {
+    void testCreatePostSuccessfullyWithMember() throws Throwable {
         memberService.registerAdminMember();
         MemberLoginDTO loginDTO = new MemberLoginDTO("admin", "admin");
         BoardRegisterDTO boardRegisterDTO = new BoardRegisterDTO(
@@ -117,7 +117,7 @@ public class PostServiceTests {
     }
 
     @Test
-    void testUpdatePostSuccessfully() {
+    void testUpdatePostSuccessfully() throws Throwable {
         memberService.registerAdminMember();
         MemberLoginDTO loginDTO = new MemberLoginDTO("admin", "admin");
         BoardRegisterDTO boardRegisterDTO = new BoardRegisterDTO(
@@ -160,7 +160,7 @@ public class PostServiceTests {
     }
 
     @Test
-    void testUpdatePostSuccessfullyWithAdmin() {
+    void testUpdatePostSuccessfullyWithAdmin() throws Throwable {
         memberService.registerAdminMember();
         MemberLoginDTO loginDTO = new MemberLoginDTO("admin", "admin");
         BoardRegisterDTO boardRegisterDTO = new BoardRegisterDTO(
@@ -206,7 +206,7 @@ public class PostServiceTests {
     }
 
     @Test
-    void testUpdatePostFailWithUser() {
+    void testUpdatePostFailWithUser() throws Throwable {
         memberService.registerAdminMember();
         MemberLoginDTO loginDTO = new MemberLoginDTO("admin", "admin");
         BoardRegisterDTO boardRegisterDTO = new BoardRegisterDTO(
@@ -251,7 +251,7 @@ public class PostServiceTests {
     }
 
     @Test
-    void testDeletePostSuccessfullyWithAdmin() {
+    void testDeletePostSuccessfullyWithAdmin() throws Throwable {
         memberService.registerAdminMember();
         MemberLoginDTO loginDTO = new MemberLoginDTO("admin", "admin");
         BoardRegisterDTO boardRegisterDTO = new BoardRegisterDTO(
@@ -285,7 +285,7 @@ public class PostServiceTests {
     }
 
     @Test
-    void testDeletePostSuccessfullyWithUser() {
+    void testDeletePostSuccessfullyWithUser() throws Throwable {
         memberService.registerAdminMember();
         MemberLoginDTO loginDTO = new MemberLoginDTO("admin", "admin");
         BoardRegisterDTO boardRegisterDTO = new BoardRegisterDTO(
@@ -317,7 +317,7 @@ public class PostServiceTests {
     }
 
     @Test
-    void testDeletePostFailWithUser() {
+    void testDeletePostFailWithUser() throws Throwable {
         memberService.registerAdminMember();
         MemberLoginDTO loginDTO = new MemberLoginDTO("admin", "admin");
         BoardRegisterDTO boardRegisterDTO = new BoardRegisterDTO(

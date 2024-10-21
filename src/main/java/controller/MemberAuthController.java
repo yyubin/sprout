@@ -27,7 +27,7 @@ public class MemberAuthController implements ControllerInterface{
     }
 
     @PostMapping(path = "/accounts/signin")
-    public void signin(HttpRequest<Map<String, Object>> request) throws RuntimeException {
+    public void signin(HttpRequest<Map<String, Object>> request) throws Throwable {
         Map<String, Object> body = request.getBody();
         MemberLoginDTO memberLoginDTO = new MemberLoginDTO(
                 (String) body.get("id"),
@@ -43,7 +43,7 @@ public class MemberAuthController implements ControllerInterface{
     }
 
     @GetMapping(path = "/accounts/signout")
-    public void signout() {
+    public void signout() throws Throwable {
         memberAuthService.logout();
         HttpResponse<?> response = new HttpResponse<>(
                 PrintResultMessage.ACCOUNTS_LOGOUT_SUCCESS,

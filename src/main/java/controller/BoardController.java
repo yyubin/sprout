@@ -39,7 +39,7 @@ public class BoardController implements ControllerInterface{
     }
 
     @PostMapping(path = "/boards/add")
-    public void addBoard(HttpRequest<Map<String, Object>> request) throws Exception {
+    public void addBoard(HttpRequest<Map<String, Object>> request) throws Throwable {
         Map<String, Object> body = request.getBody();
         List<MemberGrade> gradeList = new ArrayList<>();
         gradeList.add(MemberGrade.ADMIN);
@@ -65,7 +65,7 @@ public class BoardController implements ControllerInterface{
     }
 
     @PutMapping(path = "/boards/edit")
-    public void editBoard(HttpRequest<Map<String, Object>> request) throws Exception {
+    public void editBoard(HttpRequest<Map<String, Object>> request) throws Throwable {
         Long id = Long.valueOf(request.getQueryParams().get("boardId"));
         Map<String, Object> body = request.getBody();
 
@@ -94,7 +94,7 @@ public class BoardController implements ControllerInterface{
     }
 
     @DeleteMapping(path = "/boards/remove")
-    public void removeBoard(HttpRequest<Map<String, Object>> request) throws Exception {
+    public void removeBoard(HttpRequest<Map<String, Object>> request) throws Throwable {
         Long id = Long.valueOf(request.getQueryParams().get("boardId"));
         boardService.deleteBoard(id);
         HttpResponse<?> response = new HttpResponse<>(

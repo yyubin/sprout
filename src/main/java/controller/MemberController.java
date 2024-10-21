@@ -102,7 +102,7 @@ public class MemberController implements ControllerInterface {
     }
 
     @DeleteMapping(path = "/accounts/remove")
-    public void remove(HttpRequest<Map<String, Object>> request) {
+    public void remove(HttpRequest<Map<String, Object>> request) throws Throwable {
         String id = request.getQueryParams().get("accountId");
         memberAuthService.logout();
         memberService.deleteMember(id);

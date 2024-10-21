@@ -20,6 +20,7 @@ import util.Session;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 @Service
 @Priority(value = 1)
@@ -39,7 +40,7 @@ public class MemberAuthService {
         return redisSessionManager;
     }
 
-    public String login(MemberLoginDTO memberLoginDTO) throws MemberNotFoundException, InvalidCredentialsException {
+    public String login(MemberLoginDTO memberLoginDTO) throws Throwable {
         Optional<Member> member = memberService.getMemberById(memberLoginDTO.getId());
 
         checkNotLogin(Session.getSessionId());
@@ -58,40 +59,53 @@ public class MemberAuthService {
         return newSessionId;
     }
 
-    public void logout() throws NotLoggedInException {
+    public void logout() throws Throwable {
         checkLogin(Session.getSessionId());
         redisSessionManager.deleteSession(Session.getSessionId());
     }
 
-    public MemberGrade checkAuthority(String sessionId) throws NotLoggedInException {
-        String memberId = checkLoginAndgetMemberId(sessionId);
+    public MemberGrade checkAuthority(String sessionId) throws Throwable {
+        String memberId = checkLoginAndGetMemberId(sessionId);
         return memberService.getMemberById(memberId)
                 .map(Member::getGrade)
                 .orElseThrow(() -> new MemberNotFoundException(ExceptionMessage.MEMBER_NOT_FOUND));
     }
 
-    private void checkLogin(String sessionId) throws NotLoggedInException {
-        if (redisSessionManager.getSession(sessionId) == null) {
-            throw new NotLoggedInException(ExceptionMessage.NOT_LOGGED_IN);
-        }
+    private void checkLogin(String sessionId) throws Throwable {
+        checkExists(sessionId,
+                () -> redisSessionManager.getSession(sessionId) == null,
+                () -> new NotLoggedInException(ExceptionMessage.NOT_LOGGED_IN));
     }
 
-    private void checkNotLogin(String sessionId) throws AlreadyLoggedInException {
+    private void checkNotLogin(String sessionId) throws Throwable {
         if (sessionId == null) {
             return;
         }
-        if (redisSessionManager.getSession(sessionId) != null) {
-            throw new AlreadyLoggedInException(ExceptionMessage.ALREADY_LOGGED_IN);
-        }
+        checkExists(sessionId,
+                () -> redisSessionManager.getSession(sessionId) != null,
+                () -> new AlreadyLoggedInException(ExceptionMessage.ALREADY_LOGGED_IN));
     }
 
-    private String checkLoginAndgetMemberId(String sessionId) throws NotLoggedInException {
+    private String checkLoginAndGetMemberId(String sessionId) throws Throwable {
         String memberId = redisSessionManager.getSession(sessionId);
-        if (redisSessionManager.getSession(sessionId) == null) {
-            throw new NotLoggedInException(ExceptionMessage.NOT_LOGGED_IN);
-        }
+        checkExists(memberId,
+                () -> memberId == null,
+                () -> new NotLoggedInException(ExceptionMessage.NOT_LOGGED_IN));
         return memberId;
     }
 
+    private void checkMemberExists(Optional<Member> member) throws Throwable {
+        checkExists(member,
+                member::isEmpty,
+                () -> new MemberNotFoundException(ExceptionMessage.MEMBER_NOT_FOUND));
+    }
+
+    private void checkExists(Object value,
+                             Supplier<Boolean> checkFunction,
+                             Supplier<Throwable> exceptionSupplier) throws Throwable {
+        if (checkFunction.get()) {
+            throw exceptionSupplier.get();
+        }
+    }
 
 }

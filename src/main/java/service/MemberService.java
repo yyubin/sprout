@@ -18,6 +18,8 @@ import util.PasswordUtil;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 @Service
 @Priority(value = 0)
@@ -29,7 +31,8 @@ public class MemberService {
         this.memberRepository = memberRepository;
     }
 
-    public void registerMember(MemberRegisterDTO memberRegisterDTO) throws MemberIdAlreadyExistsException, MemberEmailAlreadyExistsException {
+    public void registerMember(MemberRegisterDTO memberRegisterDTO)
+            throws MemberIdAlreadyExistsException, MemberEmailAlreadyExistsException {
         checkIdExists(memberRegisterDTO.getId());
         checkEmailExists(memberRegisterDTO.getEmail());
 
@@ -61,7 +64,8 @@ public class MemberService {
         return memberRepository.findAll();
     }
 
-    public void updateMember(String memberId, MemberUpdateDTO memberUpdateDTO) throws MemberNotFoundException{
+    public void updateMember(String memberId, MemberUpdateDTO memberUpdateDTO)
+            throws MemberNotFoundException {
         checkIdDoesNotExists(memberId);
         if (memberUpdateDTO.getPassword() != null) {
             memberUpdateDTO.setPassword(PasswordUtil.encryptPassword(memberUpdateDTO.getPassword()));
@@ -75,20 +79,32 @@ public class MemberService {
     }
 
     private void checkIdExists(String memberId) throws MemberIdAlreadyExistsException {
-        if (getMemberById(memberId).isPresent()) {
-            throw new MemberIdAlreadyExistsException(ExceptionMessage.MEMBER_ID_ALREADY_EXISTS);
-        }
+        checkExists(memberId,
+                () -> getMemberById(memberId).isPresent(),
+                MemberIdAlreadyExistsException::new,
+                ExceptionMessage.MEMBER_ID_ALREADY_EXISTS);
     }
 
     private void checkEmailExists(String email) throws MemberEmailAlreadyExistsException {
-        if (getMemberByEmail(email).isPresent()) {
-            throw new MemberEmailAlreadyExistsException(ExceptionMessage.MEMBER_EMAIL_ALREADY_EXISTS);
-        }
+        checkExists(email,
+                () -> getMemberByEmail(email).isPresent(),
+                MemberEmailAlreadyExistsException::new,
+                ExceptionMessage.MEMBER_EMAIL_ALREADY_EXISTS);
     }
 
     private void checkIdDoesNotExists(String memberId) throws MemberNotFoundException {
-        if (getMemberById(memberId).isEmpty()) {
-            throw new MemberNotFoundException(ExceptionMessage.MEMBER_NOT_FOUND);
+        checkExists(memberId,
+                () -> getMemberById(memberId).isEmpty(),
+                MemberNotFoundException::new,
+                ExceptionMessage.MEMBER_NOT_FOUND);
+    }
+
+    private <T extends Throwable> void checkExists(String identifier,
+                                                   Supplier<Boolean> checkFunction,
+                                                   Function<String, T> exceptionSupplier,
+                                                   String message) throws T {
+        if (checkFunction.get()) {
+            throw exceptionSupplier.apply(message);
         }
     }
 
