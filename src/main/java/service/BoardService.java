@@ -17,6 +17,7 @@ import repository.interfaces.BoardRepository;
 import service.interfaces.BoardServiceInterface;
 import util.Session;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -37,11 +38,18 @@ public class BoardService implements BoardServiceInterface {
     public void createBoard(BoardRegisterDTO boardRegisterDTO) throws Throwable {
         checkAdminAuthority(Session.getSessionId());
         checkDuplicateBoardName(boardRegisterDTO.getBoardName());
+        List<MemberGrade> gradeList = new ArrayList<>();
+        gradeList.add(MemberGrade.ADMIN);
+
+        String grades = boardRegisterDTO.getGrade();
+        if (grades.equals(MemberGrade.USER.getDescription()) || grades.equals(MemberGrade.USER.getDescriptionEn())) {
+            gradeList.add(MemberGrade.USER);
+        }
         Board board = new Board(
                 (long) (boardRepository.size() + 1),
                 boardRegisterDTO.getBoardName(),
                 boardRegisterDTO.getDescription(),
-                boardRegisterDTO.getAccessGrades()
+                gradeList
         );
         boardRepository.save(board);
     }
@@ -62,12 +70,21 @@ public class BoardService implements BoardServiceInterface {
     public void updateBoard(BoardUpdateDTO boardUpdateDTO) throws Throwable {
         checkAdminAuthority(Session.getSessionId());
         checkDuplicateBoardName(boardUpdateDTO.getBoardName());
+
+        List<MemberGrade> gradeList = new ArrayList<>();
+        gradeList.add(MemberGrade.ADMIN);
+
+        String grades = boardUpdateDTO.getGrade();
+        if (grades.equals(MemberGrade.USER.getDescription()) || grades.equals(MemberGrade.USER.getDescriptionEn())) {
+            gradeList.add(MemberGrade.USER);
+        }
+
         if (boardRepository.findById(boardUpdateDTO.getId()).isPresent()) {
             Board board = new Board(
                     boardUpdateDTO.getId(),
                     boardUpdateDTO.getBoardName(),
                     boardUpdateDTO.getDescription(),
-                    boardUpdateDTO.getAccessGrades()
+                    gradeList
             );
             boardRepository.update(board);
             return;

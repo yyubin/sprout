@@ -45,7 +45,7 @@ public class PostServiceTests {
         BoardRegisterDTO boardRegisterDTO = new BoardRegisterDTO(
                 "Test Baord",
                 "This is test-board",
-                List.of(MemberGrade.ADMIN, MemberGrade.USER)
+                "USER"
         );
         memberAuthService.login(loginDTO);
         boardService.createBoard(boardRegisterDTO);
@@ -67,7 +67,7 @@ public class PostServiceTests {
         BoardRegisterDTO boardRegisterDTO = new BoardRegisterDTO(
                 "Test Baord",
                 "This is test-board",
-                List.of(MemberGrade.ADMIN)
+                "ADMIN"
         );
         memberAuthService.login(loginDTO);
         boardService.createBoard(boardRegisterDTO);
@@ -94,7 +94,7 @@ public class PostServiceTests {
         BoardRegisterDTO boardRegisterDTO = new BoardRegisterDTO(
                 "Test Baord",
                 "This is test-board",
-                List.of(MemberGrade.ADMIN, MemberGrade.USER)
+                "USER"
         );
         memberAuthService.login(loginDTO);
         boardService.createBoard(boardRegisterDTO);
@@ -123,7 +123,7 @@ public class PostServiceTests {
         BoardRegisterDTO boardRegisterDTO = new BoardRegisterDTO(
                 "Test Baord",
                 "This is test-board",
-                List.of(MemberGrade.ADMIN, MemberGrade.USER)
+                "USER"
         );
         memberAuthService.login(loginDTO);
         boardService.createBoard(boardRegisterDTO);
@@ -166,7 +166,7 @@ public class PostServiceTests {
         BoardRegisterDTO boardRegisterDTO = new BoardRegisterDTO(
                 "Test Baord",
                 "This is test-board",
-                List.of(MemberGrade.ADMIN, MemberGrade.USER)
+                "USER"
         );
         memberAuthService.login(loginDTO);
         boardService.createBoard(boardRegisterDTO);
@@ -212,7 +212,7 @@ public class PostServiceTests {
         BoardRegisterDTO boardRegisterDTO = new BoardRegisterDTO(
                 "Test Baord",
                 "This is test-board",
-                List.of(MemberGrade.ADMIN, MemberGrade.USER)
+                "USER"
         );
         memberAuthService.login(loginDTO);
         boardService.createBoard(boardRegisterDTO);
@@ -257,7 +257,7 @@ public class PostServiceTests {
         BoardRegisterDTO boardRegisterDTO = new BoardRegisterDTO(
                 "Test Baord",
                 "This is test-board",
-                List.of(MemberGrade.ADMIN, MemberGrade.USER)
+                "USER"
         );
         memberAuthService.login(loginDTO);
         boardService.createBoard(boardRegisterDTO);
@@ -291,7 +291,7 @@ public class PostServiceTests {
         BoardRegisterDTO boardRegisterDTO = new BoardRegisterDTO(
                 "Test Baord",
                 "This is test-board",
-                List.of(MemberGrade.ADMIN, MemberGrade.USER)
+                "USER"
         );
         memberAuthService.login(loginDTO);
         boardService.createBoard(boardRegisterDTO);
@@ -323,7 +323,7 @@ public class PostServiceTests {
         BoardRegisterDTO boardRegisterDTO = new BoardRegisterDTO(
                 "Test Baord",
                 "This is test-board",
-                List.of(MemberGrade.ADMIN, MemberGrade.USER)
+                "USER"
         );
         memberAuthService.login(loginDTO);
         boardService.createBoard(boardRegisterDTO);

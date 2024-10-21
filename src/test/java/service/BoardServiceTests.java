@@ -50,7 +50,7 @@ public class BoardServiceTests {
         BoardRegisterDTO boardRegisterDTO = new BoardRegisterDTO(
                 "Test Baord",
                 "This is test-board",
-                List.of(MemberGrade.ADMIN, MemberGrade.USER)
+                "USER"
         );
         memberAuthService.login(loginDTO);
         boardService.createBoard(boardRegisterDTO);
@@ -68,7 +68,7 @@ public class BoardServiceTests {
         BoardRegisterDTO boardRegisterDTO = new BoardRegisterDTO(
                 "Test Baord",
                 "This is test-board",
-                List.of(MemberGrade.ADMIN, MemberGrade.USER)
+                "USER"
         );
 
         assertThrows(UnauthorizedAccessException.class, () -> boardService.createBoard(boardRegisterDTO));
@@ -81,7 +81,7 @@ public class BoardServiceTests {
         BoardRegisterDTO boardRegisterDTO = new BoardRegisterDTO(
                 "Test Baord",
                 "This is test-board",
-                List.of(MemberGrade.ADMIN, MemberGrade.USER)
+                "USER"
         );
         String sessionId = memberAuthService.login(loginDTO);
         boardService.createBoard(boardRegisterDTO);
@@ -90,7 +90,7 @@ public class BoardServiceTests {
                 1L,
                 "Test Board2",
                 "Update board description",
-                List.of(MemberGrade.ADMIN)
+                "USER"
         );
         boardService.updateBoard(boardUpdateDTO);
         Optional<Board> board = boardService.getBoardById(1L);
@@ -111,7 +111,7 @@ public class BoardServiceTests {
                 1L,
                 "Test Board2",
                 "Update board description",
-                List.of(MemberGrade.ADMIN)
+                "ADMIN"
         );
 
         assertThrows(UnauthorizedAccessException.class, () -> boardService.updateBoard(boardUpdateDTO));
@@ -124,7 +124,7 @@ public class BoardServiceTests {
         BoardRegisterDTO boardRegisterDTO = new BoardRegisterDTO(
                 "Test Baord",
                 "This is test-board",
-                List.of(MemberGrade.ADMIN, MemberGrade.USER)
+                "USER"
         );
         String sessionId = memberAuthService.login(loginDTO);
         boardService.createBoard(boardRegisterDTO);
@@ -151,12 +151,12 @@ public class BoardServiceTests {
         BoardRegisterDTO boardRegisterDTO1 = new BoardRegisterDTO(
                 "Test Baord1",
                 "This is test-board",
-                List.of(MemberGrade.ADMIN, MemberGrade.USER)
+                "USER"
         );
         BoardRegisterDTO boardRegisterDTO2 = new BoardRegisterDTO(
                 "Test Baord2",
                 "This is test-board",
-                List.of(MemberGrade.ADMIN, MemberGrade.USER)
+                "USER"
         );
         boardService.createBoard(boardRegisterDTO1);
         boardService.createBoard(boardRegisterDTO2);
@@ -172,12 +172,12 @@ public class BoardServiceTests {
         BoardRegisterDTO boardRegisterDTO1 = new BoardRegisterDTO(
                 "Test Baord",
                 "This is test-board",
-                List.of(MemberGrade.ADMIN, MemberGrade.USER)
+                "USER"
         );
         BoardRegisterDTO boardRegisterDTO2 = new BoardRegisterDTO(
                 "Test Baord",
                 "This is test-board",
-                List.of(MemberGrade.ADMIN, MemberGrade.USER)
+                "USER"
         );
         boardService.createBoard(boardRegisterDTO1);
         assertThrows(BoardNameAlreadyExistsException.class, () -> boardService.createBoard(boardRegisterDTO2));
