@@ -8,14 +8,12 @@ public class MemberRegisterDTO {
     private String name;
     private String email;
     private String password;
-    private LocalDate joinDate;
 
-    public MemberRegisterDTO(String id, String name, String email, String password, LocalDate joinDate) {
+    public MemberRegisterDTO(String id, String name, String email, String password) {
         this.id = id;
         this.name = name;
         this.email = email;
         this.password = password;
-        this.joinDate = joinDate;
     }
 
     public String getId() {

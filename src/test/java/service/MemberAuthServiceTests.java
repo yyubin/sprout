@@ -35,7 +35,7 @@ public class MemberAuthServiceTests {
 
     @Test
     public void testSuccessfulLogin() throws Throwable {
-        MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin@gmail.com", "qwer", LocalDate.now());
+        MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin@gmail.com", "qwer");
         memberService.registerMember(memberDTO);
 
         MemberLoginDTO memberLoginDTO = new MemberLoginDTO("yubin111", "qwer");
@@ -46,7 +46,7 @@ public class MemberAuthServiceTests {
 
     @Test
     public void testFailedLogin() {
-        MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin@gmail.com", "qwer", LocalDate.now());
+        MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin@gmail.com", "qwer");
         memberService.registerMember(memberDTO);
 
         assertThrows(InvalidCredentialsException.class, () -> {
@@ -56,7 +56,7 @@ public class MemberAuthServiceTests {
 
     @Test
     public void testSuccessfulLogout() throws Throwable {
-        MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin@gmail.com", "qwer", LocalDate.now());
+        MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin@gmail.com", "qwer");
         memberService.registerMember(memberDTO);
 
         MemberLoginDTO memberLoginDTO = new MemberLoginDTO("yubin111", "qwer");
@@ -67,7 +67,7 @@ public class MemberAuthServiceTests {
 
     @Test
     public void testSessionManagementAfterLogin() throws Throwable {
-        MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin13", "yubin", "yubin@gmail.com", "qwer", LocalDate.now());
+        MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin13", "yubin", "yubin@gmail.com", "qwer");
         memberService.registerMember(memberDTO);
         String sessionId = memberAuthService.login(new MemberLoginDTO("yubin13", "qwer"));
 

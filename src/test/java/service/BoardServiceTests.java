@@ -59,7 +59,7 @@ public class BoardServiceTests {
 
     @Test
     void createBoardWithMemberFail() throws Throwable {
-        MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin@gmail.com", "qwer", LocalDate.now());
+        MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin@gmail.com", "qwer");
         memberService.registerMember(memberDTO);
 
         MemberLoginDTO memberLoginDTO = new MemberLoginDTO("yubin111", "qwer");
@@ -101,7 +101,7 @@ public class BoardServiceTests {
 
     @Test
     void updateBoardWithMemberFail() throws Throwable {
-        MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin@gmail.com", "qwer", LocalDate.now());
+        MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin@gmail.com", "qwer");
         memberService.registerMember(memberDTO);
 
         MemberLoginDTO memberLoginDTO = new MemberLoginDTO("yubin111", "qwer");
@@ -134,7 +134,7 @@ public class BoardServiceTests {
 
     @Test
     void deleteBoardWithMemberFail() throws Throwable {
-        MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin@gmail.com", "qwer", LocalDate.now());
+        MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin@gmail.com", "qwer");
         memberService.registerMember(memberDTO);
 
         MemberLoginDTO memberLoginDTO = new MemberLoginDTO("yubin111", "qwer");

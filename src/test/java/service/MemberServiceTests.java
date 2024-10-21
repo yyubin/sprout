@@ -33,7 +33,7 @@ public class MemberServiceTests {
 
     @Test
     public void testRegisterMember() {
-        MemberRegisterDTO registerDTO = new MemberRegisterDTO("yubin11", "yubin", "yubin@gmail.com", "qwer", LocalDate.now());
+        MemberRegisterDTO registerDTO = new MemberRegisterDTO("yubin11", "yubin", "yubin@gmail.com", "qwer");
         memberService.registerMember(registerDTO);
 
         Optional<Member> retrievedMember = memberService.getMemberById(registerDTO.getId());
@@ -44,8 +44,8 @@ public class MemberServiceTests {
 
     @Test
     public void testRegisterDuplicateId() {
-        MemberRegisterDTO registerDTO1 = new MemberRegisterDTO("yubin11", "yubin", "yubin1@gmail.com", "qwer", LocalDate.now());
-        MemberRegisterDTO registerDTO2 = new MemberRegisterDTO("yubin11", "yubin", "yubin2@gmail.com", "qwer", LocalDate.now());
+        MemberRegisterDTO registerDTO1 = new MemberRegisterDTO("yubin11", "yubin", "yubin1@gmail.com", "qwer");
+        MemberRegisterDTO registerDTO2 = new MemberRegisterDTO("yubin11", "yubin", "yubin2@gmail.com", "qwer");
         memberService.registerMember(registerDTO1);
 
         Exception exception = assertThrows(MemberIdAlreadyExistsException.class, () -> memberService.registerMember(registerDTO2));
@@ -54,8 +54,8 @@ public class MemberServiceTests {
 
     @Test
     public void testRegisterDuplicateEmail() {
-        MemberRegisterDTO registerDTO1 = new MemberRegisterDTO("yubin111", "yubin", "yubin@gmail.com", "qwer", LocalDate.now());
-        MemberRegisterDTO registerDTO2 = new MemberRegisterDTO("yubin112", "yubin", "yubin@gmail.com", "qwer", LocalDate.now());
+        MemberRegisterDTO registerDTO1 = new MemberRegisterDTO("yubin111", "yubin", "yubin@gmail.com", "qwer");
+        MemberRegisterDTO registerDTO2 = new MemberRegisterDTO("yubin112", "yubin", "yubin@gmail.com", "qwer");
         memberService.registerMember(registerDTO1);
 
         Exception exception = assertThrows(MemberEmailAlreadyExistsException.class, () -> memberService.registerMember(registerDTO2));
@@ -64,8 +64,8 @@ public class MemberServiceTests {
 
     @Test
     public void testGetAllMembers() {
-        MemberRegisterDTO registerDTO1 = new MemberRegisterDTO("yubin111", "yubin", "yubin1@gmail.com", "qwer", LocalDate.now());
-        MemberRegisterDTO registerDTO2 = new MemberRegisterDTO("yubin112", "yubin", "yubin2@gmail.com", "qwer", LocalDate.now());
+        MemberRegisterDTO registerDTO1 = new MemberRegisterDTO("yubin111", "yubin", "yubin1@gmail.com", "qwer");
+        MemberRegisterDTO registerDTO2 = new MemberRegisterDTO("yubin112", "yubin", "yubin2@gmail.com", "qwer");
         memberService.registerMember(registerDTO1);
         memberService.registerMember(registerDTO2);
 
@@ -75,7 +75,7 @@ public class MemberServiceTests {
 
     @Test
     public void testGetMemberById() {
-        MemberRegisterDTO registerDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin1@gmail.com", "qwer", LocalDate.now());
+        MemberRegisterDTO registerDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin1@gmail.com", "qwer");
         memberService.registerMember(registerDTO);
         Optional<Member> retrievedMember = memberService.getMemberById(registerDTO.getId());
         assertTrue(retrievedMember.isPresent());
@@ -83,7 +83,7 @@ public class MemberServiceTests {
 
     @Test
     public void testGetMemberByEmail() {
-        MemberRegisterDTO registerDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin1@gmail.com", "qwer", LocalDate.now());
+        MemberRegisterDTO registerDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin1@gmail.com", "qwer");
         memberService.registerMember(registerDTO);
         Optional<Member> retrievedMember = memberService.getMemberByEmail(registerDTO.getEmail());
         assertTrue(retrievedMember.isPresent());
@@ -91,7 +91,7 @@ public class MemberServiceTests {
 
     @Test
     public void testUpdateMember() {
-        MemberRegisterDTO registerDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin1@gmail.com", "qwer", LocalDate.now());
+        MemberRegisterDTO registerDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin1@gmail.com", "qwer");
         memberService.registerMember(registerDTO);
 
         MemberUpdateDTO memberUpdateDTO = new MemberUpdateDTO("yubin2@gmail.com", null);
@@ -110,7 +110,7 @@ public class MemberServiceTests {
 
     @Test
     public void testDeleteMember() {
-        MemberRegisterDTO registerDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin1@gmail.com", "qwer", LocalDate.now());
+        MemberRegisterDTO registerDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin1@gmail.com", "qwer");
         memberService.registerMember(registerDTO);
         memberService.deleteMember(registerDTO.getId());
         assertEquals(0, memberService.getAllMembers().size());

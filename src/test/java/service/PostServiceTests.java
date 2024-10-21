@@ -73,7 +73,7 @@ public class PostServiceTests {
         boardService.createBoard(boardRegisterDTO);
         memberAuthService.logout();
 
-        MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin@gmail.com", "qwer", LocalDate.now());
+        MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin@gmail.com", "qwer");
         memberService.registerMember(memberDTO);
 
         MemberLoginDTO memberLoginDTO = new MemberLoginDTO("yubin111", "qwer");
@@ -100,7 +100,7 @@ public class PostServiceTests {
         boardService.createBoard(boardRegisterDTO);
         memberAuthService.logout();
 
-        MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin@gmail.com", "qwer", LocalDate.now());
+        MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin@gmail.com", "qwer");
         memberService.registerMember(memberDTO);
 
         MemberLoginDTO memberLoginDTO = new MemberLoginDTO("yubin111", "qwer");
@@ -129,7 +129,7 @@ public class PostServiceTests {
         boardService.createBoard(boardRegisterDTO);
         memberAuthService.logout();
 
-        MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin@gmail.com", "qwer", LocalDate.now());
+        MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin@gmail.com", "qwer");
         memberService.registerMember(memberDTO);
 
         MemberLoginDTO memberLoginDTO = new MemberLoginDTO("yubin111", "qwer");
@@ -172,7 +172,7 @@ public class PostServiceTests {
         boardService.createBoard(boardRegisterDTO);
         memberAuthService.logout();
 
-        MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin@gmail.com", "qwer", LocalDate.now());
+        MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin@gmail.com", "qwer");
         memberService.registerMember(memberDTO);
 
         MemberLoginDTO memberLoginDTO = new MemberLoginDTO("yubin111", "qwer");
@@ -218,7 +218,7 @@ public class PostServiceTests {
         boardService.createBoard(boardRegisterDTO);
         memberAuthService.logout();
 
-        MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin_other@gmail.com", "qwer", LocalDate.now());
+        MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin_other@gmail.com", "qwer");
         memberService.registerMember(memberDTO);
 
         MemberLoginDTO memberLoginDTO = new MemberLoginDTO("yubin111", "qwer");
@@ -242,7 +242,7 @@ public class PostServiceTests {
 
         memberAuthService.logout();
 
-        MemberRegisterDTO otherMemberDTO = new MemberRegisterDTO("yu222", "yubin", "yubin@gmail.com", "qwer", LocalDate.now());
+        MemberRegisterDTO otherMemberDTO = new MemberRegisterDTO("yu222", "yubin", "yubin@gmail.com", "qwer");
         memberService.registerMember(otherMemberDTO);
 
         MemberLoginDTO otherMemberLoginDTO = new MemberLoginDTO("yu222", "qwer");
@@ -263,7 +263,7 @@ public class PostServiceTests {
         boardService.createBoard(boardRegisterDTO);
         memberAuthService.logout();
 
-        MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin@gmail.com", "qwer", LocalDate.now());
+        MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin@gmail.com", "qwer");
         memberService.registerMember(memberDTO);
 
         MemberLoginDTO memberLoginDTO = new MemberLoginDTO("yubin111", "qwer");
@@ -297,7 +297,7 @@ public class PostServiceTests {
         boardService.createBoard(boardRegisterDTO);
         memberAuthService.logout();
 
-        MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin@gmail.com", "qwer", LocalDate.now());
+        MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin@gmail.com", "qwer");
         memberService.registerMember(memberDTO);
 
         MemberLoginDTO memberLoginDTO = new MemberLoginDTO("yubin111", "qwer");
@@ -329,7 +329,7 @@ public class PostServiceTests {
         boardService.createBoard(boardRegisterDTO);
         memberAuthService.logout();
 
-        MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin@gmail.com", "qwer", LocalDate.now());
+        MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin@gmail.com", "qwer");
         memberService.registerMember(memberDTO);
 
         MemberLoginDTO memberLoginDTO = new MemberLoginDTO("yubin111", "qwer");
@@ -343,7 +343,7 @@ public class PostServiceTests {
         postService.createPost(postRegisterDTO);
         memberAuthService.logout();
 
-        MemberRegisterDTO otherMemberRegisterDTO = new MemberRegisterDTO("yubin121", "yubin", "yubi2n@gmail.com", "qwer", LocalDate.now());
+        MemberRegisterDTO otherMemberRegisterDTO = new MemberRegisterDTO("yubin121", "yubin", "yubi2n@gmail.com", "qwer");
         memberService.registerMember(otherMemberRegisterDTO);
 
         MemberLoginDTO otherMemberLoginDTO = new MemberLoginDTO("yubin121", "qwer");
