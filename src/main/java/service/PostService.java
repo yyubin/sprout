@@ -95,6 +95,12 @@ public class PostService {
         return postRepository.findPostsByName(postName);
     }
 
+    public List<Post> getPostsByBoardName(String boardName) {
+        return getAllPosts().stream()
+                .filter(post -> post.getBoard().getBoardName().equals(boardName) && !post.isDeleted())
+                .toList();
+    }
+
     public int getAllPostsSize() {
         return postRepository.allPostsSize();
     }

@@ -5,6 +5,7 @@ import config.annotations.Component;
 import config.annotations.Requires;
 import http.response.HttpResponse;
 
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -29,6 +30,16 @@ public class PrintHandler {
             body.forEach((key, value) -> {
                 System.out.println(key + " : " + value);
             });
+        }
+    }
+
+    public void printResponseBodyAsMapList(HttpResponse<List<Map<String, Object>>> response) {
+        List<Map<String, Object>> body = response.getBody();
+        for (Map<String, Object> map : body) {
+            map.forEach((key, value) -> {
+                System.out.print(key + " : " + value + " ");
+            });
+            System.out.println();
         }
     }
 

@@ -6,6 +6,8 @@ import controller.annotations.DeleteMapping;
 import controller.annotations.GetMapping;
 import controller.annotations.PostMapping;
 import controller.annotations.PutMapping;
+import domain.Board;
+import domain.Post;
 import domain.grade.MemberGrade;
 import dto.BoardRegisterDTO;
 import dto.BoardUpdateDTO;
@@ -14,21 +16,25 @@ import http.response.HttpResponse;
 import http.response.ResponseCode;
 import message.PrintResultMessage;
 import service.BoardService;
+import service.PostService;
 import view.PrintHandler;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Controller
-@Requires(dependsOn = {BoardService.class, PrintHandler.class})
+@Requires(dependsOn = {BoardService.class, PostService.class, PrintHandler.class})
 public class BoardController implements ControllerInterface{
 
     private final BoardService boardService;
+    private final PostService postService;
     private final PrintHandler printHandler;
 
-    public BoardController(BoardService boardService, PrintHandler printHandler) {
+    public BoardController(BoardService boardService, PostService postService, PrintHandler printHandler) {
         this.boardService = boardService;
+        this.postService = postService;
         this.printHandler = printHandler;
     }
 
@@ -99,13 +105,27 @@ public class BoardController implements ControllerInterface{
         printHandler.printSuccessWithResponseCodeAndCustomMessage(response);
     }
 
-//    @GetMapping(path = "/boards/view")
-//    public void viewBoard(HttpRequest<Map<String, Object>> request) throws Exception {
-//        String boardName = request.getQueryParams().get("boardName");
-//        boardService.deleteBoard(boardName);
-//        HttpResponse<?> response = new HttpResponse<>(
-//                PrintResultMessage.B
-//        )
-//    }
+    @GetMapping(path = "/boards/view")
+    public void viewBoard(HttpRequest<Map<String, Object>> request) throws Exception {
+        String boardName = request.getQueryParams().get("boardName");
+        List<Post> postList = postService.getPostsByBoardName(boardName);
+
+        List<Map<String, Object>> postSummaryList = postList.stream()
+                .map(post -> {
+                    Map<String, Object> postSummary = new HashMap<>();
+                    postSummary.put("postId", post.getPostId());
+                    postSummary.put("postName", post.getPostName());
+                    postSummary.put("postDate", post.getCreatedDate());
+                    return postSummary;
+                })
+                .toList();
+
+        HttpResponse<List<Map<String, Object>>> response = new HttpResponse<>(
+                ResponseCode.SUCCESS.getMessage(),
+                ResponseCode.SUCCESS,
+                postSummaryList
+        );
+        printHandler.printResponseBodyAsMapList(response);
+    }
 
 }

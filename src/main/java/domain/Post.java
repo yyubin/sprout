@@ -44,6 +44,10 @@ public class Post {
         return board;
     }
 
+    public LocalDateTime getCreatedDate() {
+        return createdDate;
+    }
+
     public boolean isDeleted() {
         return deleted;
     }
