@@ -7,9 +7,12 @@ import message.ExceptionMessage;
 import service.interfaces.MemberAuthServiceInterface;
 import util.Session;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.Arrays;
 
 public class MethodProxyHandler implements InvocationHandler {
 
@@ -23,14 +26,19 @@ public class MethodProxyHandler implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        System.out.println("MethodProxyHandler.invoke");
-        if (method.isAnnotationPresent(BeforeAuthCheck.class)) {
+        Method targetMethod = target.getClass().getMethod(method.getName(), method.getParameterTypes());
+        if (targetMethod.isAnnotationPresent(BeforeAuthCheck.class)) {
             MemberGrade memberGrade = memberAuthService.checkAuthority(Session.getSessionId());
             if (memberGrade != MemberGrade.ADMIN) {
                 throw new UnauthorizedAccessException(ExceptionMessage.UNAUTHORIZED_CREATE_BOARD);
             }
         }
-        return method.invoke(target, args);
+
+        try {
+            return method.invoke(target, args);
+        } catch (InvocationTargetException e) {
+            throw e.getTargetException();
+        }
     }
 
     public static Object createProxy(Object target, MemberAuthServiceInterface memberAuthService) {

@@ -21,6 +21,7 @@ import service.interfaces.BoardServiceInterface;
 import service.interfaces.MemberAuthServiceInterface;
 import service.interfaces.MemberServiceInterface;
 import util.RedisSessionManager;
+import util.Session;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -74,10 +75,7 @@ public class BoardServiceTests {
                 "USER"
         );
 
-        System.out.println(boardService.getBoardSize());
-        boardService.createBoard(boardRegisterDTO);
-        //assertThrows(UnauthorizedAccessException.class, () -> boardService.createBoard(boardRegisterDTO));
-        System.out.println(boardService.getBoardSize());
+        assertThrows(UnauthorizedAccessException.class, () -> boardService.createBoard(boardRegisterDTO));
     }
 
     @Test
