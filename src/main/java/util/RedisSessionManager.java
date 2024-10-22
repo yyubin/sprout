@@ -2,9 +2,10 @@ package util;
 
 import config.annotations.Component;
 import redis.clients.jedis.Jedis;
+import util.interfaces.SessionManager;
 
 @Component
-public class RedisSessionManager implements SessionManager{
+public class RedisSessionManager implements SessionManager {
 
     private final Jedis jedis;
 

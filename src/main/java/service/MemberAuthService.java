@@ -14,9 +14,8 @@ import message.ExceptionMessage;
 import service.interfaces.MemberAuthServiceInterface;
 import service.interfaces.MemberServiceInterface;
 import util.BCryptPasswordUtil;
-import util.RedisSessionManager;
 import util.Session;
-import util.SessionManager;
+import util.interfaces.SessionManager;
 
 import java.util.Optional;
 import java.util.UUID;

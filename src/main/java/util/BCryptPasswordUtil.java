@@ -1,8 +1,9 @@
 package util;
 
 import org.mindrot.jbcrypt.BCrypt;
+import util.interfaces.PasswordUtil;
 
-public class BCryptPasswordUtil implements PasswordUtil{
+public class BCryptPasswordUtil implements PasswordUtil {
 
     public static String encryptPassword(String rawPassword) {
         return BCrypt.hashpw(rawPassword, BCrypt.gensalt());
