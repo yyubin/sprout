@@ -43,7 +43,11 @@ public class BoardController implements ControllerInterface{
 
     @PostMapping(path = "/boards/add")
     public void addBoard(BoardRegisterDTO boardRegisterDTO) throws Throwable {
-        boardService.createBoard(boardRegisterDTO);
+        try {
+            boardService.createBoard(boardRegisterDTO);
+        } catch (Throwable e) {
+            throw new Throwable(e.getMessage());
+        }
 
         HttpResponse<?> response = new HttpResponse<>(
                 PrintResultMessage.BOARD_CREATE_SUCCESS,
@@ -55,7 +59,11 @@ public class BoardController implements ControllerInterface{
 
     @PutMapping(path = "/boards/edit")
     public void editBoard(Long boardId, BoardUpdateDTO boardUpdateDTO) throws Throwable {
-        boardService.updateBoard(boardId, boardUpdateDTO);
+        try {
+            boardService.updateBoard(boardId, boardUpdateDTO);
+        } catch (Throwable e) {
+            throw new Throwable(e.getMessage());
+        }
 
         HttpResponse<?> response = new HttpResponse<>(
                 PrintResultMessage.BOARD_UPDATE_SUCCESS,

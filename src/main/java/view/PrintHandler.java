@@ -21,8 +21,8 @@ public class PrintHandler implements PrintProcessor {
     }
 
     public void printExceptionMessage(Throwable e) {
-        if(!e.getCause().getCause().getMessage().isEmpty()) {
-            System.out.println(e.getCause().getMessage());
+        if(e.getMessage().isEmpty()) {
+            System.out.println(e.getMessage());
             return;
         }
         System.out.println(ExceptionMessage.BAD_REQUEST);

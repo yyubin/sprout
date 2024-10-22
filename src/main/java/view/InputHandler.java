@@ -6,12 +6,15 @@ import config.annotations.Requires;
 import http.request.RequestHandler;
 import message.ExceptionMessage;
 import message.InputCautionMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import view.interfaces.InputProcessor;
 import view.interfaces.PrintProcessor;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Scanner;
 
 @Component
@@ -19,6 +22,7 @@ import java.util.Scanner;
 @Requires(dependsOn = {RequestHandler.class, PrintProcessor.class})
 public class InputHandler implements InputProcessor {
 
+    private static final Logger log = LoggerFactory.getLogger(InputHandler.class);
     private final RequestHandler requestHandler;
     private final PrintProcessor printHandler;
 
@@ -49,6 +53,8 @@ public class InputHandler implements InputProcessor {
 
                 try {
                     requestHandler.handleRequest(rawRequest.toString());
+                } catch (InvocationTargetException e) {
+                    printHandler.printCustomMessage(e.getCause().getMessage());
                 } catch (Throwable e) {
                     printHandler.printCustomMessage(e.getMessage());
                 }

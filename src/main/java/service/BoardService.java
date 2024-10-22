@@ -38,6 +38,7 @@ public class BoardService implements BoardServiceInterface {
         if (grades.equals(MemberGrade.USER.getDescription()) || grades.equals(MemberGrade.USER.getDescriptionEn())) {
             gradeList.add(MemberGrade.USER);
         }
+
         Board board = new Board(
                 (long) (boardRepository.size() + 1),
                 boardRegisterDTO.getBoardName(),
@@ -63,16 +64,15 @@ public class BoardService implements BoardServiceInterface {
     @BeforeAuthCheck
     public void updateBoard(Long boardId, BoardUpdateDTO boardUpdateDTO) throws Throwable {
         checkDuplicateBoardName(boardUpdateDTO.getBoardName());
-
         List<MemberGrade> gradeList = new ArrayList<>();
         gradeList.add(MemberGrade.ADMIN);
 
         String grades = boardUpdateDTO.getGrade();
-        if (grades.equals(MemberGrade.USER.getDescription()) || grades.equals(MemberGrade.USER.getDescriptionEn())) {
+        if (grades.equals(MemberGrade.USER.getDescriptionEn())) {
             gradeList.add(MemberGrade.USER);
         }
 
-        if (boardRepository.findById(boardUpdateDTO.getId()).isPresent()) {
+        if (boardRepository.findById(boardId).isPresent()) {
             Board board = new Board(
                     boardId,
                     boardUpdateDTO.getBoardName(),

@@ -7,6 +7,9 @@ public class PostRegisterDTO {
     private String postName;
     private String postContent;
 
+    public PostRegisterDTO() {
+    }
+
     public PostRegisterDTO(String postName, String postContent) {
         this.postName = postName;
         this.postContent = postContent;
