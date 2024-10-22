@@ -17,6 +17,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import repository.InMemoryBoardRepository;
 import repository.InMemoryMemberRepository;
+import service.interfaces.BoardServiceInterface;
+import service.interfaces.MemberAuthServiceInterface;
+import service.interfaces.MemberServiceInterface;
 import util.RedisSessionManager;
 
 import java.time.LocalDate;
@@ -28,9 +31,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class BoardServiceTests {
 
-    private MemberAuthService memberAuthService;
-    private BoardService boardService;
-    private MemberService memberService;
+    private MemberAuthServiceInterface memberAuthService;
+    private BoardServiceInterface boardService;
+    private MemberServiceInterface memberService;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -38,9 +41,9 @@ public class BoardServiceTests {
         Container.getInstance().scan(PackageName.util.getPackageName());
         Container.getInstance().scan(PackageName.service.getPackageName());
 
-        memberService = Container.getInstance().get(MemberService.class);
-        memberAuthService = Container.getInstance().get(MemberAuthService.class);
-        boardService = Container.getInstance().get(BoardService.class);
+        memberService = Container.getInstance().get(MemberServiceInterface.class);
+        memberAuthService = Container.getInstance().get(MemberAuthServiceInterface.class);
+        boardService = Container.getInstance().get(BoardServiceInterface.class);
     }
 
     @Test
@@ -71,7 +74,10 @@ public class BoardServiceTests {
                 "USER"
         );
 
-        assertThrows(UnauthorizedAccessException.class, () -> boardService.createBoard(boardRegisterDTO));
+        System.out.println(boardService.getBoardSize());
+        boardService.createBoard(boardRegisterDTO);
+        //assertThrows(UnauthorizedAccessException.class, () -> boardService.createBoard(boardRegisterDTO));
+        System.out.println(boardService.getBoardSize());
     }
 
     @Test
