@@ -10,6 +10,7 @@ import exception.MemberIdAlreadyExistsException;
 import message.ExceptionMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import service.interfaces.MemberServiceInterface;
 import util.BCryptPasswordUtil;
 
 import java.time.LocalDate;
@@ -19,7 +20,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class MemberServiceTests {
-    private MemberService memberService;
+    private MemberServiceInterface memberService;
 
     @BeforeEach
     public void setUp() throws Exception {
@@ -28,7 +29,7 @@ public class MemberServiceTests {
         Container.getInstance().scan(PackageName.util.getPackageName());
         Container.getInstance().scan(PackageName.service.getPackageName());
 
-        memberService = Container.getInstance().get(MemberService.class);
+        memberService = Container.getInstance().get(MemberServiceInterface.class);
     }
 
     @Test

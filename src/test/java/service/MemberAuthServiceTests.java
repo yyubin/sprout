@@ -12,6 +12,8 @@ import org.junit.jupiter.api.Test;
 import redis.clients.jedis.Jedis;
 import repository.InMemoryBoardRepository;
 import repository.InMemoryMemberRepository;
+import service.interfaces.MemberAuthServiceInterface;
+import service.interfaces.MemberServiceInterface;
 import util.RedisSessionManager;
 import util.Session;
 
@@ -21,16 +23,16 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class MemberAuthServiceTests {
 
-    private MemberAuthService memberAuthService;
-    private MemberService memberService;
+    private MemberAuthServiceInterface memberAuthService;
+    private MemberServiceInterface memberService;
 
     @BeforeEach
     public void setup() throws Exception {
         Container.getInstance().scan(PackageName.repository.getPackageName());
         Container.getInstance().scan(PackageName.util.getPackageName());
         Container.getInstance().scan(PackageName.service.getPackageName());
-        memberService = Container.getInstance().get(MemberService.class);
-        memberAuthService = Container.getInstance().get(MemberAuthService.class);
+        memberService = Container.getInstance().get(MemberServiceInterface.class);
+        memberAuthService = Container.getInstance().get(MemberAuthServiceInterface.class);
     }
 
     @Test

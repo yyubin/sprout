@@ -12,6 +12,10 @@ import org.junit.jupiter.api.Test;
 import repository.InMemoryBoardRepository;
 import repository.InMemoryMemberRepository;
 import repository.InMemoryPostRepository;
+import service.interfaces.BoardServiceInterface;
+import service.interfaces.MemberAuthServiceInterface;
+import service.interfaces.MemberServiceInterface;
+import service.interfaces.PostServiceInterface;
 import util.RedisSessionManager;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -21,10 +25,10 @@ import java.util.List;
 
 public class PostServiceTests {
 
-    private PostService postService;
-    private MemberAuthService memberAuthService;
-    private BoardService boardService;
-    private MemberService memberService;
+    private PostServiceInterface postService;
+    private MemberAuthServiceInterface memberAuthService;
+    private BoardServiceInterface boardService;
+    private MemberServiceInterface memberService;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -32,10 +36,10 @@ public class PostServiceTests {
         Container.getInstance().scan(PackageName.util.getPackageName());
         Container.getInstance().scan(PackageName.service.getPackageName());
 
-        memberService = Container.getInstance().get(MemberService.class);
-        memberAuthService = Container.getInstance().get(MemberAuthService.class);
-        boardService = Container.getInstance().get(BoardService.class);
-        postService = Container.getInstance().get(PostService.class);
+        memberService = Container.getInstance().get(MemberServiceInterface.class);
+        memberAuthService = Container.getInstance().get(MemberAuthServiceInterface.class);
+        boardService = Container.getInstance().get(BoardServiceInterface.class);
+        postService = Container.getInstance().get(PostServiceInterface.class);
     }
 
     @Test
