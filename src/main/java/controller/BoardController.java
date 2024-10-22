@@ -75,7 +75,12 @@ public class BoardController implements ControllerInterface{
 
     @DeleteMapping(path = "/boards/remove")
     public void removeBoard(Long boardId) throws Throwable {
-        boardService.deleteBoard(boardId);
+        try {
+            boardService.deleteBoard(boardId);
+        } catch (Throwable e) {
+            throw new Throwable(e.getMessage());
+        }
+
         HttpResponse<?> response = new HttpResponse<>(
                 PrintResultMessage.BOARD_DELETE_SUCCESS,
                 ResponseCode.SUCCESS,
