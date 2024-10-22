@@ -10,18 +10,19 @@ import http.response.HttpResponse;
 import http.response.ResponseCode;
 import message.PrintResultMessage;
 import service.MemberAuthService;
+import service.interfaces.MemberAuthServiceInterface;
 import view.PrintHandler;
 
 import java.util.Map;
 
 @Controller
-@Requires(dependsOn = {MemberAuthService.class, PrintHandler.class})
+@Requires(dependsOn = {MemberAuthServiceInterface.class, PrintHandler.class})
 public class MemberAuthController implements ControllerInterface{
 
-    private final MemberAuthService memberAuthService;
+    private final MemberAuthServiceInterface memberAuthService;
     private final PrintHandler printHandler;
 
-    public MemberAuthController(MemberAuthService memberAuthService, PrintHandler printHandler) {
+    public MemberAuthController(MemberAuthServiceInterface memberAuthService, PrintHandler printHandler) {
         this.memberAuthService = memberAuthService;
         this.printHandler = printHandler;
     }

@@ -36,7 +36,7 @@ public class PostControllerTests {
     }
 
     @Test
-    public void testAddPost() {
+    public void testAddPost() throws Throwable {
         Long boardId = 1L; // Sample board ID
         PostRegisterDTO postRegisterDTO = new PostRegisterDTO("Test Post", "This is a test post.");
 
@@ -47,7 +47,7 @@ public class PostControllerTests {
     }
 
     @Test
-    public void testRemovePost() {
+    public void testRemovePost() throws Throwable {
         Long postId = 1L; // Sample post ID
 
         postController.removePost(postId);
@@ -57,7 +57,7 @@ public class PostControllerTests {
     }
 
     @Test
-    public void testEditPost() {
+    public void testEditPost() throws Throwable {
         Long boardId = 2L; // Sample board ID
         Long postId = 1L; // Sample post ID
         PostUpdateDTO postUpdateDTO = new PostUpdateDTO("Updated Post", "Updated Content"); // Adjusted constructor parameters

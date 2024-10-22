@@ -21,6 +21,8 @@ import message.PrintResultMessage;
 
 import service.MemberAuthService;
 import service.MemberService;
+import service.interfaces.MemberAuthServiceInterface;
+import service.interfaces.MemberServiceInterface;
 import view.PrintHandler;
 
 import java.time.LocalDate;
@@ -29,14 +31,14 @@ import java.util.Map;
 import java.util.Optional;
 
 @Controller
-@Requires(dependsOn = {MemberService.class, MemberAuthService.class, PrintHandler.class})
+@Requires(dependsOn = {MemberServiceInterface.class, MemberAuthServiceInterface.class, PrintHandler.class})
 public class MemberController implements ControllerInterface {
 
-    private final MemberService memberService;
-    private final MemberAuthService memberAuthService;
+    private final MemberServiceInterface memberService;
+    private final MemberAuthServiceInterface memberAuthService;
     private final PrintHandler printHandler;
 
-    public MemberController(MemberService memberService, MemberAuthService memberAuthService, PrintHandler printHandler) {
+    public MemberController(MemberServiceInterface memberService, MemberAuthServiceInterface memberAuthService, PrintHandler printHandler) {
         this.memberService = memberService;
         this.memberAuthService = memberAuthService;
         this.printHandler = printHandler;

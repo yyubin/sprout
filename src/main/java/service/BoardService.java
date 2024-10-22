@@ -15,6 +15,7 @@ import message.ExceptionMessage;
 import repository.InMemoryBoardRepository;
 import repository.interfaces.BoardRepository;
 import service.interfaces.BoardServiceInterface;
+import service.interfaces.MemberAuthServiceInterface;
 import util.Session;
 
 import java.util.ArrayList;
@@ -24,13 +25,13 @@ import java.util.function.Supplier;
 
 @Service
 @Priority(value = 2)
-@Requires(dependsOn = {BoardRepository.class, MemberAuthService.class})
+@Requires(dependsOn = {BoardRepository.class, MemberAuthServiceInterface.class})
 public class BoardService implements BoardServiceInterface {
 
     private final BoardRepository boardRepository;
-    private final MemberAuthService memberAuthService;
+    private final MemberAuthServiceInterface memberAuthService;
 
-    public BoardService(BoardRepository boardRepository, MemberAuthService memberAuthService) {
+    public BoardService(BoardRepository boardRepository, MemberAuthServiceInterface memberAuthService) {
         this.boardRepository = boardRepository;
         this.memberAuthService = memberAuthService;
     }

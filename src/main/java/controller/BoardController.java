@@ -17,6 +17,8 @@ import http.response.ResponseCode;
 import message.PrintResultMessage;
 import service.BoardService;
 import service.PostService;
+import service.interfaces.BoardServiceInterface;
+import service.interfaces.PostServiceInterface;
 import view.PrintHandler;
 
 import java.util.ArrayList;
@@ -25,14 +27,14 @@ import java.util.List;
 import java.util.Map;
 
 @Controller
-@Requires(dependsOn = {BoardService.class, PostService.class, PrintHandler.class})
+@Requires(dependsOn = {BoardServiceInterface.class, PostServiceInterface.class, PrintHandler.class})
 public class BoardController implements ControllerInterface{
 
-    private final BoardService boardService;
-    private final PostService postService;
+    private final BoardServiceInterface boardService;
+    private final PostServiceInterface postService;
     private final PrintHandler printHandler;
 
-    public BoardController(BoardService boardService, PostService postService, PrintHandler printHandler) {
+    public BoardController(BoardServiceInterface boardService, PostServiceInterface postService, PrintHandler printHandler) {
         this.boardService = boardService;
         this.postService = postService;
         this.printHandler = printHandler;

@@ -32,7 +32,7 @@ public class PostController implements ControllerInterface{
     }
 
     @PostMapping(path = "/posts/add")
-    public void addPost(Long boardId, PostRegisterDTO postRegisterDTO) {
+    public void addPost(Long boardId, PostRegisterDTO postRegisterDTO) throws Throwable {
         postService.createPost(boardId, postRegisterDTO);
 
         HttpResponse<?> response = new HttpResponse<>(
@@ -44,7 +44,7 @@ public class PostController implements ControllerInterface{
     }
 
     @DeleteMapping(path = "/posts/remove")
-    public void removePost(Long postId) {
+    public void removePost(Long postId) throws Throwable {
         postService.deletePost(postId);
         HttpResponse<?> response = new HttpResponse<>(
                 PrintResultMessage.POST_DELETE_SUCCESS,
@@ -55,7 +55,7 @@ public class PostController implements ControllerInterface{
     }
 
     @PutMapping(path = "/posts/edit")
-    public void editPost(Long boardId, Long postId, PostUpdateDTO postUpdateDTO) {
+    public void editPost(Long boardId, Long postId, PostUpdateDTO postUpdateDTO) throws Throwable {
         postService.updatePost(boardId, postId, postUpdateDTO);
 
         HttpResponse<?> response = new HttpResponse<>(

@@ -12,9 +12,11 @@ import exception.MemberNotFoundException;
 import exception.NotLoggedInException;
 import message.ExceptionMessage;
 import service.interfaces.MemberAuthServiceInterface;
+import service.interfaces.MemberServiceInterface;
 import util.BCryptPasswordUtil;
 import util.RedisSessionManager;
 import util.Session;
+import util.SessionManager;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -22,20 +24,21 @@ import java.util.function.Supplier;
 
 @Service
 @Priority(value = 1)
-@Requires(dependsOn = {MemberService.class, RedisSessionManager.class})
+@Requires(dependsOn = {MemberServiceInterface.class, SessionManager.class})
 public class MemberAuthService implements MemberAuthServiceInterface {
 
-    private final MemberService memberService;
-    private final RedisSessionManager redisSessionManager;
+    private final MemberServiceInterface memberService;
+    private final SessionManager redisSessionManager;
     private final int sessionTimeout = 3600; // 1시간
 
-    public MemberAuthService(MemberService memberService, RedisSessionManager redisSessionManager) {
+    public MemberAuthService(MemberServiceInterface memberService, SessionManager redisSessionManager) {
         this.memberService = memberService;
         this.redisSessionManager = redisSessionManager;
     }
 
-    public RedisSessionManager getRedisSessionManager() {
-        return redisSessionManager;
+    @Override
+    public SessionManager getRedisSessionManager() {
+        return this.redisSessionManager;
     }
 
     public String login(MemberLoginDTO memberLoginDTO) throws Throwable {

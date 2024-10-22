@@ -17,6 +17,9 @@ import exception.UnauthorizedAccessException;
 import message.ExceptionMessage;
 import repository.InMemoryPostRepository;
 import repository.interfaces.PostRepository;
+import service.interfaces.BoardServiceInterface;
+import service.interfaces.MemberAuthServiceInterface;
+import service.interfaces.MemberServiceInterface;
 import service.interfaces.PostServiceInterface;
 import util.Session;
 
@@ -27,22 +30,22 @@ import java.util.Optional;
 
 @Service
 @Priority(value = 3)
-@Requires(dependsOn = {PostRepository.class, MemberService.class, MemberAuthService.class, BoardService.class})
+@Requires(dependsOn = {PostRepository.class, MemberServiceInterface.class, MemberAuthServiceInterface.class, BoardServiceInterface.class})
 public class PostService implements PostServiceInterface {
 
     private final PostRepository postRepository;
-    private final MemberService memberService;
-    private final MemberAuthService memberAuthService;
-    private final BoardService boardService;
+    private final MemberServiceInterface memberService;
+    private final MemberAuthServiceInterface memberAuthService;
+    private final BoardServiceInterface boardService;
 
-    public PostService(PostRepository postRepository, MemberService memberService, MemberAuthService memberAuthService, BoardService boardService) {
+    public PostService(PostRepository postRepository, MemberServiceInterface memberService, MemberAuthServiceInterface memberAuthService, BoardServiceInterface boardService) {
         this.postRepository = postRepository;
         this.memberService = memberService;
         this.memberAuthService = memberAuthService;
         this.boardService = boardService;
     }
 
-    public void createPost(Long boardId, PostRegisterDTO postRegisterDTO) throws UnauthorizedAccessException, MemberNotFoundException, NotFoundBoardWithBoardIdException {
+    public void createPost(Long boardId, PostRegisterDTO postRegisterDTO) throws Throwable {
         String memberId = memberAuthService.getRedisSessionManager().getSession(Session.getSessionId());
         Board board = checkExistsBoardAndGetBoard(boardId);
         Member author = checkExistsMemberAndGetMemberById(memberId);
@@ -58,7 +61,7 @@ public class PostService implements PostServiceInterface {
         postRepository.save(post);
     }
 
-    public void updatePost(Long boardId, Long postId, PostUpdateDTO postUpdateDTO) throws UnauthorizedAccessException, NotFoundBoardWithBoardIdException, NotFoundPostWithPostIdException {
+    public void updatePost(Long boardId, Long postId, PostUpdateDTO postUpdateDTO) throws Throwable {
         String memberId = memberAuthService.getRedisSessionManager().getSession(Session.getSessionId());
         Board board = checkExistsBoardAndGetBoard(boardId);
         Member author = checkExistsMemberAndGetMemberById(memberId);
@@ -72,7 +75,7 @@ public class PostService implements PostServiceInterface {
         postRepository.update(post);
     }
 
-    public void deletePost(Long postId) throws NotFoundPostWithPostIdException {
+    public void deletePost(Long postId) throws Throwable {
         String memberId = memberAuthService.getRedisSessionManager().getSession(Session.getSessionId());
         Board board = checkExistsBoardAndGetBoard(postId);
         Member author = checkExistsMemberAndGetMemberById(memberId);
@@ -135,7 +138,7 @@ public class PostService implements PostServiceInterface {
         }
     }
 
-    private Board checkExistsBoardAndGetBoard(Long boardId) throws NotFoundBoardWithBoardIdException {
+    private Board checkExistsBoardAndGetBoard(Long boardId) throws Throwable {
         return boardService.getBoardById(boardId)
                 .orElseThrow(() -> new NotFoundBoardWithBoardIdException(ExceptionMessage.NOT_FOUND_BOARD_WITH_BOARD_ID, boardId));
     }
