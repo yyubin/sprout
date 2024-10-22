@@ -12,12 +12,14 @@ public class HttpRequest<T> {
     private String path;
     private T body;
     private Map<String, String> queryParams;
+    private String sessionId;
 
     public HttpRequest(HttpMethod method, String path, T body, Map<String, String> queryParams) {
         this.method = method;
         this.path = path;
         this.body = body;
         this.queryParams = queryParams;
+        this.sessionId = Session.getSessionId();
     }
 
     public HttpMethod getMethod() {
