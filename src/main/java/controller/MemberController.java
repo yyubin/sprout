@@ -104,6 +104,7 @@ public class MemberController implements ControllerInterface {
     @GetMapping(path = "/accounts/testadmin")
     public void createTestAdmin() {
         memberService.registerAdminMember();
+        printHandler.printCustomMessage("ADMIN 생성 완료");
     }
 
 }

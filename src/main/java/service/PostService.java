@@ -75,13 +75,13 @@ public class PostService implements PostServiceInterface {
         postRepository.update(post);
     }
 
-    public void deletePost(Long postId) throws Throwable {
+    public void deletePost(Long boardId, Long postId) throws Throwable {
         String memberId = memberAuthService.getRedisSessionManager().getSession(Session.getSessionId());
-        Board board = checkExistsBoardAndGetBoard(postId);
+        Board board = checkExistsBoardAndGetBoard(boardId);
         Member author = checkExistsMemberAndGetMemberById(memberId);
         checkCreateAuthorityWithBoard(board, author);
         checkPostOwnership(memberId, postId);
-        postRepository.deleteById(postId);
+        postRepository.deleteById(boardId, postId);
     }
 
     public List<Post> getPostsByBoardId(Long boardId) throws NotFoundBoardWithBoardIdException {

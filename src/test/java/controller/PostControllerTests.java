@@ -50,11 +50,12 @@ public class PostControllerTests {
 
     @Test
     public void testRemovePost() throws Throwable {
+        Long boardId = 2L;
         Long postId = 1L; // Sample post ID
 
-        postController.removePost(postId);
+        postController.removePost(boardId, postId);
 
-        verify(postService, times(1)).deletePost(postId);
+        verify(postService, times(1)).deletePost(boardId, postId);
         verify(printHandler, times(1)).printSuccessWithResponseCodeAndCustomMessage(any(HttpResponse.class));
     }
 

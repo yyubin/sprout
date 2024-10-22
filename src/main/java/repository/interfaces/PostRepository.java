@@ -17,6 +17,6 @@ public interface PostRepository {
     List<Post> findPostsByAuthor(String author);
     List<Post> findPostsByBoardId(Long boardId);
     void update(Post post);
-    void deleteById(Long postId);
+    void deleteById(Long boardId, Long postId);
 
 }

@@ -15,7 +15,7 @@ public interface PostServiceInterface {
 
     void updatePost(Long boardId, Long postId, PostUpdateDTO postUpdateDTO) throws Throwable;
 
-    void deletePost(Long postId) throws Throwable;
+    void deletePost(Long boardId, Long postId) throws Throwable;
 
     List<Post> getPostsByBoardId(Long boardId) throws NotFoundBoardWithBoardIdException;
 

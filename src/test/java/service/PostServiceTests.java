@@ -270,7 +270,7 @@ public class PostServiceTests {
         memberAuthService.logout();
         memberAuthService.login(loginDTO);
         Post post = postService.getAllPosts().getFirst();
-        postService.deletePost(post.getPostId());
+        postService.deletePost(1L, post.getPostId());
 
         assertEquals(0, postService.getAllPosts().size());
     }
@@ -301,7 +301,7 @@ public class PostServiceTests {
         postService.createPost(1L, postRegisterDTO);
 
         Post post = postService.getAllPosts().getFirst();
-        postService.deletePost(post.getPostId());
+        postService.deletePost(1L, post.getPostId());
 
         assertEquals(0, postService.getAllPosts().size());
     }
@@ -339,7 +339,7 @@ public class PostServiceTests {
         memberAuthService.login(otherMemberLoginDTO);
 
         Post post = postService.getAllPosts().getFirst();
-        assertThrows(UnauthorizedAccessException.class, () -> postService.deletePost(post.getPostId()));
+        assertThrows(UnauthorizedAccessException.class, () -> postService.deletePost(1L, post.getPostId()));
     }
 
 }

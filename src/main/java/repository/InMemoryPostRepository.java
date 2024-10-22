@@ -70,8 +70,8 @@ public class InMemoryPostRepository implements PostRepository {
         posts.set(posts.indexOf(post), post);
     }
 
-    public void deleteById(Long postId) {
-        findById(postId).ifPresent(post -> {
+    public void deleteById(Long boardId, Long postId) {
+        findByPostIdAndBoardId(postId, boardId).ifPresent(post -> {
             post.setDeleted(true);
         });
     }

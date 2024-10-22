@@ -7,6 +7,7 @@ import http.request.RequestHandler;
 import message.ExceptionMessage;
 import message.InputCautionMessage;
 import view.interfaces.InputProcessor;
+import view.interfaces.PrintProcessor;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -15,13 +16,13 @@ import java.util.Scanner;
 
 @Component
 @Priority(value = 1)
-@Requires(dependsOn = {RequestHandler.class, PrintHandler.class})
+@Requires(dependsOn = {RequestHandler.class, PrintProcessor.class})
 public class InputHandler implements InputProcessor {
 
     private final RequestHandler requestHandler;
-    private final PrintHandler printHandler;
+    private final PrintProcessor printHandler;
 
-    public InputHandler(RequestHandler requestHandler, PrintHandler printHandler) {
+    public InputHandler(RequestHandler requestHandler, PrintProcessor printHandler) {
         this.requestHandler = requestHandler;
         this.printHandler = printHandler;
     }

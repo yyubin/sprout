@@ -46,8 +46,8 @@ public class PostController implements ControllerInterface{
     }
 
     @DeleteMapping(path = "/posts/remove")
-    public void removePost(Long postId) throws Throwable {
-        postService.deletePost(postId);
+    public void removePost(Long boardId, Long postId) throws Throwable {
+        postService.deletePost(boardId, postId);
         HttpResponse<?> response = new HttpResponse<>(
                 PrintResultMessage.POST_DELETE_SUCCESS,
                 ResponseCode.SUCCESS,
