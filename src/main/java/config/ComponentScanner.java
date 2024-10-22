@@ -1,7 +1,9 @@
 package config;
 
 import config.annotations.*;
+import config.proxy.MethodProxyHandler;
 import org.reflections.Reflections;
+import service.interfaces.MemberAuthServiceInterface;
 
 import java.lang.reflect.Constructor;
 import java.util.*;
@@ -34,6 +36,10 @@ public class ComponentScanner {
                 instance = constructor.newInstance(parameters);
             } else {
                 instance = componentClass.getDeclaredConstructor().newInstance();
+            }
+
+            if (componentClass.getAnnotation(BeforeAuthCheck.class) != null) {
+                instance = MethodProxyHandler.createProxy(instance, Container.getInstance().get(MemberAuthServiceInterface.class));
             }
 
             Container.getInstance().register(componentClass, instance);

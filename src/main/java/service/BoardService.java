@@ -1,22 +1,15 @@
 package service;
 
-import config.Container;
-import config.annotations.Priority;
-import config.annotations.Requires;
-import config.annotations.Service;
+import config.annotations.*;
 import domain.Board;
 import domain.grade.MemberGrade;
 import dto.BoardRegisterDTO;
 import dto.BoardUpdateDTO;
 import exception.BoardNameAlreadyExistsException;
 import exception.NotFoundBoardWithBoardIdException;
-import exception.UnauthorizedAccessException;
 import message.ExceptionMessage;
-import repository.InMemoryBoardRepository;
 import repository.interfaces.BoardRepository;
 import service.interfaces.BoardServiceInterface;
-import service.interfaces.MemberAuthServiceInterface;
-import util.Session;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,19 +18,18 @@ import java.util.function.Supplier;
 
 @Service
 @Priority(value = 2)
-@Requires(dependsOn = {BoardRepository.class, MemberAuthServiceInterface.class})
+@Requires(dependsOn = {BoardRepository.class})
+@BeforeAuthCheck
 public class BoardService implements BoardServiceInterface {
 
     private final BoardRepository boardRepository;
-    private final MemberAuthServiceInterface memberAuthService;
 
-    public BoardService(BoardRepository boardRepository, MemberAuthServiceInterface memberAuthService) {
+    public BoardService(BoardRepository boardRepository) {
         this.boardRepository = boardRepository;
-        this.memberAuthService = memberAuthService;
     }
 
+    @BeforeAuthCheck
     public void createBoard(BoardRegisterDTO boardRegisterDTO) throws Throwable {
-        checkAdminAuthority(Session.getSessionId());
         checkDuplicateBoardName(boardRegisterDTO.getBoardName());
         List<MemberGrade> gradeList = new ArrayList<>();
         gradeList.add(MemberGrade.ADMIN);
@@ -68,8 +60,8 @@ public class BoardService implements BoardServiceInterface {
                 .orElseThrow(() -> new NotFoundBoardWithBoardIdException(ExceptionMessage.NOT_FOUND_BOARD_WITH_BOARD_ID, boardId)));
     }
 
+    @BeforeAuthCheck
     public void updateBoard(Long boardId, BoardUpdateDTO boardUpdateDTO) throws Throwable {
-        checkAdminAuthority(Session.getSessionId());
         checkDuplicateBoardName(boardUpdateDTO.getBoardName());
 
         List<MemberGrade> gradeList = new ArrayList<>();
@@ -93,17 +85,10 @@ public class BoardService implements BoardServiceInterface {
         throw new NotFoundBoardWithBoardIdException(ExceptionMessage.NOT_FOUND_BOARD_WITH_BOARD_ID, boardUpdateDTO.getId());
     }
 
+    @BeforeAuthCheck
     public void deleteBoard(Long boardId) throws Throwable {
-        checkAdminAuthority(Session.getSessionId());
         if (boardRepository.findById(boardId).isPresent()) {
             boardRepository.delete(boardId);
-        }
-    }
-
-    private void checkAdminAuthority(String sessionId) throws Throwable {
-        MemberGrade memberGrade = memberAuthService.checkAuthority(sessionId);
-        if (memberGrade != MemberGrade.ADMIN) {
-            throw new UnauthorizedAccessException(ExceptionMessage.UNAUTHORIZED_CREATE_BOARD);
         }
     }
 
