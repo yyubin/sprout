@@ -9,7 +9,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import service.MemberAuthService;
+import service.interfaces.MemberAuthServiceInterface;
 import view.PrintHandler;
+import view.interfaces.PrintProcessor;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,8 +22,8 @@ import static org.mockito.Mockito.*;
 
 public class MemberAuthControllerTests {
 
-    private MemberAuthService mockMemberAuthService;
-    private PrintHandler mockPrintHandler;
+    private MemberAuthServiceInterface mockMemberAuthService;
+    private PrintProcessor mockPrintHandler;
     private MemberAuthController memberAuthController;
 
     @BeforeEach

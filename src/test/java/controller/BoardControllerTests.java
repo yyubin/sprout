@@ -14,7 +14,10 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import service.BoardService;
 import service.PostService;
+import service.interfaces.BoardServiceInterface;
+import service.interfaces.PostServiceInterface;
 import view.PrintHandler;
+import view.interfaces.PrintProcessor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -28,9 +31,9 @@ import static org.mockito.Mockito.*;
 
 public class BoardControllerTests {
 
-    private BoardService mockBoardService;
-    private PostService mockPostService;
-    private PrintHandler mockPrintHandler;
+    private BoardServiceInterface mockBoardService;
+    private PostServiceInterface mockPostService;
+    private PrintProcessor mockPrintHandler;
     private BoardController boardController;
 
     @BeforeEach

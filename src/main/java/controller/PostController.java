@@ -14,19 +14,21 @@ import http.response.HttpResponse;
 import http.response.ResponseCode;
 import message.PrintResultMessage;
 import service.PostService;
+import service.interfaces.PostServiceInterface;
 import view.PrintHandler;
+import view.interfaces.PrintProcessor;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @Controller
-@Requires(dependsOn = {PostService.class, PrintHandler.class})
+@Requires(dependsOn = {PostServiceInterface.class, PrintProcessor.class})
 public class PostController implements ControllerInterface{
 
-    private final PostService postService;
-    private final PrintHandler printHandler;
+    private final PostServiceInterface postService;
+    private final PrintProcessor printHandler;
 
-    public PostController(PostService postService, PrintHandler printHandler) {
+    public PostController(PostServiceInterface postService, PrintProcessor printHandler) {
         this.postService = postService;
         this.printHandler = printHandler;
     }

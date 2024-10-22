@@ -11,7 +11,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import service.PostService;
+import service.interfaces.PostServiceInterface;
 import view.PrintHandler;
+import view.interfaces.PrintProcessor;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -22,10 +24,10 @@ import static org.mockito.Mockito.*;
 public class PostControllerTests {
 
     @Mock
-    private PostService postService;
+    private PostServiceInterface postService;
 
     @Mock
-    private PrintHandler printHandler;
+    private PrintProcessor printHandler;
 
     @InjectMocks
     private PostController postController;

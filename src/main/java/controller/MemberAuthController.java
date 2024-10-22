@@ -12,17 +12,18 @@ import message.PrintResultMessage;
 import service.MemberAuthService;
 import service.interfaces.MemberAuthServiceInterface;
 import view.PrintHandler;
+import view.interfaces.PrintProcessor;
 
 import java.util.Map;
 
 @Controller
-@Requires(dependsOn = {MemberAuthServiceInterface.class, PrintHandler.class})
+@Requires(dependsOn = {MemberAuthServiceInterface.class, PrintProcessor.class})
 public class MemberAuthController implements ControllerInterface{
 
     private final MemberAuthServiceInterface memberAuthService;
-    private final PrintHandler printHandler;
+    private final PrintProcessor printHandler;
 
-    public MemberAuthController(MemberAuthServiceInterface memberAuthService, PrintHandler printHandler) {
+    public MemberAuthController(MemberAuthServiceInterface memberAuthService, PrintProcessor printHandler) {
         this.memberAuthService = memberAuthService;
         this.printHandler = printHandler;
     }

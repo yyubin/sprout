@@ -20,6 +20,7 @@ import service.PostService;
 import service.interfaces.BoardServiceInterface;
 import service.interfaces.PostServiceInterface;
 import view.PrintHandler;
+import view.interfaces.PrintProcessor;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,14 +28,14 @@ import java.util.List;
 import java.util.Map;
 
 @Controller
-@Requires(dependsOn = {BoardServiceInterface.class, PostServiceInterface.class, PrintHandler.class})
+@Requires(dependsOn = {BoardServiceInterface.class, PostServiceInterface.class, PrintProcessor.class})
 public class BoardController implements ControllerInterface{
 
     private final BoardServiceInterface boardService;
     private final PostServiceInterface postService;
-    private final PrintHandler printHandler;
+    private final PrintProcessor printHandler;
 
-    public BoardController(BoardServiceInterface boardService, PostServiceInterface postService, PrintHandler printHandler) {
+    public BoardController(BoardServiceInterface boardService, PostServiceInterface postService, PrintProcessor printHandler) {
         this.boardService = boardService;
         this.postService = postService;
         this.printHandler = printHandler;

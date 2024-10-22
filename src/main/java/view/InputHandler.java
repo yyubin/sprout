@@ -6,6 +6,7 @@ import config.annotations.Requires;
 import http.request.RequestHandler;
 import message.ExceptionMessage;
 import message.InputCautionMessage;
+import view.interfaces.InputProcessor;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -15,7 +16,7 @@ import java.util.Scanner;
 @Component
 @Priority(value = 1)
 @Requires(dependsOn = {RequestHandler.class, PrintHandler.class})
-public class InputHandler {
+public class InputHandler implements InputProcessor {
 
     private final RequestHandler requestHandler;
     private final PrintHandler printHandler;
