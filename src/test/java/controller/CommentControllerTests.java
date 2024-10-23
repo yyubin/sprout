@@ -1,5 +1,6 @@
 package controller;
 
+import domain.Comment;
 import dto.CommentRegisterDTO;
 import dto.CommentUpdateDTO;
 import http.response.HttpResponse;
@@ -11,10 +12,15 @@ import org.mockito.MockitoAnnotations;
 import service.interfaces.CommentServiceInterface;
 import view.interfaces.PrintProcessor;
 
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 public class CommentControllerTests {
 
@@ -66,6 +72,33 @@ public class CommentControllerTests {
 
         verify(commentService, times(1)).deleteComment(eq(commentId), eq(boardId), eq(postId));
         verify(printHandler, times(1)).printSuccessWithResponseCodeAndCustomMessage(any(HttpResponse.class));
+    }
+
+    @Test
+    void viewComment_shouldReturnCommentSummary() throws Throwable {
+        Long boardId = 1L;
+        Long postId = 1L;
+
+        Comment parentComment = new Comment(1L, 1L, 1L, null, "Author1", "Parent", LocalDateTime.now());
+        Comment childComment = new Comment(2L, 1L, 1L, 1L, "Author2", "Child", LocalDateTime.now());
+
+        List<Comment> comments = Arrays.asList(parentComment, childComment);
+
+        when(commentService.viewComments(boardId, postId)).thenReturn(comments);
+
+        commentController.viewComment(boardId, postId);
+
+        Map<String, Object> parentCommentSummary = new HashMap<>();
+        parentCommentSummary.put("댓글 내용", "Parent comment");
+        parentCommentSummary.put("작성자", "Author1");
+
+        Map<String, Object> childCommentSummary = new HashMap<>();
+        childCommentSummary.put("댓글 내용", "- Child comment");
+        childCommentSummary.put("작성자", "Author2");
+
+        List<Map<String, Object>> expectedSummaryList = Arrays.asList(parentCommentSummary, childCommentSummary);
+
+        verify(printHandler).printResponseBodyAsMapList(any());
     }
 
 }
