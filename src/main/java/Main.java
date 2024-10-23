@@ -1,47 +1,11 @@
 
-import config.Container;
-import config.PackageName;
-import http.request.RequestHandler;
-
-import org.yaml.snakeyaml.Yaml;
-import view.InputHandler;
-
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import config.ApplicationInitializer;
 
 public class Main {
 
     public static void main(String[] args) throws Exception {
 
-        Yaml yaml = new Yaml();
-        List<String> packageToScan;
-
-        try (InputStream input = Main.class.getClassLoader().getResourceAsStream("config.yml")) {
-            Map<String, List<String>> data = yaml.load(input);
-            packageToScan = data.get("packages");
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
-        }
-
-        for (String packageName : packageToScan) {
-            Container.getInstance().scan(packageName.trim());
-        }
-
-        Collection<Object> components = Container.getInstance().getComponents();
-        for (Object component : components) {
-            System.out.println(component.getClass().getName());
-        }
-
-        RequestHandler handler = Container.getInstance().get(RequestHandler.class);
-        handler.setControllers(Container.getInstance().scanControllers());
-
-        InputHandler inputHandler = Container.getInstance().get(InputHandler.class);
-        inputHandler.startInputLoop();
+        ApplicationInitializer.initialize();
 
     }
 
