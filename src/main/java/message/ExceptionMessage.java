@@ -19,6 +19,9 @@ public class ExceptionMessage {
     public static final String UNAUTHORIZED_CREATE_POST = "게시글 생성 및 수정 권한이 없습니다.";
     public static final String UNAUTHORIZED_POST = "해당 글에 대한 권한이 없습니다.";
 
+    public static final String NOT_FOUND_COMMENT = "유효하지 않은 댓글입니다.";
+    public static final String UNAUTHORIZED_UPDATE_COMMENT = "해당 댓글에 대한 권한이 없습니다.";
+
     public static final String ALREADY_USED_BOARD_NAME = "이미 사용중인 게시판 이름입니다.";
 
     public static final String BAD_REQUEST = "잘못된 요청입니다.";
