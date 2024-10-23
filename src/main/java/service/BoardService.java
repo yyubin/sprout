@@ -34,8 +34,7 @@ public class BoardService implements BoardServiceInterface {
         List<MemberGrade> gradeList = new ArrayList<>();
         gradeList.add(MemberGrade.ADMIN);
 
-        String grades = boardRegisterDTO.getGrade();
-        if (grades.equals(MemberGrade.USER.getDescription()) || grades.equals(MemberGrade.USER.getDescriptionEn())) {
+        if (isUserGrade(boardRegisterDTO.getGrade())) {
             gradeList.add(MemberGrade.USER);
         }
 
@@ -67,8 +66,7 @@ public class BoardService implements BoardServiceInterface {
         List<MemberGrade> gradeList = new ArrayList<>();
         gradeList.add(MemberGrade.ADMIN);
 
-        String grades = boardUpdateDTO.getGrade();
-        if (grades.equals(MemberGrade.USER.getDescriptionEn())) {
+        if (isUserGrade(boardUpdateDTO.getGrade())) {
             gradeList.add(MemberGrade.USER);
         }
 
@@ -103,5 +101,10 @@ public class BoardService implements BoardServiceInterface {
         if (checkFunction.get()) {
             throw exceptionSupplier.get();
         }
+    }
+
+    private boolean isUserGrade(String grade) {
+        return grade.equals(MemberGrade.USER.getDescription()) ||
+                grade.equals(MemberGrade.USER.getDescriptionEn());
     }
 }
