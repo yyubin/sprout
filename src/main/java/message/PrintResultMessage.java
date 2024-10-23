@@ -18,4 +18,8 @@ public class PrintResultMessage {
     public static final String POST_UPDATE_SUCCESS = "게시글 수정이 성공하였습니다.";
     public static final String POST_DELETE_SUCCESS = "게시글 삭제가 성공하였습니다.";
 
+    public static final String COMMENT_CREATE_SUCCESS = "댓글 생성이 성공하였습니다.";
+    public static final String COMMENT_UPDATE_SUCCESS = "댓글 수정이 성공하였습니다.";
+    public static final String COMMENT_DELETE_SUCCESS = "댓글 삭제가 성공하였습니다.";
+
 }
