@@ -300,7 +300,24 @@ Restful API의 명세를 따르려고 시도하였습니다.
   ```plantuml
   DELETE /comments/remove?boardId=1&postId=1&commentId=1 HTTP/1.1
   ```
+#### 댓글 조회
+- 기능 설명 : 사용자가 댓글을 조회할 수 있는 기능
+- 입력
 
+  - 게시판 ID `boardId`
+  - 게시물 ID `postId`
+- 출력 
+  
+  - 댓글 내용 : `content`
+
+    - 대댓글까지 가능, 대댓글을 경우 `content` 앞에 `-` 가 붙습니다.
+  - 작성자 : `author`
+- HTTP 메서드 : GET
+- API 엔드포인트 : /comments/view
+- 요청 예제
+  ```plantuml
+  GET /comments/view?boardId=1&postId=1 HTTP/1.1
+  ```
 
 ---
 
