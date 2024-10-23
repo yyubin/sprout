@@ -133,6 +133,14 @@ public class RequestHandler {
 
     private <T> T parseBodyToModel(String body, Class<T> modelClass) throws Exception {
         ObjectMapper objectMapper = new ObjectMapper();
+        if (modelClass.equals(String.class)) {
+            return (T) body;
+        }
+
+        if (modelClass.equals(Long.class)) {
+            return (T) Long.valueOf(body);
+        }
+
         return objectMapper.readValue(body, modelClass);
     }
 
