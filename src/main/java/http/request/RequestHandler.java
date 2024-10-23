@@ -90,20 +90,30 @@ public class RequestHandler {
     private Object[] resolveParameters(Method method, HttpRequest<?> httpRequest) throws Exception {
         Class<?>[] parameterTypes = method.getParameterTypes();
         Object[] parameters = new Object[parameterTypes.length];
+        String body = (String) httpRequest.getBody();
 
         String[] parameterNames = getParameterNames(method);
         for (int i = 0; i < parameterTypes.length; i++) {
             Class<?> parameterType = parameterTypes[i];
             String paramName = parameterNames[i];
             if (parameterType.equals(Long.class)) {
-                String queryParamValue = httpRequest.getQueryParams().get(paramName);
-                if (queryParamValue != null) {
-                    parameters[i] = Long.valueOf(queryParamValue);
+                Long valueFromBody = parseBodyToModel(body, Long.class);
+                if (valueFromBody != null) {
+                    parameters[i] = valueFromBody;
+                } else {
+                    String queryParamValue = httpRequest.getQueryParams().get(paramName);
+                    if (queryParamValue != null) {
+                        parameters[i] = Long.valueOf(queryParamValue);
+                    }
                 }
             } else if (parameterType.equals(String.class)) {
-                parameters[i] = httpRequest.getQueryParams().get(paramName);
+                String valueFromBody = parseBodyToModel(body, String.class);
+                if (valueFromBody != null) {
+                    parameters[i] = valueFromBody;
+                } else {
+                    parameters[i] = httpRequest.getQueryParams().get(paramName);
+                }
             } else {
-                String body = (String) httpRequest.getBody();
                 try {
                     parameters[i] = parseBodyToModel(body, parameterType);
                 } catch (Exception e) {
