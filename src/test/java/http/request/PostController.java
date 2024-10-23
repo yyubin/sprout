@@ -8,4 +8,9 @@ public class PostController implements ControllerInterface {
     public void postMethodWithString(AnyModel anyModel) {
         // Method logic
     }
+
+    @PostMapping(path = "/postPathWithoutModel")
+    public void postMethodWithoutModel(String key) {
+        System.out.println(key);
+    }
 }

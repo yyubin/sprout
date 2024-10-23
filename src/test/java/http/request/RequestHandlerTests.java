@@ -66,6 +66,21 @@ public class RequestHandlerTests {
     }
 
     @Test
+    void testHandlePostRequestByQuery() throws Exception {
+        List<ControllerInterface> controllers = new ArrayList<>();
+        PostController postController = mock(PostController.class);
+        controllers.add(postController);
+        requestHandler.setControllers(controllers);
+
+        String rawRequest = "POST /postPathWithoutModel HTTP/1.1\n"+
+                                "{\"key\":\"value\"}";
+
+        requestHandler.handleRequest(rawRequest);
+
+        verify(postController, times(1)).postMethodWithoutModel(any());
+    }
+
+    @Test
     void testHandleNoMatchingPath() {
         List<ControllerInterface> controllers = new ArrayList<>();
         controllers.add(new GetController());
