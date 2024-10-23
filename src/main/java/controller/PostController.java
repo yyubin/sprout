@@ -76,7 +76,11 @@ public class PostController implements ControllerInterface{
         Map<String, Object> responseBody = new HashMap<>();
         responseBody.put("게시글 번호", post.getPostId());
         responseBody.put("작성일", post.getCreatedDate());
-        responseBody.put("수정일", post.getUpdatedDate());
+        if (post.getUpdatedDate() != null) {
+            responseBody.put("수정일", post.getUpdatedDate());
+        } else {
+            responseBody.put("수정일", "수정 내역이 없습니다.");
+        }
         responseBody.put("제목", post.getPostName());
         responseBody.put("내용", post.getPostContent());
 
