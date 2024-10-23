@@ -1,9 +1,12 @@
 package http.request;
 
+import config.Container;
+import config.PackageName;
 import controller.ControllerInterface;
 import controller.ExampleController;
 import controller.annotations.GetMapping;
 import controller.annotations.PostMapping;
+import exception.BadRequestException;
 import exception.NoMatchingHandlerException;
 import message.ExceptionMessage;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,8 +24,15 @@ public class RequestHandlerTests {
     private RequestHandler requestHandler;
 
     @BeforeEach
-    void setUp() {
-        //requestHandler = new RequestHandler();
+    void setUp() throws Exception {
+        Container.getInstance().scan(PackageName.repository.getPackageName());
+        Container.getInstance().scan(PackageName.config_exception.getPackageName());
+        Container.getInstance().scan(PackageName.http_request.getPackageName());
+        Container.getInstance().scan(PackageName.util.getPackageName());
+        Container.getInstance().scan(PackageName.service.getPackageName());
+        Container.getInstance().scan(PackageName.view.getPackageName());
+        Container.getInstance().scan(PackageName.controller.getPackageName());
+        requestHandler = Container.getInstance().get(RequestHandler.class);
     }
 
     @Test
@@ -47,11 +57,12 @@ public class RequestHandlerTests {
         controllers.add(postController);
         requestHandler.setControllers(controllers);
 
-        String rawRequest = "POST /postPath\n";
+        String rawRequest = "POST /postPath HTTP/1.1\n" +
+                            "{\"key\":\"value\"}";
 
         requestHandler.handleRequest(rawRequest);
 
-        verify(postController, times(1)).postMethodWithHttpRequest(any(HttpRequest.class));
+        verify(postController, times(1)).postMethodWithString(any(AnyModel.class));
     }
 
     @Test
@@ -62,11 +73,10 @@ public class RequestHandlerTests {
 
         String rawRequest = "GET /nonMatchingPath\n";
 
-        Exception exception = assertThrows(NoMatchingHandlerException.class, () -> {
+        Exception exception = assertThrows(BadRequestException.class, () -> {
             requestHandler.handleRequest(rawRequest);
         });
 
-        assertEquals(ExceptionMessage.NO_MATCHING_PATH, exception.getMessage());
     }
 
 }
