@@ -18,6 +18,7 @@ import exception.UnsupportedHttpMethod;
 import message.ExceptionMessage;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Arrays;
@@ -39,25 +40,29 @@ public class RequestHandler {
         this.controllers = controllers;
     }
 
-    public String handleRequest(String rawRequest) throws Exception, UnsupportedHttpMethod {
+    public void handleRequest(String rawRequest) throws Exception, UnsupportedHttpMethod {
         HttpRequest<?> httpRequest = HttpRequestParser.parse(rawRequest);
         if (httpRequest.getMethod().equals(HttpMethod.GET)) {
-            return handleRequestByMethod(httpRequest, GetMapping.class);
+            handleRequestByMethod(httpRequest, GetMapping.class);
+            return;
         }
         if (httpRequest.getMethod().equals(HttpMethod.POST)) {
-            return handleRequestByMethod(httpRequest, PostMapping.class);
+            handleRequestByMethod(httpRequest, PostMapping.class);
+            return;
         }
         if (httpRequest.getMethod().equals(HttpMethod.PUT)) {
-            return handleRequestByMethod(httpRequest, PutMapping.class);
+            handleRequestByMethod(httpRequest, PutMapping.class);
+            return;
         }
         if (httpRequest.getMethod().equals(HttpMethod.DELETE)) {
-            return handleRequestByMethod(httpRequest, DeleteMapping.class);
+            handleRequestByMethod(httpRequest, DeleteMapping.class);
+            return;
         }
 
         throw new UnsupportedHttpMethod(ExceptionMessage.UNSUPPORTED_HTTP_METHOD);
     }
 
-    private String handleRequestByMethod(HttpRequest<?> httpRequest, Class<? extends Annotation> mappingClass) throws Exception {
+    private void handleRequestByMethod(HttpRequest<?> httpRequest, Class<? extends Annotation> mappingClass) throws Exception {
         boolean result = false;
         for (ControllerInterface controller : controllers) {
             for (Method method : controller.getClass().getDeclaredMethods()) {
@@ -65,7 +70,7 @@ public class RequestHandler {
                     result = handleRequestMethod(httpRequest, mappingClass, controller, method);
                 }
                 if (result) {
-                    return null;
+                    return;
                 }
             }
         }
@@ -131,7 +136,7 @@ public class RequestHandler {
             }
         } catch (Throwable e) {
             String result = handlerException(e);
-            throw new Exception(e);
+            throw new Exception(result);
         }
 
     }

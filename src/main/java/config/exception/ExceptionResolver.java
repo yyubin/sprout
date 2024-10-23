@@ -17,7 +17,7 @@ public class ExceptionResolver implements ExceptionProcessor{
 
     @ExceptionHandler(disposeOf = InvocationTargetException.class)
     public String handleInvocationTargetException(InvocationTargetException e) {
-        return ResponseCode.UNAUTHORIZED.getMessage();
+        return e.getCause().getMessage();
     }
 
     @ExceptionHandler(disposeOf = AlreadyLoggedInException.class)
@@ -62,6 +62,7 @@ public class ExceptionResolver implements ExceptionProcessor{
 
     @ExceptionHandler(disposeOf = MemberIdAlreadyExistsException.class)
     public String handleMemberIdAlreadyExistsException(MemberIdAlreadyExistsException e) {
+        System.out.println("ExceptionResolver.handleMemberIdAlreadyExistsException");
         return ExceptionMessage.MEMBER_ID_ALREADY_EXISTS;
     }
 
