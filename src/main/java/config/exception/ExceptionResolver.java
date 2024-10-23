@@ -91,5 +91,10 @@ public class ExceptionResolver implements ExceptionProcessor{
         return ExceptionMessage.NOT_FOUND_BOARD_WITH_BOARD_NAME;
     }
 
+    @ExceptionHandler(disposeOf = NotFoundComment.class)
+    public String handleNotFoundCommentException(NotFoundComment e) {
+        return ExceptionMessage.NOT_FOUND_COMMENT;
+    }
+
 
 }
