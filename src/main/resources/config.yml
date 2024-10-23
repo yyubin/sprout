@@ -1,0 +1,8 @@
+packages:
+  - repository
+  - config.exception
+  - http.request
+  - util
+  - service
+  - view
+  - controller

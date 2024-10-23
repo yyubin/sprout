@@ -3,21 +3,34 @@ import config.Container;
 import config.PackageName;
 import http.request.RequestHandler;
 
+import org.yaml.snakeyaml.Yaml;
 import view.InputHandler;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 public class Main {
 
     public static void main(String[] args) throws Exception {
 
-        Container.getInstance().scan(PackageName.repository.getPackageName());
-        Container.getInstance().scan(PackageName.config_exception.getPackageName());
-        Container.getInstance().scan(PackageName.http_request.getPackageName());
-        Container.getInstance().scan(PackageName.util.getPackageName());
-        Container.getInstance().scan(PackageName.service.getPackageName());
-        Container.getInstance().scan(PackageName.view.getPackageName());
-        Container.getInstance().scan(PackageName.controller.getPackageName());
+        Yaml yaml = new Yaml();
+        List<String> packageToScan;
+
+        try (InputStream input = Main.class.getClassLoader().getResourceAsStream("config.yml")) {
+            Map<String, List<String>> data = yaml.load(input);
+            packageToScan = data.get("packages");
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        for (String packageName : packageToScan) {
+            Container.getInstance().scan(packageName.trim());
+        }
 
         Collection<Object> components = Container.getInstance().getComponents();
         for (Object component : components) {
