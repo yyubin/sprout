@@ -3,6 +3,10 @@ package http.request;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import config.Constants;
 import config.annotations.Component;
+import config.annotations.ExceptionHandler;
+import config.annotations.Requires;
+import config.exception.ExceptionProcessor;
+import config.exception.ExceptionResolver;
 import controller.ControllerInterface;
 import controller.annotations.DeleteMapping;
 import controller.annotations.GetMapping;
@@ -21,40 +25,39 @@ import java.util.List;
 import java.util.Map;
 
 @Component
+@Requires(dependsOn = {ExceptionProcessor.class})
 public class RequestHandler {
 
+    private final ExceptionProcessor exceptionResolver;
     private List<ControllerInterface> controllers;
 
-    public RequestHandler() {
+    public RequestHandler(ExceptionProcessor exceptionResolver) {
+        this.exceptionResolver = exceptionResolver;
     }
 
     public void setControllers(List<ControllerInterface> controllers) {
         this.controllers = controllers;
     }
 
-    public void handleRequest(String rawRequest) throws Exception, UnsupportedHttpMethod {
+    public String handleRequest(String rawRequest) throws Exception, UnsupportedHttpMethod {
         HttpRequest<?> httpRequest = HttpRequestParser.parse(rawRequest);
         if (httpRequest.getMethod().equals(HttpMethod.GET)) {
-            handleRequestByMethod(httpRequest, GetMapping.class);
-            return;
+            return handleRequestByMethod(httpRequest, GetMapping.class);
         }
         if (httpRequest.getMethod().equals(HttpMethod.POST)) {
-            handleRequestByMethod(httpRequest, PostMapping.class);
-            return;
+            return handleRequestByMethod(httpRequest, PostMapping.class);
         }
         if (httpRequest.getMethod().equals(HttpMethod.PUT)) {
-            handleRequestByMethod(httpRequest, PutMapping.class);
-            return;
+            return handleRequestByMethod(httpRequest, PutMapping.class);
         }
         if (httpRequest.getMethod().equals(HttpMethod.DELETE)) {
-            handleRequestByMethod(httpRequest, DeleteMapping.class);
-            return;
+            return handleRequestByMethod(httpRequest, DeleteMapping.class);
         }
 
         throw new UnsupportedHttpMethod(ExceptionMessage.UNSUPPORTED_HTTP_METHOD);
     }
 
-    private void handleRequestByMethod(HttpRequest<?> httpRequest, Class<? extends Annotation> mappingClass) throws Exception {
+    private String handleRequestByMethod(HttpRequest<?> httpRequest, Class<? extends Annotation> mappingClass) throws Exception {
         boolean result = false;
         for (ControllerInterface controller : controllers) {
             for (Method method : controller.getClass().getDeclaredMethods()) {
@@ -62,7 +65,7 @@ public class RequestHandler {
                     result = handleRequestMethod(httpRequest, mappingClass, controller, method);
                 }
                 if (result) {
-                    return;
+                    return null;
                 }
             }
         }
@@ -120,11 +123,34 @@ public class RequestHandler {
 
 
     private void invokeMethod(ControllerInterface controller, Method method, Object[] httpRequest) throws Exception {
-        if (method.getParameterCount() == 0) {
-            method.invoke(controller);
-        } else {
-            method.invoke(controller, httpRequest);
+        try {
+            if (method.getParameterCount() == 0) {
+                method.invoke(controller);
+            } else {
+                method.invoke(controller, httpRequest);
+            }
+        } catch (Throwable e) {
+            String result = handlerException(e);
+            throw new Exception(e);
         }
+
+    }
+
+    private String handlerException(Throwable e) throws Exception {
+        for (Method method : exceptionResolver.getClass().getMethods()) {
+            if (method.isAnnotationPresent(ExceptionHandler.class)) {
+                ExceptionHandler annotation = method.getAnnotation(ExceptionHandler.class);
+
+                if (annotation.disposeOf().isAssignableFrom(e.getClass())) {
+                    try {
+                        return (String) method.invoke(exceptionResolver, e);
+                    } catch (Exception ex) {
+                        return exceptionResolver.handleUndefinedException(ex);
+                    }
+                }
+            }
+        }
+        return exceptionResolver.handleUndefinedException((Exception) e);
     }
 
 }

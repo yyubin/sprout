@@ -12,6 +12,7 @@ public class Main {
     public static void main(String[] args) throws Exception {
 
         Container.getInstance().scan(PackageName.repository.getPackageName());
+        Container.getInstance().scan(PackageName.config_exception.getPackageName());
         Container.getInstance().scan(PackageName.http_request.getPackageName());
         Container.getInstance().scan(PackageName.util.getPackageName());
         Container.getInstance().scan(PackageName.service.getPackageName());

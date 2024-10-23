@@ -22,7 +22,7 @@ public class RequestHandlerTests {
 
     @BeforeEach
     void setUp() {
-        requestHandler = new RequestHandler();
+        //requestHandler = new RequestHandler();
     }
 
     @Test

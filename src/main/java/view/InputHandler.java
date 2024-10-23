@@ -51,13 +51,11 @@ public class InputHandler implements InputProcessor {
                     break;
                 }
 
-                try {
-                    requestHandler.handleRequest(rawRequest.toString());
-                } catch (InvocationTargetException e) {
-                    printHandler.printCustomMessage(e.getCause().getMessage());
-                } catch (Throwable e) {
-                    printHandler.printCustomMessage(e.getMessage());
+                String result = requestHandler.handleRequest(rawRequest.toString());
+                if (result != null) {
+                    printHandler.printCustomMessage(result);
                 }
+
 
             }
         } catch (Exception e) {
