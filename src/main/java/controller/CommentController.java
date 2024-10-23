@@ -26,7 +26,7 @@ public class CommentController implements ControllerInterface{
         this.commentService = commentService;
     }
 
-    @PostMapping(path = "/comments")
+    @PostMapping(path = "/comments/add")
     public void createComment(CommentRegisterDTO commentRegisterDTO, Long boardId, Long postId) {
         commentService.createComment(commentRegisterDTO, boardId, postId);
 
@@ -38,7 +38,7 @@ public class CommentController implements ControllerInterface{
         printHandler.printSuccessWithResponseCodeAndCustomMessage(response);
     }
 
-    @PutMapping(path = "/comments")
+    @PutMapping(path = "/comments/update")
     public void updateComment(CommentUpdateDTO commentUpdateDTO, Long boardId, Long postId) throws Throwable {
         commentService.updateComment(commentUpdateDTO, boardId, postId);
 
@@ -50,7 +50,7 @@ public class CommentController implements ControllerInterface{
         printHandler.printSuccessWithResponseCodeAndCustomMessage(response);
     }
 
-    @DeleteMapping(path = "/comments")
+    @DeleteMapping(path = "/comments/remove")
     public void deleteComment(Long boardId, Long postId, Long commentId) throws Throwable {
         commentService.deleteComment(commentId, boardId, postId);
         HttpResponse<?> response = new HttpResponse<>(
