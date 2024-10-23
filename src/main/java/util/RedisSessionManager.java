@@ -1,16 +1,33 @@
 package util;
 
 import config.annotations.Component;
+import org.yaml.snakeyaml.Yaml;
 import redis.clients.jedis.Jedis;
 import util.interfaces.SessionManager;
+
+import java.io.InputStream;
+import java.util.Map;
 
 @Component
 public class RedisSessionManager implements SessionManager {
 
-    private final Jedis jedis;
+    private Jedis jedis;
 
     public RedisSessionManager() {
-        this.jedis = new Jedis("localhost", 6379);
+        loadConfiguration();
+    }
+
+    private void loadConfiguration() {
+        Yaml yaml = new Yaml();
+        try (InputStream input = getClass().getClassLoader().getResourceAsStream("config.yml")) {
+            Map<String, Object> data = yaml.load(input);
+            String host = (String) ((Map<String, Object>) data.get("redis")).get("host");
+            int port = (int) ((Map<String, Object>) data.get("redis")).get("port");
+
+            this.jedis = new Jedis(host, port);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         Session.setSessionId(null);
     }
 
