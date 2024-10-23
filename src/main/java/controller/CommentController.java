@@ -26,9 +26,9 @@ public class CommentController implements ControllerInterface{
     private final CommentServiceInterface commentService;
     private final PrintProcessor printHandler;
 
-    public CommentController(PrintProcessor printHandler, CommentServiceInterface commentService) {
-        this.printHandler = printHandler;
+    public CommentController(CommentServiceInterface commentService, PrintProcessor printHandler) {
         this.commentService = commentService;
+        this.printHandler = printHandler;
     }
 
     @GetMapping(path = "/comments/view")
