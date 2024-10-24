@@ -62,7 +62,6 @@ public class ExceptionResolver implements ExceptionProcessor{
 
     @ExceptionHandler(disposeOf = MemberIdAlreadyExistsException.class)
     public String handleMemberIdAlreadyExistsException(MemberIdAlreadyExistsException e) {
-        System.out.println("ExceptionResolver.handleMemberIdAlreadyExistsException");
         return ExceptionMessage.MEMBER_ID_ALREADY_EXISTS;
     }
 
