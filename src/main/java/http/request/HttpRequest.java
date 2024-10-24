@@ -38,4 +38,7 @@ public class HttpRequest<T> {
         return queryParams;
     }
 
+    public String getSessionId() {
+        return sessionId;
+    }
 }

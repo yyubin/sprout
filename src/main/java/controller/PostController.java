@@ -34,9 +34,8 @@ public class PostController implements ControllerInterface{
     }
 
     @PostMapping(path = "/posts/add")
-    public void addPost(Long boardId, PostRegisterDTO postRegisterDTO) throws Throwable {
+    public void addPost(Long boardId, PostRegisterDTO postRegisterDTO) throws Throwable {;
         postService.createPost(boardId, postRegisterDTO);
-
         HttpResponse<?> response = new HttpResponse<>(
                 PrintResultMessage.POST_CREATE_SUCCESS,
                 ResponseCode.SUCCESS,

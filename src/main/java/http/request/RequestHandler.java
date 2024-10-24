@@ -16,6 +16,7 @@ import exception.BadRequestException;
 import exception.NoMatchingHandlerException;
 import exception.UnsupportedHttpMethod;
 import message.ExceptionMessage;
+import util.Session;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
@@ -42,6 +43,8 @@ public class RequestHandler {
 
     public void handleRequest(String rawRequest) throws Exception, UnsupportedHttpMethod {
         HttpRequest<?> httpRequest = HttpRequestParser.parse(rawRequest);
+        handlerUserSession(httpRequest);
+
         if (httpRequest.getMethod().equals(HttpMethod.GET)) {
             handleRequestByMethod(httpRequest, GetMapping.class);
             return;
@@ -80,38 +83,42 @@ public class RequestHandler {
     private boolean handleRequestMethod(HttpRequest<?> httpRequest, Class<? extends Annotation> mappingClass, ControllerInterface controller, Method method) throws Exception {
         String path = (String) mappingClass.getMethod(Constants.path.getConstantsName()).invoke(method.getAnnotation(mappingClass));
         if (path.equals(httpRequest.getPath())) {
-            Object[] parameters = resolveParameters(method, httpRequest);
+            Object[] parameters = resolveParameters(method, (HttpRequest<Map<String, Object>>) httpRequest);
             invokeMethod(controller, method, parameters);
             return true;
         }
         return false;
     }
 
-    private Object[] resolveParameters(Method method, HttpRequest<?> httpRequest) throws Exception {
+    private Object[] resolveParameters(Method method, HttpRequest<Map<String, Object>> httpRequest) throws Exception {
         Class<?>[] parameterTypes = method.getParameterTypes();
         Object[] parameters = new Object[parameterTypes.length];
-        String body = (String) httpRequest.getBody();
+        Map<String, Object> body = httpRequest.getBody();
 
         String[] parameterNames = getParameterNames(method);
         for (int i = 0; i < parameterTypes.length; i++) {
             Class<?> parameterType = parameterTypes[i];
             String paramName = parameterNames[i];
+
             if (parameterType.equals(Long.class)) {
-                Long valueFromBody = parseBodyToModel(body, Long.class);
-                if (valueFromBody != null) {
-                    parameters[i] = valueFromBody;
+                String queryParamValue = httpRequest.getQueryParams().get(paramName);
+                if (queryParamValue != null) {
+                    parameters[i] = Long.valueOf(queryParamValue);
                 } else {
-                    String queryParamValue = httpRequest.getQueryParams().get(paramName);
-                    if (queryParamValue != null) {
-                        parameters[i] = Long.valueOf(queryParamValue);
+                    Long valueFromBody = parseBodyToModel(body, paramName, Long.class);
+                    if (valueFromBody != null) {
+                        parameters[i] = valueFromBody;
                     }
                 }
             } else if (parameterType.equals(String.class)) {
-                String valueFromBody = parseBodyToModel(body, String.class);
-                if (valueFromBody != null) {
-                    parameters[i] = valueFromBody;
+                String queryParamValue = httpRequest.getQueryParams().get(paramName);
+                if (queryParamValue != null) {
+                    parameters[i] = queryParamValue;
                 } else {
-                    parameters[i] = httpRequest.getQueryParams().get(paramName);
+                    String valueFromBody = parseBodyToModel(body, paramName, String.class);
+                    if (valueFromBody != null) {
+                        parameters[i] = valueFromBody;
+                    }
                 }
             } else {
                 try {
@@ -131,17 +138,28 @@ public class RequestHandler {
                 .toArray(String[]::new);
     }
 
-    private <T> T parseBodyToModel(String body, Class<T> modelClass) throws Exception {
+    private <T> T parseBodyToModel(Map<String, Object> body, String paramName, Class<T> modelClass) throws Exception {
         ObjectMapper objectMapper = new ObjectMapper();
+        System.out.println(objectMapper.writeValueAsString(body));
+        Object value = body.get(paramName);
+        if (value == null) {
+            return null;
+        }
+
         if (modelClass.equals(String.class)) {
-            return (T) body;
+            return modelClass.cast(value.toString());
         }
 
         if (modelClass.equals(Long.class)) {
-            return (T) Long.valueOf(body);
+            return modelClass.cast(Long.valueOf(value.toString()));
         }
 
-        return objectMapper.readValue(body, modelClass);
+        return null;
+    }
+
+    private <T> T parseBodyToModel(Map<String, Object> body, Class<T> modelClass) throws Exception {
+        ObjectMapper objectMapper = new ObjectMapper();
+        return objectMapper.convertValue(body, modelClass);
     }
 
 
@@ -174,6 +192,10 @@ public class RequestHandler {
             }
         }
         return exceptionResolver.handleUndefinedException((Exception) e);
+    }
+
+    private void handlerUserSession(HttpRequest<?> httpRequest) {
+        Session.setSessionId(httpRequest.getSessionId());
     }
 
 }
