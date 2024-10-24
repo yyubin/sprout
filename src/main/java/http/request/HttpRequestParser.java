@@ -52,7 +52,6 @@ public class HttpRequestParser {
     }
 
     private static Map<String, Object> parseBodyToMap(String body) throws Exception {
-        ObjectMapper objectMapper = new ObjectMapper();
         return objectMapper.readValue(body, new TypeReference<Map<String, Object>>() {});
     }
 
