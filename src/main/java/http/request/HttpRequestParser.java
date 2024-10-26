@@ -3,6 +3,9 @@ package http.request;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import config.annotations.Component;
+import config.annotations.Priority;
+import config.annotations.Requires;
 import exception.BadRequestException;
 import http.response.ResponseCode;
 import message.ExceptionMessage;
@@ -10,11 +13,18 @@ import message.ExceptionMessage;
 import java.util.HashMap;
 import java.util.Map;
 
+@Component
+@Priority(value = 1)
+@Requires(dependsOn = {ObjectMapperConfig.class})
 public class HttpRequestParser {
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapperConfig objectMapper;
 
-    public static HttpRequest<Map<String, Object>> parse(String rawRequest) throws IllegalAccessError, Exception {
+    public HttpRequestParser(ObjectMapperConfig objectMapper) {
+        this.objectMapper = objectMapper;
+    }
+
+    public HttpRequest<Map<String, Object>> parse(String rawRequest) throws IllegalAccessError, Exception {
         String[] requestLines = rawRequest.split("\n");
         String[] requestParts = requestLines[0].split(" ");
 
@@ -51,8 +61,8 @@ public class HttpRequestParser {
         return new HttpRequest<>(HttpMethod.valueOf(method), path, body, queryParams);
     }
 
-    private static Map<String, Object> parseBodyToMap(String body) throws Exception {
-        return objectMapper.readValue(body, new TypeReference<Map<String, Object>>() {});
+    private Map<String, Object> parseBodyToMap(String body) throws Exception {
+        return objectMapper.getObjectMapper().readValue(body, new TypeReference<Map<String, Object>>() {});
     }
 
 }

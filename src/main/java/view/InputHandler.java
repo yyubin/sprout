@@ -22,7 +22,6 @@ import java.util.Scanner;
 @Requires(dependsOn = {RequestHandler.class, PrintProcessor.class})
 public class InputHandler implements InputProcessor {
 
-    private static final Logger log = LoggerFactory.getLogger(InputHandler.class);
     private final RequestHandler requestHandler;
     private final PrintProcessor printHandler;
 

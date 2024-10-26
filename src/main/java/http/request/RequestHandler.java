@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import config.Constants;
 import config.annotations.Component;
 import config.annotations.ExceptionHandler;
+import config.annotations.Priority;
 import config.annotations.Requires;
 import config.exception.ExceptionProcessor;
 import config.exception.ExceptionResolver;
@@ -27,14 +28,19 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-@Requires(dependsOn = {ExceptionProcessor.class})
+@Priority(value = 2)
+@Requires(dependsOn = {ExceptionProcessor.class, ObjectMapperConfig.class, HttpRequestParser.class})
 public class RequestHandler {
 
     private final ExceptionProcessor exceptionResolver;
+    private final ObjectMapperConfig objectMapper;
+    private final HttpRequestParser httpRequestParser;
     private List<ControllerInterface> controllers;
 
-    public RequestHandler(ExceptionProcessor exceptionResolver) {
+    public RequestHandler(ExceptionProcessor exceptionResolver, ObjectMapperConfig objectMapper, HttpRequestParser httpRequestParser) {
         this.exceptionResolver = exceptionResolver;
+        this.objectMapper = objectMapper;
+        this.httpRequestParser = httpRequestParser;
     }
 
     public void setControllers(List<ControllerInterface> controllers) {
@@ -42,7 +48,7 @@ public class RequestHandler {
     }
 
     public void handleRequest(String rawRequest) throws Exception, UnsupportedHttpMethod {
-        HttpRequest<?> httpRequest = HttpRequestParser.parse(rawRequest);
+        HttpRequest<?> httpRequest = httpRequestParser.parse(rawRequest);
         handlerUserSession(httpRequest);
 
         if (httpRequest.getMethod().equals(HttpMethod.GET)) {
@@ -139,8 +145,6 @@ public class RequestHandler {
     }
 
     private <T> T parseBodyToModel(Map<String, Object> body, String paramName, Class<T> modelClass) throws Exception {
-        ObjectMapper objectMapper = new ObjectMapper();
-        System.out.println(objectMapper.writeValueAsString(body));
         Object value = body.get(paramName);
         if (value == null) {
             return null;
@@ -158,8 +162,7 @@ public class RequestHandler {
     }
 
     private <T> T parseBodyToModel(Map<String, Object> body, Class<T> modelClass) throws Exception {
-        ObjectMapper objectMapper = new ObjectMapper();
-        return objectMapper.convertValue(body, modelClass);
+        return objectMapper.getObjectMapper().convertValue(body, modelClass);
     }
 
 
