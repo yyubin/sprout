@@ -26,6 +26,9 @@ public class MethodProxyHandler implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        if (Session.getSessionId() == null) {
+            throw new UnauthorizedAccessException(ExceptionMessage.UNAUTHORIZED_CREATE_BOARD);
+        }
         Method targetMethod = target.getClass().getMethod(method.getName(), method.getParameterTypes());
         if (targetMethod.isAnnotationPresent(BeforeAuthCheck.class)) {
             MemberGrade memberGrade = memberAuthService.checkAuthority(Session.getSessionId());
