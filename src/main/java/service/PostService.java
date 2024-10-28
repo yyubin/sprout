@@ -43,6 +43,7 @@ public class PostService implements PostServiceInterface {
     }
 
     public void createPost(Long boardId, PostRegisterDTO postRegisterDTO) throws Throwable {
+        checkLogin();
         String memberId = memberAuthService.getRedisSessionManager().getSession(Session.getSessionId());
         Board board = checkExistsBoardAndGetBoard(boardId);
         Member author = checkExistsMemberAndGetMemberById(memberId);
@@ -59,6 +60,7 @@ public class PostService implements PostServiceInterface {
     }
 
     public void updatePost(Long boardId, Long postId, PostUpdateDTO postUpdateDTO) throws Throwable {
+        checkLogin();
         String memberId = memberAuthService.getRedisSessionManager().getSession(Session.getSessionId());
         Board board = checkExistsBoardAndGetBoard(boardId);
         Member author = checkExistsMemberAndGetMemberById(memberId);
@@ -73,6 +75,7 @@ public class PostService implements PostServiceInterface {
     }
 
     public void deletePost(Long boardId, Long postId) throws Throwable {
+        checkLogin();
         String memberId = memberAuthService.getRedisSessionManager().getSession(Session.getSessionId());
         Board board = checkExistsBoardAndGetBoard(boardId);
         Member author = checkExistsMemberAndGetMemberById(memberId);
@@ -117,7 +120,6 @@ public class PostService implements PostServiceInterface {
     }
 
     private void checkCreateAuthorityWithBoard(Board board, Member author) throws UnauthorizedAccessException {
-        checkLogin();
         if (!board.getAccessGrade().contains(author.getGrade())) {
             throw new UnauthorizedAccessException(ExceptionMessage.UNAUTHORIZED_CREATE_POST);
         }
