@@ -36,11 +36,14 @@ public class CommentService implements CommentServiceInterface {
         this.memberAuthService = memberAuthService;
     }
 
-    public void createComment(CommentRegisterDTO commentRegisterDTO, Long boardId, Long postId) {
+    private void checkLogin() throws UnauthorizedAccessException {
         if (Session.getSessionId() == null) {
             throw new NotLoggedInException(ExceptionMessage.NOT_LOGGED_IN);
         }
+    }
 
+    public void createComment(CommentRegisterDTO commentRegisterDTO, Long boardId, Long postId) {
+        checkLogin();
         Comment comment = new Comment(
                 (long) commentRepository.getNewCommentId(boardId, postId),
                 boardId,
@@ -54,11 +57,13 @@ public class CommentService implements CommentServiceInterface {
     }
 
     public void deleteComment(Long commentId, Long boardId, Long postId) throws Throwable {
+        checkLogin();
         Optional<Comment> validComment = getValidComment(commentId, boardId, postId);
         validComment.ifPresent(comment -> commentRepository.delete(comment.getId(), boardId, postId));
     }
 
     public void updateComment(CommentUpdateDTO commentUpdateDTO, Long boardId, Long postId) throws Throwable {
+        checkLogin();
         Optional<Comment> validComment = getValidComment(commentUpdateDTO.getCommentId(), boardId, postId);
         if (validComment.isPresent()) {
             Comment comment = validComment.get();

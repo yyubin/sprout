@@ -10,10 +10,7 @@ import domain.Post;
 import domain.grade.MemberGrade;
 import dto.PostRegisterDTO;
 import dto.PostUpdateDTO;
-import exception.MemberNotFoundException;
-import exception.NotFoundBoardWithBoardIdException;
-import exception.NotFoundPostWithPostIdException;
-import exception.UnauthorizedAccessException;
+import exception.*;
 import message.ExceptionMessage;
 import repository.InMemoryPostRepository;
 import repository.interfaces.PostRepository;
@@ -120,6 +117,7 @@ public class PostService implements PostServiceInterface {
     }
 
     private void checkCreateAuthorityWithBoard(Board board, Member author) throws UnauthorizedAccessException {
+        checkLogin();
         if (!board.getAccessGrade().contains(author.getGrade())) {
             throw new UnauthorizedAccessException(ExceptionMessage.UNAUTHORIZED_CREATE_POST);
         }
@@ -146,6 +144,12 @@ public class PostService implements PostServiceInterface {
     private Member checkExistsMemberAndGetMemberById(String memberId) throws MemberNotFoundException {
         return memberService.getMemberById(memberId)
                 .orElseThrow(() -> new MemberNotFoundException(ExceptionMessage.MEMBER_NOT_FOUND));
+    }
+
+    private void checkLogin() throws NotLoggedInException  {
+        if (Session.getSessionId() == null) {
+            throw new NotLoggedInException(ExceptionMessage.NOT_LOGGED_IN);
+        }
     }
 
 

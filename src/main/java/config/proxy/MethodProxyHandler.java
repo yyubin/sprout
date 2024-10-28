@@ -2,6 +2,7 @@ package config.proxy;
 
 import config.annotations.BeforeAuthCheck;
 import domain.grade.MemberGrade;
+import exception.NotLoggedInException;
 import exception.UnauthorizedAccessException;
 import message.ExceptionMessage;
 import service.interfaces.MemberAuthServiceInterface;
@@ -26,6 +27,9 @@ public class MethodProxyHandler implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        if (Session.getSessionId() == null) {
+            throw new NotLoggedInException(ExceptionMessage.NOT_LOGGED_IN);
+        }
         Method targetMethod = target.getClass().getMethod(method.getName(), method.getParameterTypes());
         if (targetMethod.isAnnotationPresent(BeforeAuthCheck.class)) {
             MemberGrade memberGrade = memberAuthService.checkAuthority(Session.getSessionId());

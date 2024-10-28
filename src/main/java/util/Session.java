@@ -10,9 +10,6 @@ public class Session {
     private Session() {}
 
     public static String getSessionId() {
-        if (sessionId == null) {
-            throw new NotLoggedInException(ExceptionMessage.NOT_LOGGED_IN);
-        }
         return sessionId;
     }
 
