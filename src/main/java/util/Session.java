@@ -1,5 +1,8 @@
 package util;
 
+import exception.NotLoggedInException;
+import message.ExceptionMessage;
+
 public class Session {
 
     private static String sessionId = null;
@@ -7,6 +10,9 @@ public class Session {
     private Session() {}
 
     public static String getSessionId() {
+        if (sessionId == null) {
+            throw new NotLoggedInException(ExceptionMessage.NOT_LOGGED_IN);
+        }
         return sessionId;
     }
 
