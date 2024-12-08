@@ -7,10 +7,7 @@ import http.request.HttpRequest;
 import http.response.HttpResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import service.PostService;
+
 import service.interfaces.PostServiceInterface;
 import view.PrintHandler;
 import view.interfaces.PrintProcessor;
@@ -19,7 +16,11 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import static org.mockito.Mockito.*;
+
 
 public class PostControllerTests {
 

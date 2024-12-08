@@ -14,6 +14,7 @@ import exception.BoardNameAlreadyExistsException;
 import exception.NotFoundBoardWithBoardIdException;
 import exception.UnauthorizedAccessException;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import repository.InMemoryBoardRepository;
 import repository.InMemoryMemberRepository;
@@ -47,8 +48,12 @@ public class BoardServiceTests {
         boardService = Container.getInstance().get(BoardServiceInterface.class);
     }
 
+
+
     @Test
+    @DisplayName("어드민 계정으로 계시판 만들고 성공해야함")
     void createBoardWithAdminSuccess() throws Throwable {
+        // given
         memberService.registerAdminMember();
         MemberLoginDTO loginDTO = new MemberLoginDTO("admin", "admin");
         BoardRegisterDTO boardRegisterDTO = new BoardRegisterDTO(
@@ -56,13 +61,19 @@ public class BoardServiceTests {
                 "This is test-board",
                 "USER"
         );
+
         memberAuthService.login(loginDTO);
+        // when
         boardService.createBoard(boardRegisterDTO);
+
+        //then
         assertEquals(1, boardService.getBoardSize());
     }
 
     @Test
+    @DisplayName("멤버 계정으로 게시판 만들면 실패해야함")
     void createBoardWithMemberFail() throws Throwable {
+        // given
         MemberRegisterDTO memberDTO = new MemberRegisterDTO("yubin111", "yubin", "yubin@gmail.com", "qwer");
         memberService.registerMember(memberDTO);
 
@@ -75,7 +86,12 @@ public class BoardServiceTests {
                 "USER"
         );
 
+        // then & when
         assertThrows(UnauthorizedAccessException.class, () -> boardService.createBoard(boardRegisterDTO));
+
+        // @springboottest
+        // assertj
+
     }
 
     @Test
