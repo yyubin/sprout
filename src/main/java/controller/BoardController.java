@@ -28,69 +28,66 @@ import java.util.List;
 import java.util.Map;
 
 @Controller
-@Requires(dependsOn = {BoardServiceInterface.class, PostServiceInterface.class, PrintProcessor.class})
+@Requires(dependsOn = {BoardServiceInterface.class, PostServiceInterface.class})
 public class BoardController implements ControllerInterface{
 
     private final BoardServiceInterface boardService;
     private final PostServiceInterface postService;
-    private final PrintProcessor printHandler;
 
-    public BoardController(BoardServiceInterface boardService, PostServiceInterface postService, PrintProcessor printHandler) {
+    public BoardController(BoardServiceInterface boardService, PostServiceInterface postService) {
         this.boardService = boardService;
         this.postService = postService;
-        this.printHandler = printHandler;
     }
 
     @PostMapping(path = "/boards/add")
-    public void addBoard(BoardRegisterDTO boardRegisterDTO) throws Throwable {
+    public HttpResponse<?> addBoard(BoardRegisterDTO boardRegisterDTO) throws Throwable {
         try {
             boardService.createBoard(boardRegisterDTO);
         } catch (Throwable e) {
             throw new Throwable(e.getMessage());
         }
 
-        HttpResponse<?> response = new HttpResponse<>(
+        return new HttpResponse<>(
                 PrintResultMessage.BOARD_CREATE_SUCCESS,
-                ResponseCode.SUCCESS,
+                ResponseCode.CREATED,
                 null
         );
-        printHandler.printSuccessWithResponseCodeAndCustomMessage(response);
+
     }
 
     @PutMapping(path = "/boards/edit")
-    public void editBoard(Long boardId, BoardUpdateDTO boardUpdateDTO) throws Throwable {
+    public HttpResponse<?> editBoard(Long boardId, BoardUpdateDTO boardUpdateDTO) throws Throwable {
         try {
             boardService.updateBoard(boardId, boardUpdateDTO);
         } catch (Throwable e) {
             throw new Throwable(e.getMessage());
         }
 
-        HttpResponse<?> response = new HttpResponse<>(
+        return new HttpResponse<>(
                 PrintResultMessage.BOARD_UPDATE_SUCCESS,
-                ResponseCode.SUCCESS,
+                ResponseCode.ACCEPT,
                 null
         );
-        printHandler.printSuccessWithResponseCodeAndCustomMessage(response);
     }
 
     @DeleteMapping(path = "/boards/remove")
-    public void removeBoard(Long boardId) throws Throwable {
+    public HttpResponse<?> removeBoard(Long boardId) throws Throwable {
         try {
             boardService.deleteBoard(boardId);
         } catch (Throwable e) {
             throw new Throwable(e.getMessage());
         }
 
-        HttpResponse<?> response = new HttpResponse<>(
+        return new HttpResponse<>(
                 PrintResultMessage.BOARD_DELETE_SUCCESS,
-                ResponseCode.SUCCESS,
+                ResponseCode.ACCEPT,
                 null
         );
-        printHandler.printSuccessWithResponseCodeAndCustomMessage(response);
+
     }
 
     @GetMapping(path = "/boards/view")
-    public void viewBoard(String boardName) throws Exception {
+    public HttpResponse<?> viewBoard(String boardName) throws Exception {
         List<Post> postList = postService.getPostsByBoardName(boardName);
 
         List<Map<String, Object>> postSummaryList = postList.stream()
@@ -103,12 +100,12 @@ public class BoardController implements ControllerInterface{
                 })
                 .toList();
 
-        HttpResponse<List<Map<String, Object>>> response = new HttpResponse<>(
+        return new HttpResponse<>(
                 ResponseCode.SUCCESS.getMessage(),
                 ResponseCode.SUCCESS,
                 postSummaryList
         );
-        printHandler.printResponseBodyAsMapList(response);
+
     }
 
 }

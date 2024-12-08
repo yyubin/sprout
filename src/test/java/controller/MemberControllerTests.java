@@ -34,7 +34,7 @@ public class MemberControllerTests {
         memberService = mock(MemberService.class);
         memberAuthService = mock(MemberAuthService.class);
         printHandler = mock(PrintHandler.class);
-        memberController = new MemberController(memberService, memberAuthService, printHandler);
+        memberController = new MemberController(memberService, memberAuthService);
     }
 
     @Test
@@ -48,7 +48,7 @@ public class MemberControllerTests {
         memberController.signup(memberRegisterDTO);
 
         verify(memberService, times(1)).registerMember(any(MemberRegisterDTO.class));
-        verify(printHandler, times(1)).printSuccessWithResponseCodeAndCustomMessage(any(HttpResponse.class));
+//        verify(printHandler, times(1)).printSuccessWithResponseCodeAndCustomMessage(any(HttpResponse.class));
     }
 
     @Test
@@ -67,7 +67,7 @@ public class MemberControllerTests {
 
         memberController.detail(accountId);
 
-        verify(printHandler, times(1)).printResponseBodyAsMap(any(HttpResponse.class));
+//        verify(printHandler, times(1)).printResponseBodyAsMap(any(HttpResponse.class));
     }
 
     @Test

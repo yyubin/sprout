@@ -4,6 +4,8 @@ import message.ResponseMessage;
 
 public enum ResponseCode {
     SUCCESS(200, ResponseMessage.SUCCESS),
+    CREATED(201, ResponseMessage.CREATED),
+    ACCEPT(204, ResponseMessage.ACCEPT_NO_CONTENT),
     NOT_FOUND(404, ResponseMessage.NOT_FOUND),
     BAD_REQUEST(400, ResponseMessage.BAD_REQUEST),
     UNAUTHORIZED(401, ResponseMessage.UNAUTHORIZED),

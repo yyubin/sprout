@@ -2,6 +2,7 @@ packages:
   - repository
   - config.exception
   - http.request
+  - server
   - util
   - service
   - view

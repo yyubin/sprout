@@ -14,13 +14,12 @@ import controller.annotations.GetMapping;
 import controller.annotations.PostMapping;
 import controller.annotations.PutMapping;
 import exception.BadRequestException;
-import exception.NoMatchingHandlerException;
 import exception.UnsupportedHttpMethod;
+import http.response.HttpResponse;
 import message.ExceptionMessage;
 import util.Session;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Arrays;
@@ -47,53 +46,38 @@ public class RequestHandler {
         this.controllers = controllers;
     }
 
-    public void handleRequest(String rawRequest) throws Exception, UnsupportedHttpMethod {
+    public Object handleRequest(String rawRequest) throws Exception, UnsupportedHttpMethod {
         HttpRequest<?> httpRequest = httpRequestParser.parse(rawRequest);
         handlerUserSession(httpRequest);
-
         if (httpRequest.getMethod().equals(HttpMethod.GET)) {
-            handleRequestByMethod(httpRequest, GetMapping.class);
-            return;
+            return handleRequestByMethod(httpRequest, GetMapping.class);
         }
         if (httpRequest.getMethod().equals(HttpMethod.POST)) {
-            handleRequestByMethod(httpRequest, PostMapping.class);
-            return;
+            return handleRequestByMethod(httpRequest, PostMapping.class);
         }
         if (httpRequest.getMethod().equals(HttpMethod.PUT)) {
-            handleRequestByMethod(httpRequest, PutMapping.class);
-            return;
+            return handleRequestByMethod(httpRequest, PutMapping.class);
         }
         if (httpRequest.getMethod().equals(HttpMethod.DELETE)) {
-            handleRequestByMethod(httpRequest, DeleteMapping.class);
-            return;
+            return handleRequestByMethod(httpRequest, DeleteMapping.class);
         }
 
         throw new UnsupportedHttpMethod(ExceptionMessage.UNSUPPORTED_HTTP_METHOD);
     }
 
-    private void handleRequestByMethod(HttpRequest<?> httpRequest, Class<? extends Annotation> mappingClass) throws Exception {
-        boolean result = false;
+    private Object handleRequestByMethod(HttpRequest<?> httpRequest, Class<? extends Annotation> mappingClass) throws Exception {
         for (ControllerInterface controller : controllers) {
             for (Method method : controller.getClass().getDeclaredMethods()) {
                 if (method.isAnnotationPresent(mappingClass)) {
-                    result = handleRequestMethod(httpRequest, mappingClass, controller, method);
-                }
-                if (result) {
-                    return;
+                    String path = (String) mappingClass.getMethod(Constants.path.getConstantsName()).invoke(method.getAnnotation(mappingClass));
+                    if (path.equals(httpRequest.getPath())) {
+                        Object[] parameters = resolveParameters(method, (HttpRequest<Map<String, Object>>) httpRequest);
+                        return invokeMethod(controller, method, parameters);
+                    }
                 }
             }
         }
         throw new BadRequestException();
-    }
-
-    private boolean handleRequestMethod(HttpRequest<?> httpRequest, Class<? extends Annotation> mappingClass, ControllerInterface controller, Method method) throws Exception {
-        String path = (String) mappingClass.getMethod(Constants.path.getConstantsName()).invoke(method.getAnnotation(mappingClass));
-        if (path.equals(httpRequest.getPath())) {
-            Object[] parameters = resolveParameters(method, (HttpRequest<Map<String, Object>>) httpRequest);
-            invokeMethod(controller, method, parameters);
-            return true;
-        }
-        return false;
     }
 
     private Object[] resolveParameters(Method method, HttpRequest<Map<String, Object>> httpRequest) throws Exception {
@@ -166,13 +150,16 @@ public class RequestHandler {
     }
 
 
-    private void invokeMethod(ControllerInterface controller, Method method, Object[] httpRequest) throws Exception {
+    private Object invokeMethod(ControllerInterface controller, Method method, Object[] httpRequest) throws Exception {
         try {
+            Object result;
             if (method.getParameterCount() == 0) {
-                method.invoke(controller);
+                result = method.invoke(controller);
             } else {
-                method.invoke(controller, httpRequest);
+                result = method.invoke(controller, httpRequest);
             }
+            System.out.println((HttpResponse<?>) result);
+            return (HttpResponse<?>) result;
         } catch (Throwable e) {
             String result = handlerException(e);
             throw new Exception(result);

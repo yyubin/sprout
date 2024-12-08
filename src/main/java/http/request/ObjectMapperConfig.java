@@ -13,6 +13,14 @@ public class ObjectMapperConfig {
         this.objectMapper = new ObjectMapper();
     }
 
+    public String toJson(Object data) {
+        try {
+            return objectMapper.writeValueAsString(data);
+        } catch (Exception e) {
+            throw new RuntimeException();
+        }
+    }
+
     public ObjectMapper getObjectMapper() {
         return objectMapper;
     }

@@ -3,10 +3,12 @@ package message;
 public class ResponseMessage {
 
     private ResponseMessage() {
-
     }
 
     public static final String SUCCESS = "OK";
+    public static final String CREATED = "Created!";
+    public static final String ACCEPT_NO_CONTENT = "Accept No Content";
+
     public static final String NOT_FOUND = "Not Found";
     public static final String BAD_REQUEST = "Bad Request";
     public static final String UNAUTHORIZED = "Unauthorized";

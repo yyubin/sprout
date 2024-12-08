@@ -3,6 +3,7 @@ package config;
 import com.sun.tools.javac.Main;
 import http.request.RequestHandler;
 import org.yaml.snakeyaml.Yaml;
+import server.HttpServer;
 import view.InputHandler;
 
 import java.io.IOException;
@@ -38,7 +39,10 @@ public class ApplicationInitializer {
         RequestHandler handler = Container.getInstance().get(RequestHandler.class);
         handler.setControllers(Container.getInstance().scanControllers());
 
-        InputHandler inputHandler = Container.getInstance().get(InputHandler.class);
-        inputHandler.startInputLoop();
+//        InputHandler inputHandler = Container.getInstance().get(InputHandler.class);
+//        inputHandler.startInputLoop();
+
+        HttpServer server = Container.getInstance().get(HttpServer.class);
+        server.serverStart(8080);
     }
 }

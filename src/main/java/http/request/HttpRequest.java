@@ -41,4 +41,15 @@ public class HttpRequest<T> {
     public String getSessionId() {
         return sessionId;
     }
+
+    @Override
+    public String toString() {
+        return "HttpRequest{" +
+                "method=" + method +
+                ", path='" + path + '\'' +
+                ", body=" + body +
+                ", queryParams=" + queryParams +
+                ", sessionId='" + sessionId + '\'' +
+                '}';
+    }
 }

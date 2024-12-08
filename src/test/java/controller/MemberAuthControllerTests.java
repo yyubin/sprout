@@ -30,7 +30,7 @@ public class MemberAuthControllerTests {
     void setUp() {
         mockMemberAuthService = mock(MemberAuthService.class);
         mockPrintHandler = mock(PrintHandler.class);
-        memberAuthController = new MemberAuthController(mockMemberAuthService, mockPrintHandler);
+        memberAuthController = new MemberAuthController(mockMemberAuthService);
     }
 
     @Test

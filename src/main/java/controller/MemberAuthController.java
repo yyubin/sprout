@@ -17,37 +17,35 @@ import view.interfaces.PrintProcessor;
 import java.util.Map;
 
 @Controller
-@Requires(dependsOn = {MemberAuthServiceInterface.class, PrintProcessor.class})
+@Requires(dependsOn = {MemberAuthServiceInterface.class})
 public class MemberAuthController implements ControllerInterface{
 
     private final MemberAuthServiceInterface memberAuthService;
-    private final PrintProcessor printHandler;
 
-    public MemberAuthController(MemberAuthServiceInterface memberAuthService, PrintProcessor printHandler) {
+    public MemberAuthController(MemberAuthServiceInterface memberAuthService) {
         this.memberAuthService = memberAuthService;
-        this.printHandler = printHandler;
     }
 
     @PostMapping(path = "/accounts/signin")
-    public void signin(MemberLoginDTO memberLoginDTO) throws Throwable {
+    public HttpResponse<?> signin(MemberLoginDTO memberLoginDTO) throws Throwable {
         String sessionId = memberAuthService.login(memberLoginDTO);
-        HttpResponse<?> response = new HttpResponse<>(
+        return new HttpResponse<>(
                 PrintResultMessage.ACCOUNTS_LOGIN_SUCCESS + sessionId,
                 ResponseCode.SUCCESS,
                 null
         );
-        printHandler.printSuccessWithResponseCodeAndCustomMessage(response);
+
     }
 
     @GetMapping(path = "/accounts/signout")
-    public void signout() throws Throwable {
+    public HttpResponse<?> signout() throws Throwable {
         memberAuthService.logout();
-        HttpResponse<?> response = new HttpResponse<>(
+        return new HttpResponse<>(
                 PrintResultMessage.ACCOUNTS_LOGOUT_SUCCESS,
                 ResponseCode.SUCCESS,
                 null
         );
-        printHandler.printSuccessWithResponseCodeAndCustomMessage(response);
+
     }
 
 }

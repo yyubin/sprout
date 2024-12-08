@@ -32,32 +32,30 @@ import java.util.Map;
 import java.util.Optional;
 
 @Controller
-@Requires(dependsOn = {MemberServiceInterface.class, MemberAuthServiceInterface.class, PrintProcessor.class})
+@Requires(dependsOn = {MemberServiceInterface.class, MemberAuthServiceInterface.class})
 public class MemberController implements ControllerInterface {
 
     private final MemberServiceInterface memberService;
     private final MemberAuthServiceInterface memberAuthService;
-    private final PrintProcessor printHandler;
 
-    public MemberController(MemberServiceInterface memberService, MemberAuthServiceInterface memberAuthService, PrintProcessor printHandler) {
+    public MemberController(MemberServiceInterface memberService, MemberAuthServiceInterface memberAuthService) {
         this.memberService = memberService;
         this.memberAuthService = memberAuthService;
-        this.printHandler = printHandler;
     }
 
     @PostMapping(path = "/accounts/signup")
-    public void signup(MemberRegisterDTO memberRegisterDTO) throws RuntimeException {
+    public HttpResponse<?> signup(MemberRegisterDTO memberRegisterDTO) throws RuntimeException {
+        System.out.println("MemberController.signup");
         memberService.registerMember(memberRegisterDTO);
-        HttpResponse<?> response = new HttpResponse<>(
+        return new HttpResponse<>(
                 PrintResultMessage.ACCOUNTS_SIGNUP_SUCCESS,
-                ResponseCode.SUCCESS,
+                ResponseCode.CREATED,
                 null
         );
-        printHandler.printSuccessWithResponseCodeAndCustomMessage(response);
     }
 
     @GetMapping(path = "/accounts/detail")
-    public void detail(String accountId) throws RuntimeException {
+    public HttpResponse<?> detail(String accountId) throws RuntimeException {
         Optional<Member> memberById = memberService.getMemberById(accountId);
         if (memberById.isPresent()) {
             Map<String, Object> responseBody = new HashMap<>();
@@ -66,45 +64,47 @@ public class MemberController implements ControllerInterface {
             responseBody.put("이메일", memberById.get().getEmail());
             responseBody.put("가입일", memberById.get().getJoinDate());
 
-            HttpResponse<Map<String, Object>> response = new HttpResponse<>(
+             return new HttpResponse<>(
                     ResponseCode.SUCCESS.getMessage(),
                     ResponseCode.SUCCESS,
                     responseBody
             );
 
-            printHandler.printResponseBodyAsMap(response);
-            return;
         }
         throw new MemberNotFoundException(ExceptionMessage.MEMBER_NOT_FOUND);
     }
 
     @PutMapping(path = "/accounts/edit")
-    public void edit(String accountId, MemberUpdateDTO memberUpdateDTO) throws RuntimeException {
+    public HttpResponse<?> edit(String accountId, MemberUpdateDTO memberUpdateDTO) throws RuntimeException {
         memberService.updateMember(accountId, memberUpdateDTO);
-        HttpResponse<?> response = new HttpResponse<>(
+        return new HttpResponse<>(
                 PrintResultMessage.ACCOUNTS_MEMBER_EDIT,
-                ResponseCode.SUCCESS,
+                ResponseCode.ACCEPT,
                 null
         );
-        printHandler.printSuccessWithResponseCodeAndCustomMessage(response);
+
     }
 
     @DeleteMapping(path = "/accounts/remove")
-    public void remove(String accountId) throws Throwable {
+    public HttpResponse<?> remove(String accountId) throws Throwable {
         memberAuthService.logout();
         memberService.deleteMember(accountId);
-        HttpResponse<?> response = new HttpResponse<>(
+        return new HttpResponse<>(
                 PrintResultMessage.ACCOUNTS_DELETE_SUCCESS,
-                ResponseCode.SUCCESS,
+                ResponseCode.ACCEPT,
                 null
         );
-        printHandler.printSuccessWithResponseCodeAndCustomMessage(response);
+
     }
 
     @GetMapping(path = "/accounts/testadmin")
-    public void createTestAdmin() {
+    public HttpResponse<?> createTestAdmin() {
         memberService.registerAdminMember();
-        printHandler.printCustomMessage("ADMIN 생성 완료");
+        return new HttpResponse<>(
+                "AMDIN created",
+                ResponseCode.CREATED,
+                null
+        );
     }
 
 }

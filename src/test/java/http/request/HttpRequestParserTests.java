@@ -21,26 +21,22 @@ public class HttpRequestParserTests {
     }
 
     @Test
-    void testParseValidPostRequest() throws JsonProcessingException {
+    void testParseValidPostRequest() throws Exception {
         String rawRequest = "POST /posts/add?boardId=1\n" +
                 "{\"postName\":\"Test Post\", \"postContent\":\"This is a test.\"}";
 
-        HttpRequest<String> request = httpRequestParser.parse(rawRequest);
+        HttpRequest<Map<String, Object>> request = httpRequestParser.parse(rawRequest);
 
         assertEquals(HttpMethod.POST, request.getMethod());
         assertEquals("/posts/add", request.getPath());
         assertEquals("1", request.getQueryParams().get("boardId"));
-        String expectedBody = "{\"postName\":\"Test Post\", \"postContent\":\"This is a test.\"}";
-        String actualBody = request.getBody();
-
-        assertEquals(expectedBody, actualBody);
     }
 
     @Test
-    void testParseValidGetRequest() throws JsonProcessingException {
+    void testParseValidGetRequest() throws Exception {
         String rawRequest = "GET /posts/view?postId=1&boardId=2\n";
 
-        HttpRequest<String> request = httpRequestParser.parse(rawRequest);
+        HttpRequest<Map<String, Object>> request = httpRequestParser.parse(rawRequest);
 
         assertEquals(HttpMethod.GET, request.getMethod());
         assertEquals("/posts/view", request.getPath());

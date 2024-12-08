@@ -13,26 +13,23 @@ import http.response.HttpResponse;
 import http.response.ResponseCode;
 import message.PrintResultMessage;
 import service.interfaces.CommentServiceInterface;
-import view.interfaces.PrintProcessor;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Controller
-@Requires(dependsOn = {CommentServiceInterface.class, PrintProcessor.class})
+@Requires(dependsOn = {CommentServiceInterface.class})
 public class CommentController implements ControllerInterface{
 
     private final CommentServiceInterface commentService;
-    private final PrintProcessor printHandler;
 
-    public CommentController(CommentServiceInterface commentService, PrintProcessor printHandler) {
+    public CommentController(CommentServiceInterface commentService) {
         this.commentService = commentService;
-        this.printHandler = printHandler;
     }
 
     @GetMapping(path = "/comments/view")
-    public void viewComment(Long boardId, Long postId) throws Throwable {
+    public HttpResponse<?> viewComment(Long boardId, Long postId) throws Throwable {
         List<Comment> comments = commentService.viewComments(boardId, postId);
 
         List<Map<String, Object>> commentSummaryList = comments.stream()
@@ -47,47 +44,46 @@ public class CommentController implements ControllerInterface{
                 })
                 .toList();
 
-        HttpResponse<List<Map<String, Object>>> response = new HttpResponse<>(
+        return new HttpResponse<>(
                 ResponseCode.SUCCESS.getMessage(),
                 ResponseCode.SUCCESS,
                 commentSummaryList
         );
 
-        printHandler.printResponseBodyAsMapList(response);
     }
 
     @PostMapping(path = "/comments/add")
-    public void createComment(CommentRegisterDTO commentRegisterDTO, Long boardId, Long postId) {
+    public HttpResponse<?> createComment(CommentRegisterDTO commentRegisterDTO, Long boardId, Long postId) {
         commentService.createComment(commentRegisterDTO, boardId, postId);
 
-        HttpResponse<?> response = new HttpResponse<>(
+        return new HttpResponse<>(
                 PrintResultMessage.COMMENT_CREATE_SUCCESS,
-                ResponseCode.SUCCESS,
+                ResponseCode.CREATED,
                 null
         );
-        printHandler.printSuccessWithResponseCodeAndCustomMessage(response);
+
     }
 
     @PutMapping(path = "/comments/update")
-    public void updateComment(CommentUpdateDTO commentUpdateDTO, Long boardId, Long postId) throws Throwable {
+    public HttpResponse<?> updateComment(CommentUpdateDTO commentUpdateDTO, Long boardId, Long postId) throws Throwable {
         commentService.updateComment(commentUpdateDTO, boardId, postId);
 
-        HttpResponse<?> response = new HttpResponse<>(
+        return new HttpResponse<>(
                 PrintResultMessage.COMMENT_UPDATE_SUCCESS,
-                ResponseCode.SUCCESS,
+                ResponseCode.ACCEPT,
                 null
         );
-        printHandler.printSuccessWithResponseCodeAndCustomMessage(response);
+
     }
 
     @DeleteMapping(path = "/comments/remove")
-    public void deleteComment(Long boardId, Long postId, Long commentId) throws Throwable {
+    public HttpResponse<?> deleteComment(Long boardId, Long postId, Long commentId) throws Throwable {
         commentService.deleteComment(commentId, boardId, postId);
-        HttpResponse<?> response = new HttpResponse<>(
+        return new HttpResponse<>(
                 PrintResultMessage.COMMENT_DELETE_SUCCESS,
-                ResponseCode.SUCCESS,
+                ResponseCode.ACCEPT,
                 null
         );
-        printHandler.printSuccessWithResponseCodeAndCustomMessage(response);
+
     }
 }
