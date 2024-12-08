@@ -57,6 +57,7 @@ public class MemberController implements ControllerInterface {
     @GetMapping(path = "/accounts/detail")
     public HttpResponse<?> detail(String accountId) throws RuntimeException {
         Optional<Member> memberById = memberService.getMemberById(accountId);
+
         if (memberById.isPresent()) {
             Map<String, Object> responseBody = new HashMap<>();
             responseBody.put("계정", accountId);
@@ -69,7 +70,6 @@ public class MemberController implements ControllerInterface {
                     ResponseCode.SUCCESS,
                     responseBody
             );
-
         }
         throw new MemberNotFoundException(ExceptionMessage.MEMBER_NOT_FOUND);
     }

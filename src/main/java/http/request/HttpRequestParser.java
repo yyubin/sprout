@@ -27,7 +27,6 @@ public class HttpRequestParser {
 
     private String[] splitRequest(String rawRequest) {
         int headerEndIndex = rawRequest.indexOf("\r\n\r\n");
-        System.out.println(headerEndIndex);
         if (headerEndIndex == -1) {
             headerEndIndex = rawRequest.indexOf("\n\n");
         }

@@ -81,7 +81,7 @@ public class HttpServer {
             out.flush();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
     }
 }

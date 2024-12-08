@@ -1,6 +1,7 @@
 package http.request;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import config.annotations.Component;
 import config.annotations.Priority;
 
@@ -11,6 +12,7 @@ public class ObjectMapperConfig {
 
     public ObjectMapperConfig() {
         this.objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
     }
 
     public String toJson(Object data) {

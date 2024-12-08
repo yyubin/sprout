@@ -158,13 +158,14 @@ public class RequestHandler {
             } else {
                 result = method.invoke(controller, httpRequest);
             }
-            System.out.println((HttpResponse<?>) result);
-            return (HttpResponse<?>) result;
-        } catch (Throwable e) {
-            String result = handlerException(e);
-            throw new Exception(result);
-        }
 
+            System.out.println("Method invoked: " + method.getName());
+            System.out.println("Result: " + result);
+
+            return result;
+        } catch (Throwable e) {
+            throw new Exception(handlerException(e));
+        }
     }
 
     private String handlerException(Throwable e) throws Exception {
