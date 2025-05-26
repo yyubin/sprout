@@ -1,6 +1,6 @@
 # 🌱 Sprout
 
-**Sprout**는 순수 Java 17로 **Spring Framework**와 **Tomcat**의 핵심 아이디어를 직접 구현하여
+**Sprout**는 순수 Java 21로 **Spring Framework**와 **Tomcat**의 핵심 아이디어를 직접 구현하여
 경량 Web Application Framework를 실습·학습 목적으로 재현한 프로젝트입니다.
 “씨앗이 발아하듯(Spring → Sprout)” 한 단계씩 핵심 개념을 **from scratch**로 키워‑나간 과정과 결과를 담고 있습니다.
 
