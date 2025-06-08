@@ -11,7 +11,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import app.service.interfaces.CommentServiceInterface;
-import view.interfaces.PrintProcessor;
+import legacy.view.interfaces.PrintProcessor;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;

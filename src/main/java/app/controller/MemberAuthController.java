@@ -7,7 +7,7 @@ import sprout.mvc.annotation.PostMapping;
 import app.dto.MemberLoginDTO;
 import sprout.mvc.http.HttpResponse;
 import sprout.mvc.http.ResponseCode;
-import message.PrintResultMessage;
+import app.message.PrintResultMessage;
 import app.service.interfaces.MemberAuthServiceInterface;
 import sprout.mvc.mapping.ControllerInterface;
 

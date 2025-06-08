@@ -1,6 +1,6 @@
 package sprout.mvc.http;
 
-import util.Session;
+import app.util.Session;
 
 import java.util.Map;
 

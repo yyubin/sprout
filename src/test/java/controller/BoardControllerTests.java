@@ -12,8 +12,8 @@ import app.service.BoardService;
 import app.service.PostService;
 import app.service.interfaces.BoardServiceInterface;
 import app.service.interfaces.PostServiceInterface;
-import view.PrintHandler;
-import view.interfaces.PrintProcessor;
+import legacy.view.PrintHandler;
+import legacy.view.interfaces.PrintProcessor;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;

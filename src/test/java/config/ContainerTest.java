@@ -1,5 +1,6 @@
 package config;
 
+import legacy.config.Container;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import app.repository.InMemoryMemberRepository;

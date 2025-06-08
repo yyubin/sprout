@@ -1,7 +1,5 @@
 package sprout.mvc.http;
 
-import message.ResponseMessage;
-
 public enum ResponseCode {
     SUCCESS(200, ResponseMessage.SUCCESS),
     CREATED(201, ResponseMessage.CREATED),

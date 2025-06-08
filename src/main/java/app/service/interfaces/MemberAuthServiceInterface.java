@@ -2,7 +2,7 @@ package app.service.interfaces;
 
 import app.domain.grade.MemberGrade;
 import app.dto.MemberLoginDTO;
-import util.interfaces.SessionManager;
+import app.util.interfaces.SessionManager;
 
 public interface MemberAuthServiceInterface {
     SessionManager getRedisSessionManager();

@@ -1,10 +1,10 @@
 package service;
 
 import app.dto.*;
-import config.Container;
-import config.PackageName;
+import legacy.config.Container;
+import legacy.config.PackageName;
 import app.domain.Post;
-import exception.UnauthorizedAccessException;
+import app.exception.UnauthorizedAccessException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import app.service.interfaces.BoardServiceInterface;

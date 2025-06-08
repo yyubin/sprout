@@ -9,7 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import app.service.interfaces.PostServiceInterface;
-import view.interfaces.PrintProcessor;
+import legacy.view.interfaces.PrintProcessor;
 
 import java.time.LocalDateTime;
 

@@ -11,7 +11,7 @@ import app.dto.CommentRegisterDTO;
 import app.dto.CommentUpdateDTO;
 import sprout.mvc.http.HttpResponse;
 import sprout.mvc.http.ResponseCode;
-import message.PrintResultMessage;
+import app.message.PrintResultMessage;
 import app.service.interfaces.CommentServiceInterface;
 import sprout.mvc.mapping.ControllerInterface;
 

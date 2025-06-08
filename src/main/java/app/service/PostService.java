@@ -1,6 +1,7 @@
 package app.service;
 
-import config.annotations.Priority;
+import app.exception.*;
+import legacy.config.annotations.Priority;
 import sprout.beans.annotation.Requires;
 import sprout.beans.annotation.Service;
 import app.domain.Board;
@@ -9,14 +10,13 @@ import app.domain.Post;
 import app.domain.grade.MemberGrade;
 import app.dto.PostRegisterDTO;
 import app.dto.PostUpdateDTO;
-import exception.*;
-import message.ExceptionMessage;
+import app.message.ExceptionMessage;
 import app.repository.interfaces.PostRepository;
 import app.service.interfaces.BoardServiceInterface;
 import app.service.interfaces.MemberAuthServiceInterface;
 import app.service.interfaces.MemberServiceInterface;
 import app.service.interfaces.PostServiceInterface;
-import util.Session;
+import app.util.Session;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -144,7 +144,7 @@ public class PostService implements PostServiceInterface {
                 .orElseThrow(() -> new MemberNotFoundException(ExceptionMessage.MEMBER_NOT_FOUND));
     }
 
-    private void checkLogin() throws NotLoggedInException  {
+    private void checkLogin() throws NotLoggedInException {
         if (Session.getSessionId() == null) {
             throw new NotLoggedInException(ExceptionMessage.NOT_LOGGED_IN);
         }

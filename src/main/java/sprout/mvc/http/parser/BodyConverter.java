@@ -2,7 +2,7 @@ package sprout.mvc.http.parser;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import exception.BadRequestException;
+import app.exception.BadRequestException;
 import sprout.mvc.http.HttpMethod;
 import sprout.mvc.http.ResponseCode;
 

@@ -1,15 +1,15 @@
 package app.service;
 
-import config.annotations.*;
 import app.domain.Board;
 import app.domain.grade.MemberGrade;
 import app.dto.BoardRegisterDTO;
 import app.dto.BoardUpdateDTO;
-import exception.BoardNameAlreadyExistsException;
-import exception.NotFoundBoardWithBoardIdException;
-import message.ExceptionMessage;
+import app.exception.BoardNameAlreadyExistsException;
+import app.exception.NotFoundBoardWithBoardIdException;
+import app.message.ExceptionMessage;
 import app.repository.interfaces.BoardRepository;
 import app.service.interfaces.BoardServiceInterface;
+import legacy.config.annotations.Priority;
 import sprout.aop.annotation.BeforeAuthCheck;
 import sprout.beans.annotation.Requires;
 import sprout.beans.annotation.Service;

@@ -9,11 +9,11 @@ import sprout.mvc.annotation.PutMapping;
 import app.domain.Member;
 import app.dto.MemberRegisterDTO;
 import app.dto.MemberUpdateDTO;
-import exception.MemberNotFoundException;
+import app.exception.MemberNotFoundException;
 import sprout.mvc.http.HttpResponse;
 import sprout.mvc.http.ResponseCode;
-import message.ExceptionMessage;
-import message.PrintResultMessage;
+import app.message.ExceptionMessage;
+import app.message.PrintResultMessage;
 
 import app.service.interfaces.MemberAuthServiceInterface;
 import app.service.interfaces.MemberServiceInterface;

@@ -3,8 +3,8 @@ package app.service.interfaces;
 import app.domain.Post;
 import app.dto.PostRegisterDTO;
 import app.dto.PostUpdateDTO;
-import exception.NotFoundBoardWithBoardIdException;
-import exception.NotFoundPostWithPostIdException;
+import app.exception.NotFoundBoardWithBoardIdException;
+import app.exception.NotFoundPostWithPostIdException;
 
 import java.util.List;
 

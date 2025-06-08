@@ -2,7 +2,7 @@ package server;
 
 import sprout.beans.annotation.Component;
 import sprout.beans.annotation.Requires;
-import http.request.RequestHandler;
+import legacy.http.request.RequestHandler;
 import sprout.mvc.http.HttpResponse;
 
 import java.io.*;

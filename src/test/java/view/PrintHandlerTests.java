@@ -1,5 +1,6 @@
 package view;
 
+import legacy.view.PrintHandler;
 import sprout.mvc.http.HttpResponse;
 import sprout.mvc.http.ResponseCode;
 import org.junit.jupiter.api.AfterEach;

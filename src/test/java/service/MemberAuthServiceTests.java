@@ -1,15 +1,15 @@
 package service;
 
-import config.Container;
-import config.PackageName;
+import legacy.config.Container;
+import legacy.config.PackageName;
 import app.dto.MemberLoginDTO;
 import app.dto.MemberRegisterDTO;
-import exception.InvalidCredentialsException;
+import app.exception.InvalidCredentialsException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import app.service.interfaces.MemberAuthServiceInterface;
 import app.service.interfaces.MemberServiceInterface;
-import util.Session;
+import app.util.Session;
 
 import static org.junit.jupiter.api.Assertions.*;
 

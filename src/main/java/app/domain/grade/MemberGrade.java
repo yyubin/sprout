@@ -1,6 +1,6 @@
 package app.domain.grade;
 
-import message.DescriptionMessage;
+import app.message.DescriptionMessage;
 
 public enum MemberGrade {
     ADMIN(DescriptionMessage.ADMIN_DESCRIPTION, DescriptionMessage.ADMIN_DESCRIPTION_EN),

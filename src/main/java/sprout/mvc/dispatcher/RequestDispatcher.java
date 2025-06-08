@@ -3,16 +3,16 @@ package sprout.mvc.dispatcher;
 // Spring 의 DispatcherServlet
 
 import sprout.mvc.http.HttpRequest;
-import http.request.HttpRequestParser;
+import legacy.http.request.HttpRequestParser;
 import sprout.mvc.http.HttpResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import sprout.mvc.mapping.HandlerMapping;
 import sprout.mvc.invoke.HandlerMethodInvoker;
 import sprout.mvc.invoke.HandlerMethod;
-import config.exception.ExceptionProcessor;
-import exception.BadRequestException;
-import exception.UnsupportedHttpMethod;
-import util.Session;
+import legacy.config.exception.ExceptionProcessor;
+import app.exception.BadRequestException;
+import app.exception.UnsupportedHttpMethod;
+import app.util.Session;
 
 public class RequestDispatcher {
     private final HttpRequestParser parser;

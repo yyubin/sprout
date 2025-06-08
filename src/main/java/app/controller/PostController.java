@@ -11,7 +11,7 @@ import app.dto.PostRegisterDTO;
 import app.dto.PostUpdateDTO;
 import sprout.mvc.http.HttpResponse;
 import sprout.mvc.http.ResponseCode;
-import message.PrintResultMessage;
+import app.message.PrintResultMessage;
 import app.service.interfaces.PostServiceInterface;
 import sprout.mvc.mapping.ControllerInterface;
 

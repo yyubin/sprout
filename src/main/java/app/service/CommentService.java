@@ -1,20 +1,20 @@
 package app.service;
 
-import config.annotations.Priority;
+import legacy.config.annotations.Priority;
 import sprout.beans.annotation.Requires;
 import sprout.beans.annotation.Service;
 import app.domain.Comment;
 import app.domain.grade.MemberGrade;
 import app.dto.CommentRegisterDTO;
 import app.dto.CommentUpdateDTO;
-import exception.NotFoundComment;
-import exception.NotLoggedInException;
-import exception.UnauthorizedAccessException;
-import message.ExceptionMessage;
+import app.exception.NotFoundComment;
+import app.exception.NotLoggedInException;
+import app.exception.UnauthorizedAccessException;
+import app.message.ExceptionMessage;
 import app.repository.interfaces.CommentRepository;
 import app.service.interfaces.CommentServiceInterface;
 import app.service.interfaces.MemberAuthServiceInterface;
-import util.Session;
+import app.util.Session;
 
 import java.time.LocalDateTime;
 import java.util.List;

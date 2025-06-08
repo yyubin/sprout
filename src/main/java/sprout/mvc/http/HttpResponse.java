@@ -1,8 +1,8 @@
 package sprout.mvc.http;
 
 
-import config.Container;
-import http.request.ObjectMapperConfig;
+import legacy.config.Container;
+import legacy.http.request.ObjectMapperConfig;
 
 public class HttpResponse<T> {
 

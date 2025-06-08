@@ -1,17 +1,17 @@
 package service;
 
-import config.Container;
-import config.PackageName;
+import legacy.config.Container;
+import legacy.config.PackageName;
 import app.domain.Member;
 import app.dto.MemberRegisterDTO;
 import app.dto.MemberUpdateDTO;
-import exception.MemberEmailAlreadyExistsException;
-import exception.MemberIdAlreadyExistsException;
-import message.ExceptionMessage;
+import app.exception.MemberEmailAlreadyExistsException;
+import app.exception.MemberIdAlreadyExistsException;
+import app.message.ExceptionMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import app.service.interfaces.MemberServiceInterface;
-import util.BCryptPasswordUtil;
+import app.util.BCryptPasswordUtil;
 
 import java.util.List;
 import java.util.Optional;

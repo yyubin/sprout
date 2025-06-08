@@ -1,5 +1,5 @@
 
-import config.ApplicationInitializer;
+import legacy.config.ApplicationInitializer;
 
 public class Main {
 

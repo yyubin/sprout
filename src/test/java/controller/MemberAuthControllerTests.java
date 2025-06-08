@@ -4,14 +4,14 @@ import app.controller.MemberAuthController;
 import app.dto.MemberLoginDTO;
 import sprout.mvc.http.HttpResponse;
 import sprout.mvc.http.ResponseCode;
-import message.PrintResultMessage;
+import app.message.PrintResultMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import app.service.MemberAuthService;
 import app.service.interfaces.MemberAuthServiceInterface;
-import view.PrintHandler;
-import view.interfaces.PrintProcessor;
+import legacy.view.PrintHandler;
+import legacy.view.interfaces.PrintProcessor;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;

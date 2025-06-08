@@ -3,9 +3,9 @@ package app.service.interfaces;
 import app.domain.Member;
 import app.dto.MemberRegisterDTO;
 import app.dto.MemberUpdateDTO;
-import exception.MemberEmailAlreadyExistsException;
-import exception.MemberIdAlreadyExistsException;
-import exception.MemberNotFoundException;
+import app.exception.MemberEmailAlreadyExistsException;
+import app.exception.MemberIdAlreadyExistsException;
+import app.exception.MemberNotFoundException;
 
 import java.util.List;
 import java.util.Optional;

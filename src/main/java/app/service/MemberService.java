@@ -1,18 +1,18 @@
 package app.service;
 
-import config.annotations.Priority;
+import legacy.config.annotations.Priority;
 import sprout.beans.annotation.Requires;
 import sprout.beans.annotation.Service;
 import app.domain.Member;
 import app.dto.MemberRegisterDTO;
 import app.dto.MemberUpdateDTO;
-import exception.MemberEmailAlreadyExistsException;
-import exception.MemberIdAlreadyExistsException;
-import exception.MemberNotFoundException;
-import message.ExceptionMessage;
+import app.exception.MemberEmailAlreadyExistsException;
+import app.exception.MemberIdAlreadyExistsException;
+import app.exception.MemberNotFoundException;
+import app.message.ExceptionMessage;
 import app.repository.interfaces.MemberRepository;
 import app.service.interfaces.MemberServiceInterface;
-import util.BCryptPasswordUtil;
+import app.util.BCryptPasswordUtil;
 
 import java.time.LocalDate;
 import java.util.List;

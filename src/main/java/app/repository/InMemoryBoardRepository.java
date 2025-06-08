@@ -2,9 +2,9 @@ package app.repository;
 
 import sprout.beans.annotation.Repository;
 import app.domain.Board;
-import exception.NotFoundBoardWithBoardIdException;
-import exception.NotFoundBoardWithBoardNameException;
-import message.ExceptionMessage;
+import app.exception.NotFoundBoardWithBoardIdException;
+import app.exception.NotFoundBoardWithBoardNameException;
+import app.message.ExceptionMessage;
 import app.repository.interfaces.BoardRepository;
 
 import java.util.ArrayList;

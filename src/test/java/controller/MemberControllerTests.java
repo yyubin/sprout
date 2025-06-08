@@ -13,8 +13,8 @@ import app.service.MemberAuthService;
 import app.service.MemberService;
 import app.service.interfaces.MemberAuthServiceInterface;
 import app.service.interfaces.MemberServiceInterface;
-import view.PrintHandler;
-import view.interfaces.PrintProcessor;
+import legacy.view.PrintHandler;
+import legacy.view.interfaces.PrintProcessor;
 
 import java.time.LocalDate;
 import java.util.HashMap;

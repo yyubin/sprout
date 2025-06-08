@@ -1,14 +1,14 @@
 package service;
 
-import config.Container;
-import config.PackageName;
+import legacy.config.Container;
+import legacy.config.PackageName;
 import app.domain.Board;
 import app.dto.BoardRegisterDTO;
 import app.dto.BoardUpdateDTO;
 import app.dto.MemberLoginDTO;
 import app.dto.MemberRegisterDTO;
-import exception.BoardNameAlreadyExistsException;
-import exception.UnauthorizedAccessException;
+import app.exception.BoardNameAlreadyExistsException;
+import app.exception.UnauthorizedAccessException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

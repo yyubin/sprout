@@ -1,7 +1,7 @@
 package app.domain;
 
 import app.domain.grade.MemberGrade;
-import util.BCryptPasswordUtil;
+import app.util.BCryptPasswordUtil;
 
 import java.time.LocalDate;
 

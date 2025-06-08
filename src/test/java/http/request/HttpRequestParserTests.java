@@ -1,10 +1,12 @@
 package http.request;
 
-import exception.BadRequestException;
+import app.exception.BadRequestException;
+import legacy.http.request.HttpRequestParser;
+import legacy.http.request.ObjectMapperConfig;
 import sprout.mvc.http.HttpMethod;
 import sprout.mvc.http.HttpRequest;
 import sprout.mvc.http.ResponseCode;
-import message.ExceptionMessage;
+import app.message.ExceptionMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
