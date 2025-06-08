@@ -1,7 +1,7 @@
 package view;
 
-import http.response.HttpResponse;
-import http.response.ResponseCode;
+import sprout.mvc.http.HttpResponse;
+import sprout.mvc.http.ResponseCode;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

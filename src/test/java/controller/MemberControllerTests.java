@@ -1,17 +1,18 @@
 package controller;
 
-import domain.Member;
-import dto.MemberRegisterDTO;
-import dto.MemberUpdateDTO;
-import http.request.HttpRequest;
-import http.response.HttpResponse;
+import app.controller.MemberController;
+import app.domain.Member;
+import app.dto.MemberRegisterDTO;
+import app.dto.MemberUpdateDTO;
+import sprout.mvc.http.HttpRequest;
+import sprout.mvc.http.HttpResponse;
 import org.junit.Before;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import service.MemberAuthService;
-import service.MemberService;
-import service.interfaces.MemberAuthServiceInterface;
-import service.interfaces.MemberServiceInterface;
+import app.service.MemberAuthService;
+import app.service.MemberService;
+import app.service.interfaces.MemberAuthServiceInterface;
+import app.service.interfaces.MemberServiceInterface;
 import view.PrintHandler;
 import view.interfaces.PrintProcessor;
 

@@ -1,7 +1,7 @@
 package http.request;
 
-import controller.ControllerInterface;
-import controller.annotations.GetMapping;
+import sprout.mvc.mapping.ControllerInterface;
+import sprout.mvc.annotation.GetMapping;
 
 public class GetController implements ControllerInterface {
     @GetMapping(path = "/testPath")

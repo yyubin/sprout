@@ -1,21 +1,15 @@
 package view;
 
-import config.annotations.Component;
+import sprout.beans.annotation.Component;
 import config.annotations.Priority;
-import config.annotations.Requires;
+import sprout.beans.annotation.Requires;
 import http.request.RequestHandler;
-import message.ExceptionMessage;
 import message.InputCautionMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import view.interfaces.InputProcessor;
 import view.interfaces.PrintProcessor;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Scanner;
 
 @Component
 @Priority(value = 1)

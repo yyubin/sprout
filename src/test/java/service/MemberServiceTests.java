@@ -2,18 +2,17 @@ package service;
 
 import config.Container;
 import config.PackageName;
-import domain.Member;
-import dto.MemberRegisterDTO;
-import dto.MemberUpdateDTO;
+import app.domain.Member;
+import app.dto.MemberRegisterDTO;
+import app.dto.MemberUpdateDTO;
 import exception.MemberEmailAlreadyExistsException;
 import exception.MemberIdAlreadyExistsException;
 import message.ExceptionMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import service.interfaces.MemberServiceInterface;
+import app.service.interfaces.MemberServiceInterface;
 import util.BCryptPasswordUtil;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 

@@ -2,13 +2,8 @@ package http.request;
 
 import config.Container;
 import config.PackageName;
-import controller.ControllerInterface;
-import controller.ExampleController;
-import controller.annotations.GetMapping;
-import controller.annotations.PostMapping;
+import sprout.mvc.mapping.ControllerInterface;
 import exception.BadRequestException;
-import exception.NoMatchingHandlerException;
-import message.ExceptionMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

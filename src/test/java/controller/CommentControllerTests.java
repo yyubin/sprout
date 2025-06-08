@@ -1,15 +1,16 @@
 package controller;
 
-import domain.Comment;
-import dto.CommentRegisterDTO;
-import dto.CommentUpdateDTO;
-import http.response.HttpResponse;
+import app.controller.CommentController;
+import app.domain.Comment;
+import app.dto.CommentRegisterDTO;
+import app.dto.CommentUpdateDTO;
+import sprout.mvc.http.HttpResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import service.interfaces.CommentServiceInterface;
+import app.service.interfaces.CommentServiceInterface;
 import view.interfaces.PrintProcessor;
 
 import java.time.LocalDateTime;

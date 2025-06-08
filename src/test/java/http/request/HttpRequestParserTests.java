@@ -1,8 +1,9 @@
 package http.request;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import exception.BadRequestException;
-import http.response.ResponseCode;
+import sprout.mvc.http.HttpMethod;
+import sprout.mvc.http.HttpRequest;
+import sprout.mvc.http.ResponseCode;
 import message.ExceptionMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

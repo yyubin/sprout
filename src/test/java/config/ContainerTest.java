@@ -2,8 +2,8 @@ package config;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import repository.InMemoryMemberRepository;
-import service.MemberService;
+import app.repository.InMemoryMemberRepository;
+import app.service.MemberService;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -14,7 +14,7 @@ public class ContainerTest {
     @BeforeEach
     void setUp() throws Exception {
         container = Container.getInstance();
-        container.scan("repository");
+        container.scan("app/repository");
         container.scan("component");
         container.scan("service");
     }

@@ -1,7 +1,7 @@
 package http.request;
 
-import controller.ControllerInterface;
-import controller.annotations.PostMapping;
+import sprout.mvc.mapping.ControllerInterface;
+import sprout.mvc.annotation.PostMapping;
 
 public class PostController implements ControllerInterface {
     @PostMapping(path = "/postPath")

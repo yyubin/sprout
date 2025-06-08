@@ -1,20 +1,17 @@
 package controller;
 
-import dto.MemberLoginDTO;
-import http.request.HttpRequest;
-import http.response.HttpResponse;
-import http.response.ResponseCode;
+import app.controller.MemberAuthController;
+import app.dto.MemberLoginDTO;
+import sprout.mvc.http.HttpResponse;
+import sprout.mvc.http.ResponseCode;
 import message.PrintResultMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import service.MemberAuthService;
-import service.interfaces.MemberAuthServiceInterface;
+import app.service.MemberAuthService;
+import app.service.interfaces.MemberAuthServiceInterface;
 import view.PrintHandler;
 import view.interfaces.PrintProcessor;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;

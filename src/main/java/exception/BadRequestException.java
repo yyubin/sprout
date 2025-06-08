@@ -1,6 +1,6 @@
 package exception;
 
-import http.response.ResponseCode;
+import sprout.mvc.http.ResponseCode;
 
 public class BadRequestException extends RuntimeException {
 

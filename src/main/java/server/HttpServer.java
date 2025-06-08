@@ -1,9 +1,9 @@
 package server;
 
-import config.annotations.Component;
-import config.annotations.Requires;
+import sprout.beans.annotation.Component;
+import sprout.beans.annotation.Requires;
 import http.request.RequestHandler;
-import http.response.HttpResponse;
+import sprout.mvc.http.HttpResponse;
 
 import java.io.*;
 import java.net.ServerSocket;

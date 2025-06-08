@@ -1,29 +1,19 @@
 package controller;
 
-import domain.Board;
-import domain.Member;
-import domain.Post;
-import domain.grade.MemberGrade;
-import dto.BoardRegisterDTO;
-import dto.BoardUpdateDTO;
-import http.request.HttpRequest;
-import http.response.HttpResponse;
-import http.response.ResponseCode;
+import app.controller.BoardController;
+import app.domain.grade.MemberGrade;
+import app.dto.BoardRegisterDTO;
+import app.dto.BoardUpdateDTO;
+import sprout.mvc.http.HttpResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import service.BoardService;
-import service.PostService;
-import service.interfaces.BoardServiceInterface;
-import service.interfaces.PostServiceInterface;
+import app.service.BoardService;
+import app.service.PostService;
+import app.service.interfaces.BoardServiceInterface;
+import app.service.interfaces.PostServiceInterface;
 import view.PrintHandler;
 import view.interfaces.PrintProcessor;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;

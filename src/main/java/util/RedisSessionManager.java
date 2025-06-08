@@ -1,6 +1,6 @@
 package util;
 
-import config.annotations.Component;
+import sprout.beans.annotation.Component;
 import org.yaml.snakeyaml.Yaml;
 import redis.clients.jedis.Jedis;
 import util.interfaces.SessionManager;

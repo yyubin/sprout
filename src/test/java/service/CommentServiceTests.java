@@ -1,13 +1,13 @@
 package service;
 
+import app.dto.*;
+import app.service.interfaces.*;
 import config.Container;
 import config.PackageName;
-import dto.*;
 import exception.NotLoggedInException;
 import exception.UnauthorizedAccessException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import service.interfaces.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;

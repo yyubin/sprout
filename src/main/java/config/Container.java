@@ -1,6 +1,6 @@
 package config;
 
-import controller.ControllerInterface;
+import sprout.mvc.mapping.ControllerInterface;
 
 import java.util.*;
 

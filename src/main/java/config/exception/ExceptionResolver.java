@@ -1,9 +1,9 @@
 package config.exception;
 
-import config.annotations.Component;
-import config.annotations.ExceptionHandler;
+import sprout.beans.annotation.Component;
+import sprout.error.annotation.ExceptionHandler;
 import exception.*;
-import http.response.ResponseCode;
+import sprout.mvc.http.ResponseCode;
 import message.ExceptionMessage;
 
 import java.lang.reflect.InvocationTargetException;

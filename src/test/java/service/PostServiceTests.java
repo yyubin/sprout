@@ -1,27 +1,18 @@
 package service;
 
-import com.sun.tools.javac.Main;
+import app.dto.*;
 import config.Container;
 import config.PackageName;
-import domain.Post;
-import domain.grade.MemberGrade;
-import dto.*;
+import app.domain.Post;
 import exception.UnauthorizedAccessException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import repository.InMemoryBoardRepository;
-import repository.InMemoryMemberRepository;
-import repository.InMemoryPostRepository;
-import service.interfaces.BoardServiceInterface;
-import service.interfaces.MemberAuthServiceInterface;
-import service.interfaces.MemberServiceInterface;
-import service.interfaces.PostServiceInterface;
-import util.RedisSessionManager;
+import app.service.interfaces.BoardServiceInterface;
+import app.service.interfaces.MemberAuthServiceInterface;
+import app.service.interfaces.MemberServiceInterface;
+import app.service.interfaces.PostServiceInterface;
 
 import static org.junit.jupiter.api.Assertions.*;
-
-import java.time.LocalDate;
-import java.util.List;
 
 public class PostServiceTests {
 

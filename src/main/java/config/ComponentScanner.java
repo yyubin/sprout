@@ -1,17 +1,26 @@
 package config;
 
 import config.annotations.*;
-import config.proxy.MethodProxyHandler;
+import sprout.aop.MethodProxyHandler;
+import sprout.mvc.mapping.ControllerInterface;
+import sprout.mvc.annotation.DeleteMapping;
+import sprout.mvc.annotation.GetMapping;
+import sprout.mvc.annotation.PostMapping;
+import sprout.mvc.annotation.PutMapping;
+import sprout.mvc.http.HttpMethod;
+import sprout.aop.annotation.BeforeAuthCheck;
+import sprout.beans.annotation.*;
+import sprout.mvc.mapping.RequestMappingRegistry;
 import org.reflections.Reflections;
-import service.BoardService;
-import service.MemberAuthService;
-import service.interfaces.BoardServiceInterface;
-import service.interfaces.MemberAuthServiceInterface;
+import app.service.MemberAuthService;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.util.*;
 
 public class ComponentScanner {
+
+    private final RequestMappingRegistry requestMappingRegistry = new RequestMappingRegistry();
 
     public void scan(String basePackage) throws Exception {
         Reflections reflections = new Reflections(basePackage);
@@ -48,6 +57,25 @@ public class ComponentScanner {
             registerInterface(componentClass, instance);
 
             Container.getInstance().register(componentClass, instance);
+        }
+    }
+
+    private void registerControllerMappings(ControllerInterface controller) throws Exception {
+        Class<?> controllerClass = controller.getClass();
+        for (Method method : controllerClass.getDeclaredMethods()) {
+            if (method.isAnnotationPresent(GetMapping.class)) {
+                String path = method.getAnnotation(GetMapping.class).path();
+                requestMappingRegistry.register(path, HttpMethod.GET, controller, method);
+            } else if (method.isAnnotationPresent(PostMapping.class)) {
+                String path = method.getAnnotation(PostMapping.class).path();
+                requestMappingRegistry.register(path, HttpMethod.POST, controller, method);
+            } else if (method.isAnnotationPresent(PutMapping.class)) {
+                String path = method.getAnnotation(PutMapping.class).path();
+                requestMappingRegistry.register(path, HttpMethod.PUT, controller, method);
+            } else if (method.isAnnotationPresent(DeleteMapping.class)) {
+                String path = method.getAnnotation(DeleteMapping.class).path();
+                requestMappingRegistry.register(path, HttpMethod.DELETE, controller, method);
+            }
         }
     }
 

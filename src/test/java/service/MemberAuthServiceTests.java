@@ -1,23 +1,15 @@
 package service;
 
-import com.sun.tools.javac.Main;
 import config.Container;
 import config.PackageName;
-import domain.Member;
-import dto.MemberLoginDTO;
-import dto.MemberRegisterDTO;
+import app.dto.MemberLoginDTO;
+import app.dto.MemberRegisterDTO;
 import exception.InvalidCredentialsException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import redis.clients.jedis.Jedis;
-import repository.InMemoryBoardRepository;
-import repository.InMemoryMemberRepository;
-import service.interfaces.MemberAuthServiceInterface;
-import service.interfaces.MemberServiceInterface;
-import util.RedisSessionManager;
+import app.service.interfaces.MemberAuthServiceInterface;
+import app.service.interfaces.MemberServiceInterface;
 import util.Session;
-
-import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
 

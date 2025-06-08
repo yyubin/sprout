@@ -2,7 +2,7 @@ package http.request;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import config.annotations.Component;
+import sprout.beans.annotation.Component;
 import config.annotations.Priority;
 
 @Component

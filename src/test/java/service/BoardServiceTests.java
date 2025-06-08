@@ -1,31 +1,21 @@
 package service;
 
-import com.sun.tools.javac.Main;
 import config.Container;
 import config.PackageName;
-import domain.Board;
-import domain.Member;
-import domain.grade.MemberGrade;
-import dto.BoardRegisterDTO;
-import dto.BoardUpdateDTO;
-import dto.MemberLoginDTO;
-import dto.MemberRegisterDTO;
+import app.domain.Board;
+import app.dto.BoardRegisterDTO;
+import app.dto.BoardUpdateDTO;
+import app.dto.MemberLoginDTO;
+import app.dto.MemberRegisterDTO;
 import exception.BoardNameAlreadyExistsException;
-import exception.NotFoundBoardWithBoardIdException;
 import exception.UnauthorizedAccessException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import repository.InMemoryBoardRepository;
-import repository.InMemoryMemberRepository;
-import service.interfaces.BoardServiceInterface;
-import service.interfaces.MemberAuthServiceInterface;
-import service.interfaces.MemberServiceInterface;
-import util.RedisSessionManager;
-import util.Session;
+import app.service.interfaces.BoardServiceInterface;
+import app.service.interfaces.MemberAuthServiceInterface;
+import app.service.interfaces.MemberServiceInterface;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 

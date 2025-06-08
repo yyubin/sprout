@@ -1,9 +1,6 @@
 package view.interfaces;
 
-import http.response.HttpResponse;
-
-import java.util.List;
-import java.util.Map;
+import sprout.mvc.http.HttpResponse;
 
 public interface PrintProcessor {
     void printCustomMessage(String message);

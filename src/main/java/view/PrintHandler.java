@@ -1,15 +1,12 @@
 package view;
 
 
-import config.annotations.Component;
+import sprout.beans.annotation.Component;
 import config.annotations.Priority;
-import config.annotations.Requires;
-import http.response.HttpResponse;
+import sprout.beans.annotation.Requires;
+import sprout.mvc.http.HttpResponse;
 import message.ExceptionMessage;
 import view.interfaces.PrintProcessor;
-
-import java.util.List;
-import java.util.Map;
 
 @Component
 @Priority(value = 0)

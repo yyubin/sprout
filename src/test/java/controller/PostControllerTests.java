@@ -1,20 +1,17 @@
 package controller;
 
-import domain.Post;
-import dto.PostRegisterDTO;
-import dto.PostUpdateDTO;
-import http.request.HttpRequest;
-import http.response.HttpResponse;
+import app.controller.PostController;
+import app.domain.Post;
+import app.dto.PostRegisterDTO;
+import app.dto.PostUpdateDTO;
+import sprout.mvc.http.HttpResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import service.interfaces.PostServiceInterface;
-import view.PrintHandler;
+import app.service.interfaces.PostServiceInterface;
 import view.interfaces.PrintProcessor;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.mockito.InjectMocks;
 import org.mockito.Mock;

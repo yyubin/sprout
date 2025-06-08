@@ -106,7 +106,7 @@ sprout
 
 ### 3. AOP (권한 체크 예시)
 
-**클래스:** `config.proxy.MethodProxyHandler`
+**클래스:** `sprout.aop.MethodProxyHandler`
 
 * **적용 대상** – `@BeforeAuthCheck` 가 붙은 서비스 메서드.
 * **동작**
