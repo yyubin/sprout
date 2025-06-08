@@ -1,6 +1,5 @@
 package legacy.config;
 
-import config.annotations.*;
 import legacy.config.annotations.Priority;
 import sprout.aop.MethodProxyHandler;
 import sprout.mvc.mapping.ControllerInterface;
