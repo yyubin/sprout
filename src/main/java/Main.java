@@ -1,12 +1,12 @@
 
-import legacy.config.ApplicationInitializer;
+import sprout.beans.annotation.ComponentScan;
+import sprout.boot.SproutApplication;
 
+@ComponentScan(basePackages = {"app", "sprout"})
 public class Main {
 
     public static void main(String[] args) throws Exception {
-
-        ApplicationInitializer.initialize();
-
+        SproutApplication.run(Main.class);
     }
 
 }

@@ -3,7 +3,7 @@ package legacy.config;
 import com.sun.tools.javac.Main;
 import legacy.http.request.RequestHandler;
 import org.yaml.snakeyaml.Yaml;
-import server.HttpServer;
+import legacy.server.HttpServer;
 
 import java.io.IOException;
 import java.io.InputStream;

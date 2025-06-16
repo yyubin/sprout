@@ -1,4 +1,4 @@
-package server;
+package legacy.server;
 
 import sprout.beans.annotation.Component;
 import sprout.beans.annotation.Requires;
