@@ -21,18 +21,15 @@ public class RequestDispatcher {
     private final HttpRequestParser parser;
     private final HandlerMapping mapping;
     private final HandlerMethodInvoker invoker;
-    private final ExceptionProcessor exceptionProcessor;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public RequestDispatcher(HttpRequestParser parser,
                              HandlerMapping mapping,
-                             HandlerMethodInvoker invoker,
-                             ExceptionProcessor exceptionProcessor
+                             HandlerMethodInvoker invoker
     ) {
         this.parser = parser;
         this.mapping = mapping;
         this.invoker = invoker;
-        this.exceptionProcessor = exceptionProcessor;
     }
 
     /** Main entry: raw HTTP string → HttpResponse */
@@ -49,8 +46,8 @@ public class RequestDispatcher {
         } catch (UnsupportedHttpMethod | BadRequestException e) {
             return HttpResponse.badRequest(e.getMessage());
         } catch (Exception ex) {
-            String msg = exceptionProcessor.handleUndefinedException(ex);
-            return HttpResponse.serverError(msg);
+            //String msg = exceptionProcessor.handleUndefinedException(ex);
+            return HttpResponse.serverError(ex.getMessage());
         }
     }
 }

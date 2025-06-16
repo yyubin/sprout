@@ -11,8 +11,8 @@ import java.util.Map;
 
 @Component
 public class BodyConverter {
-    private final ObjectMapper om;
-    public BodyConverter(ObjectMapper om) { this.om = om; }
+    private final ObjectMapper om = new ObjectMapper();
+
     public Map<String,Object> toMap(String body, HttpMethod method) {
         if (body == null || body.isBlank()) return null;
         try {
