@@ -1,5 +1,6 @@
 package sprout.mvc.mapping;
 
+import sprout.beans.annotation.Component;
 import sprout.mvc.http.HttpMethod;
 
 import java.lang.reflect.Method;
@@ -7,6 +8,7 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 
+@Component
 public class RequestMappingRegistry {
     private final Map<String, Map<HttpMethod, RequestMappingInfo>> mappings = new HashMap<>();
 

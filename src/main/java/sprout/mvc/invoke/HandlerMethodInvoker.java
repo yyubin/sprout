@@ -1,10 +1,12 @@
 package sprout.mvc.invoke;
 
+import sprout.beans.annotation.Component;
 import sprout.mvc.http.HttpRequest;
 import sprout.mvc.argument.CompositeArgumentResolver;
 
 import java.util.Map;
 
+@Component
 public class HandlerMethodInvoker {
     private final CompositeArgumentResolver resolvers;
 

@@ -10,12 +10,14 @@ import java.util.Map;
 @Component
 @Requires(dependsOn = {ObjectMapperConfig.class})
 public class HttpRequestParser {
-    private final RequestLineParser lineParser = new RequestLineParser();
-    private final QueryStringParser qsParser = new QueryStringParser();
+    private final RequestLineParser lineParser;
+    private final QueryStringParser qsParser;
     private final BodyConverter bodyConverter;
 
-    public HttpRequestParser(ObjectMapperConfig omConfig) {
-        this.bodyConverter = new BodyConverter(omConfig.getObjectMapper());
+    public HttpRequestParser(RequestLineParser lineParser, QueryStringParser qsParser, BodyConverter bodyConverter) {
+        this.lineParser = lineParser;
+        this.qsParser = qsParser;
+        this.bodyConverter = bodyConverter;
     }
 
     public HttpRequest<Map<String,Object>> parse(String raw) {

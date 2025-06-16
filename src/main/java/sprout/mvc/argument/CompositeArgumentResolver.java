@@ -1,5 +1,6 @@
 package sprout.mvc.argument;
 
+import sprout.beans.annotation.Component;
 import sprout.mvc.http.HttpRequest;
 
 import java.lang.reflect.Method;
@@ -7,6 +8,7 @@ import java.lang.reflect.Parameter;
 import java.util.List;
 import java.util.Map;
 
+@Component
 public class CompositeArgumentResolver {
     private final List<ArgumentResolver> delegates;
 

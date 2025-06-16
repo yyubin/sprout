@@ -8,14 +8,12 @@ import sprout.beans.annotation.*;
 import java.lang.reflect.Constructor;
 import java.util.*;
 
+@Component
 public class ClassPathScanner {
     public Collection<BeanDefinition> scan(String basePackage) {
         Reflections r = new Reflections(basePackage);
         Set<Class<?>> cands = new HashSet<>();
         cands.addAll(r.getTypesAnnotatedWith(Component.class));
-        cands.addAll(r.getTypesAnnotatedWith(Controller.class));
-        cands.addAll(r.getTypesAnnotatedWith(Service.class));
-        cands.addAll(r.getTypesAnnotatedWith(Repository.class));
         List<BeanDefinition> defs = new ArrayList<>(cands.size());
         for (Class<?> c : cands) {
             try {

@@ -5,7 +5,7 @@ import sprout.beans.annotation.Component;
 import sprout.error.annotation.ExceptionHandler;
 import legacy.config.annotations.Priority;
 import sprout.beans.annotation.Requires;
-import legacy.config.exception.ExceptionProcessor;
+import app.exception.ExceptionProcessor;
 import sprout.mvc.http.HttpMethod;
 import sprout.mvc.http.HttpRequest;
 import sprout.mvc.mapping.ControllerInterface;

@@ -1,6 +1,4 @@
-package legacy.config.exception;
-
-import app.exception.*;
+package app.exception;
 
 import java.lang.reflect.InvocationTargetException;
 

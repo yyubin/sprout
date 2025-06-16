@@ -2,9 +2,11 @@ package sprout.mvc.http.parser;
 
 import app.exception.BadRequestException;
 import app.message.ExceptionMessage;
+import sprout.beans.annotation.Component;
 import sprout.mvc.http.HttpMethod;
 import sprout.mvc.http.ResponseCode;
 
+@Component
 public class RequestLineParser {
     public RequestLine parse(String line) {
         String[] parts = line.split(" ", 3);

@@ -1,6 +1,5 @@
-package legacy.config.exception;
+package app.exception;
 
-import app.exception.*;
 import sprout.beans.annotation.Component;
 import sprout.error.annotation.ExceptionHandler;
 import sprout.mvc.http.ResponseCode;

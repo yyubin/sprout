@@ -1,8 +1,10 @@
 package sprout.mvc.mapping;
 
+import sprout.beans.annotation.Component;
 import sprout.mvc.http.HttpMethod;
 import sprout.mvc.invoke.HandlerMethod;
 
+@Component
 public class HandlerMappingImpl implements HandlerMapping {
 
     private final RequestMappingRegistry registry;

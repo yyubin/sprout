@@ -1,10 +1,13 @@
 package sprout.mvc.http.parser;
 
+import sprout.beans.annotation.Component;
+
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
+@Component
 public class QueryStringParser {
     public Map<String,String> parse(String rawPath) {
         Map<String,String> out = new HashMap<>();

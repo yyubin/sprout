@@ -15,7 +15,6 @@ import java.util.Map;
 
 
 @Component
-@Priority(value = 1)
 @Requires(dependsOn = {ObjectMapperConfig.class})
 public class HttpRequestParser {
 
