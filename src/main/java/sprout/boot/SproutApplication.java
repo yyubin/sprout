@@ -16,7 +16,7 @@ public final class SproutApplication {
 
         // 2) DI 컨테이너 부트스트랩
         Container ctx = Container.getInstance();
-        for (String p : packages) ctx.bootstrap(p.trim());
+        ctx.bootstrap(packages);
 
         // 3) 서버 구동
         HttpServer server = ctx.get(HttpServer.class);

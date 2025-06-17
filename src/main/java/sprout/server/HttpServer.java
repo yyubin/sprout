@@ -10,7 +10,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 @Component
-@Requires(dependsOn = { RequestDispatcher.class })
 public class HttpServer {
 
     private final ExecutorService pool = Executors.newFixedThreadPool(16);
