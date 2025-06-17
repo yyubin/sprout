@@ -1,29 +1,39 @@
 package sprout.scan;
 
+import org.reflections.scanners.SubTypesScanner;
+import org.reflections.scanners.TypeAnnotationsScanner;
+import org.reflections.util.ConfigurationBuilder;
+import org.reflections.util.FilterBuilder;
 import sprout.aop.annotation.BeforeAuthCheck;
 import sprout.beans.BeanDefinition;
 import org.reflections.Reflections;
 import sprout.beans.annotation.*;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 public class ClassPathScanner {
-    public Collection<BeanDefinition> scan(String basePackage) {
-        Reflections r = new Reflections(basePackage);
+    public Collection<BeanDefinition> scan(ConfigurationBuilder configBuilder) {
+        Reflections r = new Reflections(configBuilder);
 
-        Set<Class<?>> candidates = new HashSet<>(r.getTypesAnnotatedWith(Component.class));
-        Set<Class<?>> knownTypes = new HashSet<>(candidates);
+        Set<Class<?>> componentCandidates = new HashSet<>();
+        componentCandidates.addAll(r.getTypesAnnotatedWith(Component.class));
+        componentCandidates.addAll(r.getTypesAnnotatedWith(Controller.class));
+        componentCandidates.addAll(r.getTypesAnnotatedWith(Service.class));
+        componentCandidates.addAll(r.getTypesAnnotatedWith(Repository.class));
+
+        Set<Class<?>> concreteBeanTypes = componentCandidates.stream()
+                .filter(clazz -> !clazz.isInterface() && !clazz.isAnnotation() && !Modifier.isAbstract(clazz.getModifiers()))
+                .collect(Collectors.toSet());
+        Set<Class<?>> knownTypes = new HashSet<>(concreteBeanTypes);
 
         List<BeanDefinition> definitions = new ArrayList<>();
 
-        for (Class<?> clazz : candidates) {
-            if (clazz.isInterface() || clazz.isAnnotation() || Modifier.isAbstract(clazz.getModifiers())) {
-                continue;
-            }
-
+        for (Class<?> clazz : knownTypes) {
             try {
                 Constructor<?> ctor = resolveUsableConstructor(clazz, knownTypes);
                 boolean proxy = clazz.isAnnotationPresent(BeforeAuthCheck.class);
@@ -32,6 +42,7 @@ public class ClassPathScanner {
                 throw new IllegalStateException("No usable constructor for class " + clazz.getName(), e);
             }
         }
+        definitions.forEach(d -> System.out.println("→ "+ d.type()));
 
         return definitions;
     }
