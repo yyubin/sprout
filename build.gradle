@@ -28,10 +28,18 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-annotations:2.15.2'
 
     implementation 'org.reflections:reflections:0.10.2'
+    implementation 'org.javassist:javassist:3.28.0-GA'
+    implementation 'org.ow2.asm:asm:9.7'
+    implementation 'org.ow2.asm:asm-tree:9.7'
+
+    implementation 'org.slf4j:slf4j-simple:1.7.32'
+    testImplementation 'org.slf4j:slf4j-simple:1.7.32'
 
     implementation 'ch.qos.logback:logback-classic:1.2.6'
 
     implementation 'org.yaml:snakeyaml:1.29'
+
+
 
 }
 
