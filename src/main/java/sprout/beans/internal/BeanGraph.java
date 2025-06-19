@@ -45,22 +45,15 @@ public class BeanGraph {
     private void buildEdges() {
         for (BeanDefinition def : nodeMap.values()) {
             for (Class<?> dep : def.dependencies()) {
-                // 수정된 로직: 의존성 타입이 인터페이스인 경우, 해당 인터페이스를 구현하는 빈을 찾음
                 boolean dependencyFoundInNodeMap = false;
-                Class<?> actualDependencyType = null; // 실제로 nodeMap에 존재하는 구현체 타입
+                Class<?> actualDependencyType = null;
 
-                if (nodeMap.containsKey(dep)) { // 직접적으로 dep 타입이 nodeMap에 있는 경우 (대부분 구체 클래스)
+                if (nodeMap.containsKey(dep)) {
                     dependencyFoundInNodeMap = true;
                     actualDependencyType = dep;
                 } else if (dep.isInterface() || Modifier.isAbstract(dep.getModifiers())) {
-                    // 의존성 타입이 인터페이스 또는 추상 클래스인 경우
-                    // nodeMap에 있는 BeanDefinition들 중에서 이 인터페이스/추상 클래스를 구현하는 (또는 상속하는) 빈을 찾음
                     for (Class<?> candidateType : nodeMap.keySet()) {
-                        if (dep.isAssignableFrom(candidateType)) { // candidateType이 dep를 구현/상속한다면
-                            // 이 경우, 인터페이스에 대한 의존성은 해당 인터페이스의 "구현체"에 대한 의존성이 됨
-                            // 여러 구현체가 있을 수 있지만, 위상 정렬 목적에서는 어느 하나가 먼저 생성되면 되므로
-                            // 일단 찾은 첫 번째 구현체를 실제 의존성으로 간주함
-
+                        if (dep.isAssignableFrom(candidateType)) {
                             actualDependencyType = candidateType;
                             dependencyFoundInNodeMap = true;
                             break;
@@ -69,12 +62,9 @@ public class BeanGraph {
                 }
 
                 if (!dependencyFoundInNodeMap) {
-                    // 컨테이너가 관리하는 빈 중 의존성(또는 그 구현체)을 찾지 못한 경우
-                    // (외부 의존성이거나, 잘못된 의존성)
                     continue;
                 }
 
-                // 이제 actualDependencyType이 nodeMap에 있는 실제 의존성 빈의 타입
                 edges.computeIfAbsent(actualDependencyType, k -> new ArrayList<>()).add(def.type());
                 indegree.merge(def.type(), 1, Integer::sum);
             }

@@ -20,12 +20,9 @@ public class Container {
     private final ClassPathScanner scanner;
 
     private static class PendingListInjection {
-        final Object beanInstance; // List를 주입받을 빈의 실제 인스턴스
-        final Class<?> genericType; // List<T>의 T 타입
-        // 생성자 주입 시에는 Parameter 정보를 저장하여 해당 List 객체를 다시 찾아서 채워야 한다
-        // 이는 조금 더 복잡합니다. 현재는 생성자에 List 인스턴스가 이미 넘어간 상태이므로,
-        // 그 List 인스턴스 자체를 저장해서 나중에 addAll하는게 가장 편할 것 같다
-        final List<Object> listToPopulate; // 생성자를 통해 주입된 비어있는 List 인스턴스
+        final Object beanInstance;
+        final Class<?> genericType;
+        final List<Object> listToPopulate;
 
         PendingListInjection(Object beanInstance, List<Object> listToPopulate, Class<?> genericType) {
             this.beanInstance = beanInstance;
@@ -54,7 +51,7 @@ public class Container {
 
         FilterBuilder filter = new FilterBuilder();
         for (String pkg : basePackages) {
-            filter.includePackage(pkg); // 해당 패키지 또는 하위 패키지에 속하는 클래스만 포함
+            filter.includePackage(pkg);
         }
         configBuilder.filterInputsBy(filter);
 
@@ -65,13 +62,11 @@ public class Container {
     }
 
     public <T> T get(Class<T> type) {
-        // 1. 정확한 타입으로 등록된 빈을 먼저 찾기
         Object bean = singletons.get(type);
         if (bean != null) {
             return type.cast(bean);
         }
 
-        // 2. 인터페이스나 추상 클래스를 요청했을 경우 구현체를 찾기
         if (type.isInterface() || Modifier.isAbstract(type.getModifiers())) {
             List<Object> candidates = new ArrayList<>();
             for (Object existingBean : singletons.values()) {
@@ -139,7 +134,7 @@ public class Container {
     private void postProcessListInjections() {
         System.out.println("--- Post-processing List Injections ---");
         for (PendingListInjection pending : pendingListInjections) {
-            Set<Object> uniqueBeansForList = new HashSet<>(); // Set을 사용하여 중복 방지
+            Set<Object> uniqueBeansForList = new HashSet<>();
             for (Object bean : singletons.values()) {
                 if (pending.genericType.isAssignableFrom(bean.getClass())) {
                     uniqueBeansForList.add(bean);

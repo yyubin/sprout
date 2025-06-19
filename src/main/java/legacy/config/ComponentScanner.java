@@ -60,9 +60,8 @@ public class ComponentScanner {
         }
     }
 
-    private void registerControllerMappings(ControllerInterface controller) throws Exception {
-        Class<?> controllerClass = controller.getClass();
-        for (Method method : controllerClass.getDeclaredMethods()) {
+    private void registerControllerMappings(Class<?> controller) throws Exception {
+        for (Method method : controller.getDeclaredMethods()) {
             if (method.isAnnotationPresent(GetMapping.class)) {
                 String path = method.getAnnotation(GetMapping.class).path();
                 requestMappingRegistry.register(path, HttpMethod.GET, controller, method);
