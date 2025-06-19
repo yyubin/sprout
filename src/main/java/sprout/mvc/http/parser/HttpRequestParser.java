@@ -8,7 +8,6 @@ import sprout.mvc.http.HttpRequest;
 import java.util.Map;
 
 @Component
-@Requires(dependsOn = {ObjectMapperConfig.class})
 public class HttpRequestParser {
     private final RequestLineParser lineParser;
     private final QueryStringParser qsParser;
@@ -32,6 +31,7 @@ public class HttpRequestParser {
     }
 
     private String[] split(String raw) {
+        System.out.println(raw);
         // 헤더·바디 구분 문자열을 먼저 CRLF( \r\n\r\n )로 찾고
         // 없으면 LF( \n\n ) 로 한 번 더 찾기
         int delimiterIdx   = raw.indexOf("\r\n\r\n");

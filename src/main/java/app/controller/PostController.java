@@ -1,5 +1,6 @@
 package app.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import sprout.beans.annotation.Controller;
 import sprout.beans.annotation.Requires;
 import sprout.mvc.annotation.DeleteMapping;
@@ -59,7 +60,7 @@ public class PostController implements ControllerInterface {
     }
 
     @GetMapping(path = "/posts/view")
-    public HttpResponse<?> viewPost(Long boardId, Long postId) {
+    public HttpResponse<?> viewPost(Long boardId, Long postId) throws JsonProcessingException {
 
         Post post = postService.getPost(postId, boardId);
 

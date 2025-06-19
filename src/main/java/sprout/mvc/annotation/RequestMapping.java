@@ -7,10 +7,10 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+@Target({ElementType.METHOD, ElementType.ANNOTATION_TYPE, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-@RequestMapping(method = HttpMethod.DELETE)
-public @interface DeleteMapping {
+public @interface RequestMapping {
     String[] value() default {};
     String[] path() default {};
+    HttpMethod[] method() default {};
 }

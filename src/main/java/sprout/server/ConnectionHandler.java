@@ -30,7 +30,6 @@ class ConnectionHandler implements Runnable {
         }
     }
 
-    // --- helpers ---------------------------------------------------------
     private String readRawRequest(BufferedReader in) throws IOException {
         StringBuilder sb = new StringBuilder();
         String line; int contentLength = 0;

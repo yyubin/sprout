@@ -7,12 +7,14 @@ import org.reflections.util.ConfigurationBuilder;
 import org.reflections.util.FilterBuilder;
 import sprout.aop.MethodProxyHandler;
 import sprout.beans.BeanDefinition;
+import sprout.beans.annotation.Component;
 import sprout.beans.internal.BeanGraph;
 import sprout.scan.ClassPathScanner;
 
 import java.lang.reflect.Modifier;
 import java.util.*;
 
+@Component
 public class Container {
     private static Container INSTANCE;
     private final Map<Class<?>, Object> singletons = new HashMap<>();
@@ -56,7 +58,9 @@ public class Container {
         configBuilder.filterInputsBy(filter);
 
         Collection<BeanDefinition> defs = scanner.scan(configBuilder);
+        register(Container.class, this);
         List<BeanDefinition> order = new BeanGraph(defs).topologicallySorted();
+
         order.forEach(this::instantiatePrimary);
         postProcessListInjections();
     }

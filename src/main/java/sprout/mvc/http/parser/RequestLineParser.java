@@ -15,7 +15,7 @@ public class RequestLineParser {
         }
         HttpMethod method = HttpMethod.valueOf(parts[0].toUpperCase());
         String rawPath   = parts[1];
-        String cleanPath = rawPath.split("'?")[0];
+        String cleanPath = rawPath.split("\\?")[0];
         return new RequestLine(method, rawPath, cleanPath);
     }
 }

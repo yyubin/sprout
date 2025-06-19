@@ -2,6 +2,7 @@ package sprout.mvc.dispatcher;
 
 // Spring 의 DispatcherServlet
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import sprout.beans.annotation.Component;
 import sprout.mvc.http.HttpRequest;
 import sprout.mvc.http.HttpResponse;
@@ -32,15 +33,13 @@ public class RequestDispatcher {
         this.invoker = invoker;
     }
 
-    /** Main entry: raw HTTP string → HttpResponse */
-    public HttpResponse dispatch(String raw) {
+    public HttpResponse dispatch(String raw) throws JsonProcessingException {
         try {
             HttpRequest<?> req = parser.parse(raw);
-            Session.setSessionId(req.getSessionId());
+            // Session.setSessionId(req.getSessionId());
             HandlerMethod hm = mapping.findHandler(req.getPath(), req.getMethod());
             if (hm == null) throw new BadRequestException();
             Object result = invoker.invoke(hm, (HttpRequest) req);
-            // serialize JSON response for now
             String body = objectMapper.writeValueAsString(result);
             return HttpResponse.ok(body);
         } catch (UnsupportedHttpMethod | BadRequestException e) {

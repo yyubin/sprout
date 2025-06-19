@@ -1,5 +1,6 @@
 package app.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import sprout.beans.annotation.Controller;
 import sprout.beans.annotation.Requires;
 import sprout.mvc.annotation.DeleteMapping;
@@ -54,7 +55,7 @@ public class CommentController implements ControllerInterface {
     }
 
     @PostMapping(path = "/comments/add")
-    public HttpResponse<?> createComment(CommentRegisterDTO commentRegisterDTO, Long boardId, Long postId) {
+    public HttpResponse<?> createComment(CommentRegisterDTO commentRegisterDTO, Long boardId, Long postId) throws JsonProcessingException {
         commentService.createComment(commentRegisterDTO, boardId, postId);
 
         return new HttpResponse<>(

@@ -1,5 +1,6 @@
 package app.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import sprout.beans.annotation.Controller;
 import sprout.beans.annotation.Requires;
 import sprout.mvc.annotation.DeleteMapping;
@@ -36,7 +37,7 @@ public class MemberController implements ControllerInterface {
     }
 
     @PostMapping(path = "/accounts/signup")
-    public HttpResponse<?> signup(MemberRegisterDTO memberRegisterDTO) throws RuntimeException {
+    public HttpResponse<?> signup(MemberRegisterDTO memberRegisterDTO) throws RuntimeException, JsonProcessingException {
         System.out.println("MemberController.signup");
         memberService.registerMember(memberRegisterDTO);
         return new HttpResponse<>(
@@ -47,7 +48,7 @@ public class MemberController implements ControllerInterface {
     }
 
     @GetMapping(path = "/accounts/detail")
-    public HttpResponse<?> detail(String accountId) throws RuntimeException {
+    public HttpResponse<?> detail(String accountId) throws RuntimeException, JsonProcessingException {
         Optional<Member> memberById = memberService.getMemberById(accountId);
 
         if (memberById.isPresent()) {
@@ -67,7 +68,7 @@ public class MemberController implements ControllerInterface {
     }
 
     @PutMapping(path = "/accounts/edit")
-    public HttpResponse<?> edit(String accountId, MemberUpdateDTO memberUpdateDTO) throws RuntimeException {
+    public HttpResponse<?> edit(String accountId, MemberUpdateDTO memberUpdateDTO) throws RuntimeException, JsonProcessingException {
         memberService.updateMember(accountId, memberUpdateDTO);
         return new HttpResponse<>(
                 PrintResultMessage.ACCOUNTS_MEMBER_EDIT,
@@ -90,7 +91,7 @@ public class MemberController implements ControllerInterface {
     }
 
     @GetMapping(path = "/accounts/testadmin")
-    public HttpResponse<?> createTestAdmin() {
+    public HttpResponse<?> createTestAdmin() throws JsonProcessingException {
         memberService.registerAdminMember();
         return new HttpResponse<>(
                 "AMDIN created",

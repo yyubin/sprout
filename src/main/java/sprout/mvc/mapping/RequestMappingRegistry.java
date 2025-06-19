@@ -10,15 +10,17 @@ import java.util.Map;
 
 @Component
 public class RequestMappingRegistry {
-    private final Map<String, Map<HttpMethod, RequestMappingInfo>> mappings = new HashMap<>();
+    private final Map<String, Map<HttpMethod, RequestMappingInfo<?>>> mappings = new HashMap<>();
 
-    public void register(String path, HttpMethod httpMethod, ControllerInterface controller, Method handlerMethod) {
+    public void register(String path, HttpMethod httpMethod, Object controller, Method handlerMethod) {
+        System.out.println("Registering request mapping for " + path + " with http method " + httpMethod);
         mappings.computeIfAbsent(path, k -> new EnumMap<>(HttpMethod.class))
-                .put(httpMethod, new RequestMappingInfo(path, httpMethod, controller, handlerMethod));
+                .put(httpMethod, new RequestMappingInfo<>(path, httpMethod, controller, handlerMethod));
     }
 
-    public RequestMappingInfo getHandlerMethod(String path, HttpMethod httpMethod) {
-        Map<HttpMethod, RequestMappingInfo> methodMappings = mappings.get(path);
+    public RequestMappingInfo<?> getHandlerMethod(String path, HttpMethod httpMethod) {
+        Map<HttpMethod, RequestMappingInfo<?>> methodMappings = mappings.get(path);
+        System.out.println("path " + path + " method " + httpMethod);
         if (methodMappings != null) {
             return methodMappings.get(httpMethod);
         }
