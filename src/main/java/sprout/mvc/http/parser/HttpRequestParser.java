@@ -11,23 +11,20 @@ import java.util.Map;
 public class HttpRequestParser {
     private final RequestLineParser lineParser;
     private final QueryStringParser qsParser;
-    private final BodyConverter bodyConverter;
 
-    public HttpRequestParser(RequestLineParser lineParser, QueryStringParser qsParser, BodyConverter bodyConverter) {
+    public HttpRequestParser(RequestLineParser lineParser, QueryStringParser qsParser) {
         this.lineParser = lineParser;
         this.qsParser = qsParser;
-        this.bodyConverter = bodyConverter;
     }
 
-    public HttpRequest<Map<String,Object>> parse(String raw) {
+    public HttpRequest<?> parse(String raw) {
         String[] parts = split(raw);
         String headerPart = parts[0];
         String bodyPart   = parts[1];
         String firstLine  = headerPart.split("\r?\n",2)[0];
         var rl    = lineParser.parse(firstLine);
         var query = qsParser.parse(rl.rawPath());
-        var body  = bodyConverter.toMap(bodyPart, rl.method());
-        return new HttpRequest<>(rl.method(), rl.cleanPath(), body, query);
+        return new HttpRequest<>(rl.method(), rl.cleanPath(), bodyPart, query);
     }
 
     private String[] split(String raw) {

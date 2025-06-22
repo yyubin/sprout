@@ -1,10 +1,12 @@
 package sprout.mvc.argument.builtins;
 
+import app.exception.BadRequestException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import sprout.beans.annotation.Component;
 import sprout.mvc.annotation.RequestBody;
 import sprout.mvc.argument.ArgumentResolver;
 import sprout.mvc.http.HttpRequest;
+import sprout.mvc.http.ResponseCode;
 
 import java.lang.reflect.Parameter;
 import java.util.Map;
@@ -20,25 +22,22 @@ public class RequestBodyArgumentResolver implements ArgumentResolver {
 
     @Override
     public Object resolve(Parameter parameter, HttpRequest<?> request, Map<String, String> pathVariables) throws Exception {
-        var body = request.getBody(); // HttpRequest<?>의 body는 Object 타입으로 추론
-        // 요청 바디 자체가 없는 경우 (null)
-        if (body == null) {
+        // HttpRequest의 바디가 String 타입으로 넘어올 것을 예상
+        String rawBody = (String) request.getBody();
+
+        if (rawBody == null || rawBody.isBlank()) {
+            // @RequestBody가 붙었지만 바디가 비어있는 경우, null을 반환하거나 예외를 던질 수 있음
             return null;
         }
 
         try {
-            // ObjectMapper를 사용하여 바디 데이터를 대상 타입으로 변환 시도
-            return objectMapper.convertValue(body, parameter.getType());
-        } catch (IllegalArgumentException e) {
-            // Jackson의 convertValue 메서드에서 변환 실패 시 주로 던져지는 예외
-            throw new IllegalArgumentException(
-                    "Failed to convert request body to '" + parameter.getType().getName() + "'. " +
-                            "Check the JSON structure and target type compatibility. Cause: " + e.getMessage(), e);
-        } catch (Exception e) {
-            // 그 외 예상치 못한 예외 처리
-            throw new RuntimeException(
-                    "An unexpected error occurred during request body resolution for parameter '" +
-                            parameter.getName() + "': " + e.getMessage(), e);
+            // String 타입의 rawBody를 직접 대상 타입으로 변환
+            return objectMapper.readValue(rawBody.trim(), parameter.getType());
+        } catch (Exception e) { // JsonProcessingException 등 ObjectMapper에서 발생할 수 있는 모든 예외 처리
+            // BadRequestException을 던져 클라이언트에 400 Bad Request 응답
+            throw new BadRequestException(
+                    "Failed to parse request body as JSON or convert to '" + parameter.getType().getName() + "'. " +
+                            "Check JSON format and target type. Cause: " + e.getMessage(), ResponseCode.BAD_REQUEST, e);
         }
     }
 }

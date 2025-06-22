@@ -19,4 +19,7 @@ public class BadRequestException extends RuntimeException {
   public BadRequestException(Throwable cause) {
     super(cause);
   }
+
+    public BadRequestException(String s, ResponseCode responseCode, Exception e) {
+    }
 }

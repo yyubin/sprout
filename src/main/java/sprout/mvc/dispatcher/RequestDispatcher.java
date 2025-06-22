@@ -39,7 +39,7 @@ public class RequestDispatcher {
             // Session.setSessionId(req.getSessionId());
             HandlerMethod hm = mapping.findHandler(req.getPath(), req.getMethod());
             if (hm == null) throw new BadRequestException();
-            Object result = invoker.invoke(hm.requestMappingInfo(), (HttpRequest) req);
+            Object result = invoker.invoke(hm.requestMappingInfo(), req);
             String body = objectMapper.writeValueAsString(result);
             return HttpResponse.ok(body);
         } catch (UnsupportedHttpMethod | BadRequestException e) {
