@@ -6,7 +6,7 @@ import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Objects;
 
-public record RequestMappingInfo<T>(PathPattern pattern, HttpMethod httpMethod, Object controller, Method handlerMethod, Map<String, String> pathVariables) {
+public record RequestMappingInfo<T>(PathPattern pattern, HttpMethod httpMethod, Object controller, Method handlerMethod) {
 
     @Override
     public boolean equals(Object o) {
