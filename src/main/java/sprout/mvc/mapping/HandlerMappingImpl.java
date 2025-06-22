@@ -17,6 +17,6 @@ public class HandlerMappingImpl implements HandlerMapping {
     public HandlerMethod findHandler(String path, HttpMethod httpMethod) {
         var info = registry.getHandlerMethod(path, httpMethod);
         if (info == null) return null;
-        return new HandlerMethod(info.controller(), info.handlerMethod());
+        return new HandlerMethod(info);
     }
 }

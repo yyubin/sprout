@@ -13,10 +13,12 @@ import java.util.Collection;
 @Component
 public class HandlerMethodScanner {
     private final RequestMappingRegistry requestMappingRegistry;
+    private final PathPatternResolver pathPatternResolver;
     private final Container container;
 
-    public HandlerMethodScanner(RequestMappingRegistry requestMappingRegistry, Container container) {
+    public HandlerMethodScanner(RequestMappingRegistry requestMappingRegistry, PathPatternResolver pathPatternResolver, Container container) {
         this.requestMappingRegistry = requestMappingRegistry;
+        this.pathPatternResolver = pathPatternResolver;
         this.container = container;
     }
 
@@ -35,10 +37,11 @@ public class HandlerMethodScanner {
                         String methodPath = requestMappingInfoExtractor.getPath();
                         HttpMethod[] httpMethods = requestMappingInfoExtractor.getHttpMethods();
 
-                        String finalPath = combinePaths(classLevelBasePath, methodPath);
+                        String finalPathString = combinePaths(classLevelBasePath, methodPath);
+                        PathPattern pathPattern = pathPatternResolver.resolve(finalPathString);
 
                         for (HttpMethod httpMethod : httpMethods) {
-                            requestMappingRegistry.register(finalPath, httpMethod, bean, method);
+                            requestMappingRegistry.register(pathPattern, httpMethod, bean, method);
                         }
                     }
                 }

@@ -3,6 +3,8 @@ package sprout.mvc.invoke;
 import sprout.beans.annotation.Component;
 import sprout.mvc.http.HttpRequest;
 import sprout.mvc.argument.CompositeArgumentResolver;
+import sprout.mvc.mapping.PathPattern;
+import sprout.mvc.mapping.RequestMappingInfo;
 
 import java.util.Map;
 
@@ -14,8 +16,11 @@ public class HandlerMethodInvoker {
         this.resolvers = resolvers;
     }
 
-    public Object invoke(HandlerMethod handlerMethod, HttpRequest<Map<String, Object>> request) throws Exception {
-        Object[] args = resolvers.resolveArguments(handlerMethod.method(), request);
-        return handlerMethod.method().invoke(handlerMethod.controller(), args);
+    public Object invoke(RequestMappingInfo<?> requestMappingInfo, HttpRequest<Map<String, Object>> request) throws Exception {
+        PathPattern pattern = requestMappingInfo.pattern();
+        Map<String, String> pathVariables = pattern.extractPathVariables(request.getPath());
+
+        Object[] args = resolvers.resolveArguments(requestMappingInfo.handlerMethod(), request, pathVariables);
+        return requestMappingInfo.handlerMethod().invoke(requestMappingInfo.controller(), args);
     }
 }

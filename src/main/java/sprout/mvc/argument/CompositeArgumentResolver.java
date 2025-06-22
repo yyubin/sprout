@@ -16,7 +16,7 @@ public class CompositeArgumentResolver {
         this.delegates = delegates;
     }
 
-    public Object[] resolveArguments(Method method, HttpRequest<Map<String, Object>> request) throws Exception {
+    public Object[] resolveArguments(Method method, HttpRequest<Map<String, Object>> request, Map<String, String> pathVariables) throws Exception {
         Parameter[] params = method.getParameters();
         Object[] args = new Object[params.length];
         for (int i = 0; i < params.length; i++) {
@@ -25,7 +25,7 @@ public class CompositeArgumentResolver {
                     .filter(ar -> ar.supports(p))
                     .findFirst()
                     .orElseThrow(() -> new IllegalStateException("No ArgumentResolver for parameter " + p));
-            args[i] = resolver.resolve(p, request);
+            args[i] = resolver.resolve(p, request, pathVariables);
         }
         return args;
     }
