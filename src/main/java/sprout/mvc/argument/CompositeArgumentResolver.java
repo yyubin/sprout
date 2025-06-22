@@ -16,7 +16,7 @@ public class CompositeArgumentResolver {
         this.delegates = delegates;
     }
 
-    public Object[] resolveArguments(Method method, HttpRequest<Map<String, Object>> request, Map<String, String> pathVariables) throws Exception {
+    public Object[] resolveArguments(Method method, HttpRequest<?> request, Map<String, String> pathVariables) throws Exception {
         Parameter[] params = method.getParameters();
         Object[] args = new Object[params.length];
         for (int i = 0; i < params.length; i++) {

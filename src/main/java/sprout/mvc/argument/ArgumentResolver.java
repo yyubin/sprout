@@ -8,6 +8,6 @@ import java.util.Map;
 public interface ArgumentResolver {
     boolean supports(Parameter parameter);
     Object resolve(Parameter parameter,
-                   HttpRequest<Map<String,Object>> request,
+                   HttpRequest<?> request,
                    Map<String, String> pathVariables) throws Exception;
 }

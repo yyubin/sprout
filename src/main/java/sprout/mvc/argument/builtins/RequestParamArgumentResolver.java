@@ -17,7 +17,7 @@ public class RequestParamArgumentResolver implements ArgumentResolver {
     }
 
     @Override
-    public Object resolve(Parameter parameter, HttpRequest<Map<String, Object>> request, Map<String, String> pathVariables) throws Exception {
+    public Object resolve(Parameter parameter, HttpRequest<?> request, Map<String, String> pathVariables) throws Exception {
         RequestParam requestParam = parameter.getAnnotation(RequestParam.class);
         String paramName = requestParam.value().isEmpty() ? parameter.getName() : requestParam.value();
         String paramValue = request.getQueryParams().get(paramName);

@@ -17,7 +17,7 @@ public class PathVariableArgumentResolver implements ArgumentResolver {
     }
 
     @Override
-    public Object resolve(Parameter parameter, HttpRequest<Map<String, Object>> request, Map<String, String> pathVariables) throws Exception {
+    public Object resolve(Parameter parameter, HttpRequest<?> request, Map<String, String> pathVariables) throws Exception {
         PathVariable pathVariableAnnotation = parameter.getAnnotation(PathVariable.class);
         String variableName = pathVariableAnnotation.value();
 
