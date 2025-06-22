@@ -74,7 +74,7 @@ class HandlerMethodInvokerTest {
         PathPattern pathPattern = new PathPattern("/no-args");
 
         // RequestMappingInfo와 HandlerMethod 레코드 사용
-        RequestMappingInfo<Object> requestMappingInfo = new RequestMappingInfo<>(pathPattern, HttpMethod.GET, testController, method);
+        RequestMappingInfo requestMappingInfo = new RequestMappingInfo(pathPattern, HttpMethod.GET, testController, method);
         HandlerMethod handlerMethod = new HandlerMethod(requestMappingInfo);
 
         // CompositeArgumentResolver는 인자가 없으므로 빈 배열을 반환하도록 Mocking
@@ -102,7 +102,7 @@ class HandlerMethodInvokerTest {
         Method method = TestController.class.getMethod("handleWithParams", String.class, int.class);
 
         PathPattern pathPattern = new PathPattern("/with-params");
-        RequestMappingInfo<Object> requestMappingInfo = new RequestMappingInfo<>(pathPattern, HttpMethod.GET, testController, method);
+        RequestMappingInfo requestMappingInfo = new RequestMappingInfo(pathPattern, HttpMethod.GET, testController, method);
         HandlerMethod handlerMethod = new HandlerMethod(requestMappingInfo);
 
         Object[] resolvedArgs = {"testString", 123}; // ArgumentResolver가 반환할 인자들
@@ -126,7 +126,7 @@ class HandlerMethodInvokerTest {
         Method method = TestController.class.getMethod("handleWithPathVariable", String.class);
 
         PathPattern pathPattern = new PathPattern("/users/{id}");
-        RequestMappingInfo<Object> requestMappingInfo = new RequestMappingInfo<>(pathPattern, HttpMethod.GET, testController, method);
+        RequestMappingInfo requestMappingInfo = new RequestMappingInfo(pathPattern, HttpMethod.GET, testController, method);
         HandlerMethod handlerMethod = new HandlerMethod(requestMappingInfo);
 
         String requestPath = "/users/someId123";
@@ -157,7 +157,7 @@ class HandlerMethodInvokerTest {
         Method method = TestController.class.getMethod("handleWithMultiplePathVariables", String.class, String.class);
 
         PathPattern pathPattern = new PathPattern("/categories/{category}/products/{productId}");
-        RequestMappingInfo<Object> requestMappingInfo = new RequestMappingInfo<>(pathPattern, HttpMethod.GET, testController, method);
+        RequestMappingInfo requestMappingInfo = new RequestMappingInfo(pathPattern, HttpMethod.GET, testController, method);
         HandlerMethod handlerMethod = new HandlerMethod(requestMappingInfo);
 
         String requestPath = "/categories/electronics/products/P123";
@@ -189,7 +189,7 @@ class HandlerMethodInvokerTest {
         Method method = TestController.class.getMethod("handleThrowsException");
 
         PathPattern pathPattern = new PathPattern("/error-path");
-        RequestMappingInfo<Object> requestMappingInfo = new RequestMappingInfo<>(pathPattern, HttpMethod.GET, testController, method);
+        RequestMappingInfo requestMappingInfo = new RequestMappingInfo(pathPattern, HttpMethod.GET, testController, method);
         HandlerMethod handlerMethod = new HandlerMethod(requestMappingInfo);
 
         when(mockResolvers.resolveArguments(any(Method.class), any(HttpRequest.class), any(Map.class)))
@@ -212,7 +212,7 @@ class HandlerMethodInvokerTest {
         Method method = TestController.class.getMethod("handleNoArgs"); // 아무 메서드나 사용
 
         PathPattern pathPattern = new PathPattern("/arg-error");
-        RequestMappingInfo<Object> requestMappingInfo = new RequestMappingInfo<>(pathPattern, HttpMethod.GET, testController, method);
+        RequestMappingInfo requestMappingInfo = new RequestMappingInfo(pathPattern, HttpMethod.GET, testController, method);
         HandlerMethod handlerMethod = new HandlerMethod(requestMappingInfo);
 
         // ArgumentResolver가 예외를 던지도록 Mocking

@@ -5,4 +5,4 @@ import sprout.mvc.mapping.RequestMappingInfo;
 
 import java.lang.reflect.Method;
 
-public record HandlerMethod(RequestMappingInfo<?> requestMappingInfo) { }
+public record HandlerMethod(RequestMappingInfo requestMappingInfo) { }

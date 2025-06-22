@@ -16,7 +16,7 @@ public class HandlerMethodInvoker {
         this.resolvers = resolvers;
     }
 
-    public Object invoke(RequestMappingInfo<?> requestMappingInfo, HttpRequest<?> request) throws Exception {
+    public Object invoke(RequestMappingInfo requestMappingInfo, HttpRequest<?> request) throws Exception {
         PathPattern pattern = requestMappingInfo.pattern();
         Map<String, String> pathVariables = pattern.extractPathVariables(request.getPath());
 

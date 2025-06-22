@@ -48,7 +48,7 @@ class RequestMappingRegistryTest {
         registry.register(pathPattern, HttpMethod.GET, testController, handlerMethod);
 
         // then
-        RequestMappingInfo<?> foundInfo = registry.getHandlerMethod("/home", HttpMethod.GET);
+        RequestMappingInfo foundInfo = registry.getHandlerMethod("/home", HttpMethod.GET);
         assertNotNull(foundInfo);
         assertThat(foundInfo.pattern()).isEqualTo(pathPattern);
         assertThat(foundInfo.httpMethod()).isEqualTo(HttpMethod.GET);
@@ -65,7 +65,7 @@ class RequestMappingRegistryTest {
         registry.register(pathPattern, HttpMethod.POST, testController, handlerMethod);
 
         // when
-        RequestMappingInfo<?> foundInfo = registry.getHandlerMethod("/users", HttpMethod.GET);
+        RequestMappingInfo foundInfo = registry.getHandlerMethod("/users", HttpMethod.GET);
 
         // then
         assertNull(foundInfo);
@@ -77,7 +77,7 @@ class RequestMappingRegistryTest {
         // given (아무것도 등록하지 않음)
 
         // when
-        RequestMappingInfo<?> foundInfo = registry.getHandlerMethod("/nonexistent", HttpMethod.GET);
+        RequestMappingInfo foundInfo = registry.getHandlerMethod("/nonexistent", HttpMethod.GET);
 
         // then
         assertNull(foundInfo);
@@ -92,7 +92,7 @@ class RequestMappingRegistryTest {
         registry.register(pathPattern, HttpMethod.GET, testController, handlerMethod);
 
         // when
-        RequestMappingInfo<?> foundInfo = registry.getHandlerMethod("/users/123", HttpMethod.GET);
+        RequestMappingInfo foundInfo = registry.getHandlerMethod("/users/123", HttpMethod.GET);
 
         // then
         assertNotNull(foundInfo);
@@ -102,7 +102,7 @@ class RequestMappingRegistryTest {
         assertThat(foundInfo.handlerMethod()).isEqualTo(handlerMethod);
 
         // 다른 ID 값도 잘 찾아야 함
-        RequestMappingInfo<?> foundInfo2 = registry.getHandlerMethod("/users/abc", HttpMethod.GET);
+        RequestMappingInfo foundInfo2 = registry.getHandlerMethod("/users/abc", HttpMethod.GET);
         assertNotNull(foundInfo2);
         assertThat(foundInfo2.pattern()).isEqualTo(pathPattern);
     }
@@ -116,7 +116,7 @@ class RequestMappingRegistryTest {
         registry.register(pathPattern, HttpMethod.GET, testController, handlerMethod);
 
         // when
-        RequestMappingInfo<?> foundInfo = registry.getHandlerMethod("/categories/books/products/B-456", HttpMethod.GET);
+        RequestMappingInfo foundInfo = registry.getHandlerMethod("/categories/books/products/B-456", HttpMethod.GET);
 
         // then
         assertNotNull(foundInfo);
@@ -164,13 +164,13 @@ class RequestMappingRegistryTest {
 
         // when & then
         // "/users" 요청은 "/users" 패턴에 매칭되어야 함
-        RequestMappingInfo<?> foundGeneral = registry.getHandlerMethod("/users", HttpMethod.GET);
+        RequestMappingInfo foundGeneral = registry.getHandlerMethod("/users", HttpMethod.GET);
         assertNotNull(foundGeneral);
         assertThat(foundGeneral.pattern()).isEqualTo(generalPattern);
         assertThat(foundGeneral.handlerMethod()).isEqualTo(generalMethod);
 
         // "/users/123" 요청은 "/users/{id}" 패턴에 매칭되어야 함
-        RequestMappingInfo<?> foundSpecific = registry.getHandlerMethod("/users/123", HttpMethod.GET);
+        RequestMappingInfo foundSpecific = registry.getHandlerMethod("/users/123", HttpMethod.GET);
         assertNotNull(foundSpecific);
         assertThat(foundSpecific.pattern()).isEqualTo(specificPattern);
         assertThat(foundSpecific.handlerMethod()).isEqualTo(specificMethod);
@@ -192,22 +192,22 @@ class RequestMappingRegistryTest {
 
 
         // when: /api/v1/resource 요청 (변수 0개 패턴)
-        RequestMappingInfo<?> info0 = registry.getHandlerMethod("/api/v1/resource", HttpMethod.GET);
+        RequestMappingInfo info0 = registry.getHandlerMethod("/api/v1/resource", HttpMethod.GET);
         assertNotNull(info0);
         assertThat(info0.pattern()).isEqualTo(p1);
 
         // when: /api/v1/123 요청 (변수 1개 패턴)
-        RequestMappingInfo<?> info1 = registry.getHandlerMethod("/api/v1/123", HttpMethod.GET);
+        RequestMappingInfo info1 = registry.getHandlerMethod("/api/v1/123", HttpMethod.GET);
         assertNotNull(info1);
         assertThat(info1.pattern()).isEqualTo(p2);
 
         // when: /val1/path/val2 요청 (변수 2개 패턴)
-        RequestMappingInfo<?> info2 = registry.getHandlerMethod("/val1/path/val2", HttpMethod.GET);
+        RequestMappingInfo info2 = registry.getHandlerMethod("/val1/path/val2", HttpMethod.GET);
         assertNotNull(info2);
         assertThat(info2.pattern()).isEqualTo(p3);
 
         // when: / 요청 (변수 0개 루트 패턴)
-        RequestMappingInfo<?> infoRoot = registry.getHandlerMethod("/", HttpMethod.GET);
+        RequestMappingInfo infoRoot = registry.getHandlerMethod("/", HttpMethod.GET);
         assertNotNull(infoRoot);
         assertThat(infoRoot.pattern()).isEqualTo(p4);
     }
