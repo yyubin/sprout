@@ -1,9 +1,6 @@
 package sprout.mvc.mapping;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -62,14 +59,13 @@ public class PathPattern {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        PathPattern that = (PathPattern) o;
-        return originalPattern.equals(that.originalPattern);
+        if (!(o instanceof PathPattern other)) return false;
+        return Objects.equals(this.originalPattern, other.originalPattern);
     }
 
     @Override
     public int hashCode() {
-        return originalPattern.hashCode();
+        return Objects.hash(originalPattern);
     }
 
     @Override

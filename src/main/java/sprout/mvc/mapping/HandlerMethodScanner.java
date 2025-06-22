@@ -8,6 +8,7 @@ import sprout.mvc.http.HttpMethod;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Collection;
 
 @Component
@@ -23,7 +24,6 @@ public class HandlerMethodScanner {
     }
 
     public void scanControllers() {
-        System.out.println("Scanning Controllers");
         Collection<Object> beans = container.beans();
         System.out.println(beans.size() + " beans found");
         for (Object bean : beans) {
@@ -49,7 +49,7 @@ public class HandlerMethodScanner {
         }
     }
 
-    private String extractBasePath(Class<?> clazz) {
+    String extractBasePath(Class<?> clazz) {
         RequestMapping requestMapping = clazz.getAnnotation(RequestMapping.class);
         if (requestMapping != null) {
             if (requestMapping.path().length > 0) {
@@ -62,51 +62,61 @@ public class HandlerMethodScanner {
         return "";
     }
 
-    private RequestMappingInfoExtractor findRequestMappingInfoExtractor(Method method) {
-        for (Annotation methodAnnotation : method.getDeclaredAnnotations()) {
-            if (methodAnnotation.annotationType().getPackage() != null &&
-                    methodAnnotation.annotationType().getPackage().getName().startsWith("java.lang.annotation")) {
-                continue;
-            }
-            RequestMapping requestMapping = methodAnnotation.annotationType().getAnnotation(RequestMapping.class);
-            if (requestMapping != null) {
-                String[] paths = getPathFromAnnotation(methodAnnotation);
-                HttpMethod[] methods = requestMapping.method();
+    public RequestMappingInfoExtractor findRequestMappingInfoExtractor(Method method) {
+        for (Annotation ann : method.getDeclaredAnnotations()) {
 
-                if (paths.length == 0) {
-                    paths = requestMapping.path();
-                    if (paths.length == 0) {
-                        paths = requestMapping.value();
-                    }
+            // 직접 선언된 @RequestMapping
+            RequestMapping rm = ann instanceof RequestMapping
+                    ? (RequestMapping) ann
+                    : ann.annotationType().getAnnotation(RequestMapping.class);
+
+            if (rm == null) continue;
+
+            if (ann instanceof RequestMapping) {
+                int cnt = rm.method().length;
+                if (cnt != 1) { // 0 개(생략) -or- 2 개 이상이면 무시
+                    System.out.printf(
+                            "[WARN] %s.%s() - skipped: ambiguous @RequestMapping (method=%s)%n",
+                            method.getDeclaringClass().getSimpleName(), method.getName(),
+                            Arrays.toString(rm.method())
+                    );
+                    return null;
                 }
-
-                String path = (paths.length > 0) ? paths[0] : "/";
-                return new RequestMappingInfoExtractor(path, methods);
             }
+
+            // value() 가 비어 있으면 path() → value() 순으로 탐색
+            String[] paths = extractPaths(ann, rm);
+
+            HttpMethod[] methods = rm.method();
+            if (methods.length == 0) methods = new HttpMethod[] { HttpMethod.GET };
+
+            String path = (paths.length > 0 && !paths[0].isBlank()) ? paths[0] : "/";
+            return new RequestMappingInfoExtractor(path, methods);
         }
         return null;
     }
 
-    private String[] getPathFromAnnotation(Annotation annotation) {
-        try {
-            Method valueMethod = annotation.annotationType().getDeclaredMethod("value");
-            if (valueMethod.getReturnType().isArray() && valueMethod.getReturnType().getComponentType().equals(String.class)) {
-                return (String[]) valueMethod.invoke(annotation);
-            }
-        } catch (NoSuchMethodException e) {
-            try {
-                Method pathMethod = annotation.annotationType().getDeclaredMethod("path");
-                if (pathMethod.getReturnType().isArray() && pathMethod.getReturnType().getComponentType().equals(String.class)) {
-                    return (String[]) pathMethod.invoke(annotation);
-                }
-            } catch (ReflectiveOperationException ignored) {
-            }
-        } catch (ReflectiveOperationException ignored) {
-        }
-        return new String[]{};
+    private String[] extractPaths(Annotation ann, RequestMapping fallback) {
+        String[] p = getAttribute(ann, "value");
+        if (p.length == 0 || p[0].isBlank()) p = getAttribute(ann, "path");
+        if (p.length == 0 || p[0].isBlank()) p = fallback.path();
+        if (p.length == 0 || p[0].isBlank()) p = fallback.value();
+        return p;
     }
 
-    private String combinePaths(String basePath, String methodPath) {
+    private String[] getAttribute(Annotation ann, String attr) {
+        try {
+            Method m = ann.annotationType().getDeclaredMethod(attr);
+            if (m.getReturnType().isArray()
+                    && m.getReturnType().getComponentType() == String.class) {
+                return (String[]) m.invoke(ann);
+            }
+        } catch (ReflectiveOperationException ignored) { }
+        return new String[0];
+    }
+
+
+    public String combinePaths(String basePath, String methodPath) {
         if (basePath.isEmpty() || basePath.equals("/")) {
             return methodPath.startsWith("/") ? methodPath : "/" + methodPath;
         }
@@ -119,22 +129,4 @@ public class HandlerMethodScanner {
         return normalizedBasePath + normalizedMethodPath;
     }
 
-
-    private static class RequestMappingInfoExtractor {
-        private final String path;
-        private final HttpMethod[] httpMethods;
-
-        public RequestMappingInfoExtractor(String path, HttpMethod[] httpMethods) {
-            this.path = path;
-            this.httpMethods = httpMethods;
-        }
-
-        public String getPath() {
-            return path;
-        }
-
-        public HttpMethod[] getHttpMethods() {
-            return httpMethods;
-        }
-    }
 }
