@@ -74,7 +74,6 @@ class PathVariableArgumentResolverTest {
     @DisplayName("should resolve path variable using parameter name when value is empty")
     void resolve_EmptyPathVariableName_ReturnsCorrectValue() throws Exception {
         // testMethodWithEmptyAnnotation(@PathVariable("") String userId)
-        // 이 테스트는 `-parameters` 컴파일 옵션이 적용되어야 정상 작동합니다.
         Method method = TestController.class.getMethod("testMethodWithEmptyAnnotation", String.class); // <-- String.class 단일 파라미터로 수정
         Parameter parameter = method.getParameters()[0]; // @PathVariable("") String userId
         Map<String, String> pathVariables = Map.of("userId", "user456");

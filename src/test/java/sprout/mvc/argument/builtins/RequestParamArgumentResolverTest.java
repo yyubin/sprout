@@ -42,7 +42,7 @@ class RequestParamArgumentResolverTest {
         public void testMethodWithBoolean(@RequestParam boolean active) {}
     }
 
-    // --- supports() 메서드 테스트 ---
+    // supports() 메서드 테스트
 
     @Test
     @DisplayName("RequestParam 어노테이션이 있는 파라미터를 지원해야 한다")
@@ -62,7 +62,7 @@ class RequestParamArgumentResolverTest {
         assertThat(resolver.supports(parameter)).isFalse();
     }
 
-    // --- resolve() 메서드 테스트 ---
+    // resolve() 메서드 테스트
 
     @Test
     @DisplayName("명시적인 이름의 RequestParam을 성공적으로 해석해야 한다")
@@ -194,20 +194,15 @@ class RequestParamArgumentResolverTest {
         Map<String, String> queryParams = Map.of(paramName, paramValue);
         when(mockRequest.getQueryParams()).thenReturn(queryParams);
 
-        // TypeConverter에서 발생할 것으로 예상되는 예외를 검증합니다.
-        // 예를 들어 Integer.parseInt("invalid")는 NumberFormatException을 던집니다.
-        // Boolean.parseBoolean("notABoolean")은 false를 반환하므로, 이 경우 예외가 발생하지 않습니다.
-        // 따라서 이 테스트는 TypeConverter의 동작에 따라 예상되는 특정 예외를 확인해야 합니다.
+        // TypeConverter에서 발생할 것으로 예상되는 예외를 검증
+        // Boolean.parseBoolean("notABoolean")은 false를 반환하므로 이 경우 예외가 발생하지 않음
         if (targetType == int.class || targetType == Integer.class) {
             assertThrows(NumberFormatException.class, () ->
                     resolver.resolve(parameter, mockRequest, Collections.emptyMap())
             );
         } else if (targetType == boolean.class || targetType == Boolean.class) {
-            // Boolean.parseBoolean은 'true'가 아니면 모두 false를 반환하므로,
-            // 이 경우 예외가 발생하지 않고 false가 반환될 것입니다.
-            // 따라서 이 테스트 케이스에서는 예외를 기대하면 안 됩니다.
-            // 이 테스트 케이스는 이 부분을 확인하도록 수정해야 합니다.
-            // 현재는 NumberFormatException을 던지는 케이스에만 집중합니다.
+            // Boolean.parseBoolean은 'true'가 아니면 모두 false를 반환하므로
+            // 이 경우 예외가 발생하지 않고 false가 반환될 것
         } else {
             assertThrows(IllegalArgumentException.class, () -> // TypeConverter에서 던질 수 있는 일반적인 예외
                     resolver.resolve(parameter, mockRequest, Collections.emptyMap())
