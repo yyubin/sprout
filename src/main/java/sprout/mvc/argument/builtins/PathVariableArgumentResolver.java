@@ -22,7 +22,7 @@ public class PathVariableArgumentResolver implements ArgumentResolver {
         String variableName = pathVariableAnnotation.value();
 
         if (variableName.isEmpty()) {
-            variableName = parameter.getName(); // 파라미터 이름 가져오기 (JDK 8+에서 -parameters 컴파일 옵션 필요)
+            variableName = parameter.getName();
         }
 
         String value = pathVariables.get(variableName);
