@@ -9,7 +9,7 @@ import sprout.mvc.http.ResponseCode;
 @Component
 public class RequestLineParser {
     public RequestLine parse(String line) {
-        String[] parts = line.split(" ", 3);
+        String[] parts = line.trim().split(" ", 3);
         if (parts.length < 2) {
             throw new BadRequestException(ExceptionMessage.BAD_REQUEST, ResponseCode.BAD_REQUEST);
         }
