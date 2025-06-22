@@ -69,7 +69,6 @@ class HttpRequestParserTest {
         assertThat(httpRequest.getQueryParams()).isEqualTo(mockQueryParams);
         assertThat(httpRequest.getBody()).isEqualTo(""); // GET 요청이라 바디가 비어있음
 
-        // 의존성 메서드 호출 검증 (선택 사항이지만 좋은 습관)
         verify(mockRequestLineParser).parse("GET /path/to/resource?param1=value1&param2=value2 HTTP/1.1");
         verify(mockQueryStringParser).parse("/path/to/resource?param1=value1&param2=value2");
     }
