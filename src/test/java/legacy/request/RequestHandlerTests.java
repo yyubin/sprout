@@ -1,4 +1,4 @@
-package http.request;
+package legacy.request;
 
 import legacy.config.Container;
 import legacy.config.PackageName;

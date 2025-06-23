@@ -1,4 +1,4 @@
-package controller;
+package legacy.controller;
 
 import app.controller.BoardController;
 import app.domain.grade.MemberGrade;

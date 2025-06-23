@@ -1,4 +1,4 @@
-package http.request;
+package legacy.request;
 
 public class AnyModel {
     public String key;

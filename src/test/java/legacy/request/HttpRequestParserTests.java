@@ -1,4 +1,4 @@
-package http.request;
+package legacy.request;
 
 import app.exception.BadRequestException;
 import legacy.http.request.HttpRequestParser;

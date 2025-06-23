@@ -1,4 +1,4 @@
-package service;
+package legacy.service;
 
 import legacy.config.Container;
 import legacy.config.PackageName;

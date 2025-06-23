@@ -1,4 +1,4 @@
-package http.request;
+package legacy.request;
 
 import sprout.mvc.mapping.ControllerInterface;
 import sprout.mvc.annotation.PostMapping;

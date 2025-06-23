@@ -1,6 +1,5 @@
-package config;
+package legacy.config;
 
-import legacy.config.Container;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import app.repository.InMemoryMemberRepository;
@@ -17,7 +16,7 @@ public class ContainerTest {
         container = Container.getInstance();
         container.scan("app/repository");
         container.scan("component");
-        container.scan("service");
+        container.scan("legacy/service");
     }
 
     @Test
