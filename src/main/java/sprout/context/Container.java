@@ -1,25 +1,34 @@
 package sprout.context;
 
 import app.service.MemberAuthService;
+import net.sf.cglib.proxy.Enhancer;
 import org.reflections.scanners.Scanners;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 import org.reflections.util.FilterBuilder;
 import sprout.aop.MethodProxyHandler;
+import sprout.beans.BeanCreationMethod;
 import sprout.beans.BeanDefinition;
+import sprout.beans.ConstructorBeanDefinition;
 import sprout.beans.annotation.Component;
 import sprout.beans.internal.BeanGraph;
 import sprout.scan.ClassPathScanner;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Parameter;
 import java.util.*;
 
 @Component
 public class Container {
     private static Container INSTANCE;
-    private final Map<Class<?>, Object> singletons = new HashMap<>();
+    private final Map<String, Object> singletons = new HashMap<>();
     private final List<PendingListInjection> pendingListInjections = new ArrayList<>();
     private final ClassPathScanner scanner;
+
+    private final Map<Class<?>, String> primaryTypeToNameMap = new HashMap<>(); // 기본 빈 매핑
+    private final Map<Class<?>, Set<String>> typeToNamesMap = new HashMap<>(); // 모든 빈 매핑 (동일 타입 여러 개 처리)
 
     private static class PendingListInjection {
         final Object beanInstance;
@@ -41,6 +50,8 @@ public class Container {
     public void reset() {
         singletons.clear();
         pendingListInjections.clear();
+        primaryTypeToNameMap.clear();
+        typeToNamesMap.clear();
     }
 
     public void bootstrap(List<String> basePackages) {
@@ -57,82 +68,136 @@ public class Container {
         }
         configBuilder.filterInputsBy(filter);
 
+        registerSingletonInstance("container", this);
         Collection<BeanDefinition> defs = scanner.scan(configBuilder);
-        register(Container.class, this);
+        defs.add(new ConstructorBeanDefinition("container", Container.class, null, new Class[0]));
         List<BeanDefinition> order = new BeanGraph(defs).topologicallySorted();
 
         order.forEach(this::instantiatePrimary);
         postProcessListInjections();
     }
 
+    private void registerSingletonInstance(String name, Object instance) {
+        if (singletons.containsKey(name)) {
+            throw new RuntimeException("Bean '" + name + "' already registered.");
+        }
+        singletons.put(name, instance);
+
+        Class<?> type = instance.getClass();
+        primaryTypeToNameMap.putIfAbsent(type, name);
+        typeToNamesMap.computeIfAbsent(type, k -> new HashSet<>()).add(name);
+
+        for (Class<?> iface : type.getInterfaces()) {
+            primaryTypeToNameMap.putIfAbsent(iface, name);
+            typeToNamesMap.computeIfAbsent(iface, k -> new HashSet<>()).add(name);
+        }
+        for (Class<?> p = type.getSuperclass();
+             p != null && p != Object.class;
+             p = p.getSuperclass()) {
+            primaryTypeToNameMap.putIfAbsent(p, name);
+            typeToNamesMap.computeIfAbsent(p, k -> new HashSet<>()).add(name);
+        }
+    }
+
     public <T> T get(Class<T> type) {
-        Object bean = singletons.get(type);
-        if (bean != null) {
-            return type.cast(bean);
+        String primaryName = primaryTypeToNameMap.get(type);
+        if (primaryName != null) {
+            return type.cast(singletons.get(primaryName));
         }
 
-        if (type.isInterface() || Modifier.isAbstract(type.getModifiers())) {
-            List<Object> candidates = new ArrayList<>();
-            for (Object existingBean : singletons.values()) {
-                if (type.isAssignableFrom(existingBean.getClass())) {
-                    candidates.add(existingBean);
-                }
-            }
-
-            if (candidates.size() == 1) {
-                return type.cast(candidates.get(0));
-            } else if (candidates.size() > 1) {
-                throw new RuntimeException("No unique bean of type " + type.getName() + " found. Found " + candidates.size() + " candidates.");
-            }
+        Set<String> candidateNames = typeToNamesMap.get(type);
+        if (candidateNames == null || candidateNames.isEmpty()) {
+            throw new RuntimeException("No bean of type " + type.getName() + " found in the container.");
         }
 
-        throw new RuntimeException("No bean of type " + type.getName() + " found in the container.");
+        if (candidateNames.size() == 1) {
+            return type.cast(singletons.get(candidateNames.iterator().next()));
+        } else {
+            throw new RuntimeException("No unique bean of type " + type.getName() + " found. Found " + candidateNames.size() + " candidates: " + candidateNames);
+        }
+    }
+
+    public <T> T get(String name) {
+        Object bean = singletons.get(name);
+        if (bean == null) {
+            throw new RuntimeException("No bean with name '" + name + "' found in the container.");
+        }
+        return (T) bean;
+    }
+
+    public <T> List<T> getAll(Class<T> type) {
+        Set<String> candidateNames = typeToNamesMap.get(type);
+        if (candidateNames == null || candidateNames.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<T> beans = new ArrayList<>();
+        for (String name : candidateNames) {
+            beans.add(type.cast(singletons.get(name)));
+        }
+        return beans;
     }
 
     public Collection<Object> beans() { return singletons.values(); }
 
     private void instantiatePrimary(BeanDefinition def) {
-        if (singletons.containsKey(def.type())) return;
-        System.out.println("instantiating primary: " + def.type().getName());
+        if (singletons.containsKey(def.getName())) return;
+        System.out.println("instantiating primary: " + def.getType().getName());
 
+        Object beanInstance;
         try {
-            Class<?>[] paramTypes = def.dependencies();
-            var params = def.constructor().getParameters();
-            Object[] deps = new Object[paramTypes.length];
-
-            for (int i = 0; i < paramTypes.length; i++) {
-                Class<?> paramType = paramTypes[i];
-
-                if (List.class.isAssignableFrom(paramType)) {
-                    List<Object> emptyList = new ArrayList<>();
-                    deps[i] = emptyList;
-
-                    var genericType = (Class<?>) ((java.lang.reflect.ParameterizedType) params[i].getParameterizedType())
-                            .getActualTypeArguments()[0];
-
-                    pendingListInjections.add(new PendingListInjection(null, emptyList, genericType));
-                    System.out.println("  " + def.type().getName() + " needs List<" + genericType.getName() + ">, added to pending.");
-
+            Object[] deps;
+            Parameter[] methodParams;
+            if (def.getCreationMethod() == BeanCreationMethod.CONSTRUCTOR) {
+                Constructor<?> constructor = def.getConstructor();
+                methodParams = constructor.getParameters();
+                deps = resolveDependencies(def.getConstructorArgumentTypes(), methodParams, def.getType());
+                if (def.isConfigurationClassProxyNeeded()) {
+                    Enhancer enhancer = new Enhancer();
+                    enhancer.setSuperclass(def.getType());
+                    enhancer.setCallback(new ConfigurationMethodInterceptor(this));
+                    beanInstance = enhancer.create(def.getConstructorArgumentTypes(), deps);
                 } else {
-                    deps[i] = get(paramType);
+                    beanInstance = def.getConstructor().newInstance(deps);
                 }
+            } else if (def.getCreationMethod() == BeanCreationMethod.FACTORY_METHOD) {
+                Object factoryBean = get(def.getFactoryBeanName());
+                Method factoryMethod = def.getFactoryMethod();
+                methodParams = factoryMethod.getParameters();
+                deps = resolveDependencies(def.getFactoryMethodArgumentTypes(), methodParams, def.getType());
+                beanInstance = def.getFactoryMethod().invoke(factoryBean, deps);
+            } else {
+                throw new IllegalArgumentException("Unsupported bean creation method: " + def.getCreationMethod());
             }
-
-            Object bean = def.constructor().newInstance(deps);
 
             // 프록시
             // if (def.proxyNeeded()) {
             //     bean = MethodProxyHandler.createProxy(bean, get(MemberAuthService.class));
             // }
 
-            register(def.type(), bean);
-            for (Class<?> iface : def.type().getInterfaces()) {
-                register(iface, bean);
-            }
+            registerInternal(def.getName(), beanInstance);
 
         } catch (Exception e) {
-            throw new RuntimeException("Bean instantiation failed for " + def.type().getName(), e);
+            throw new RuntimeException("Bean instantiation failed for " + def.getType().getName(), e);
         }
+    }
+
+    private Object[] resolveDependencies(Class<?>[] dependencyTypes, Parameter[] params, Class<?> currentBeanType) {
+        Object[] deps = new Object[dependencyTypes.length];
+        for (int i = 0; i < dependencyTypes.length; i++) {
+            Class<?> paramType = dependencyTypes[i];
+            if (List.class.isAssignableFrom(paramType)) {
+                List<Object> emptyList = new ArrayList<>();
+                deps[i] = emptyList;
+
+                var genericType = (Class<?>) ((java.lang.reflect.ParameterizedType) params[i].getParameterizedType())
+                        .getActualTypeArguments()[0];
+
+                pendingListInjections.add(new PendingListInjection(null, emptyList, genericType));
+            } else {
+                deps[i] = get(paramType); // 단일 빈 의존성 주입
+            }
+        }
+        return deps;
     }
 
     private void postProcessListInjections() {
@@ -152,5 +217,32 @@ public class Container {
         }
     }
 
-    private void register(Class<?> key, Object bean) { singletons.put(key, bean); }
+    private void registerInternal(String name, Object bean) {
+        if (singletons.containsKey(name)) return;        // 이미 있으면 무시
+
+        singletons.put(name, bean);
+
+        Class<?> type = bean.getClass();
+        primaryTypeToNameMap.putIfAbsent(type, name);
+        typeToNamesMap.computeIfAbsent(type, k -> new HashSet<>()).add(name);
+
+        for (Class<?> iface : type.getInterfaces()) {
+            primaryTypeToNameMap.putIfAbsent(iface, name);
+            typeToNamesMap.computeIfAbsent(iface, k -> new HashSet<>()).add(name);
+        }
+        for (Class<?> p = type.getSuperclass();
+             p != null && p != Object.class;
+             p = p.getSuperclass()) {
+            primaryTypeToNameMap.putIfAbsent(p, name);
+            typeToNamesMap.computeIfAbsent(p, k -> new HashSet<>()).add(name);
+        }
+    }
+
+    public void registerRuntimeBean(String name, Object bean) {
+        registerInternal(name, bean);
+    }
+
+    public boolean containsBean(String name) {
+        return singletons.containsKey(name);
+    }
 }
