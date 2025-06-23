@@ -1,4 +1,4 @@
-package util;
+package legacy.util;
 
 import app.util.BCryptPasswordUtil;
 import org.junit.jupiter.api.Test;
