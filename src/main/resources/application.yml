@@ -1,0 +1,8 @@
+server:
+  thread-type: virtual  # 스레드 종류: virtual 또는 platform
+  thread-pool-size: 150 # platform 스레드일 경우 사용할 스레드 풀 크기
+
+database:
+  url: jdbc:mysql://localhost:3306/sprout_db
+  username: sprout_user
+  password: your_password
