@@ -12,17 +12,24 @@ import java.util.concurrent.Executors;
 @Component
 public class HttpServer {
 
-    private final ExecutorService pool = Executors.newFixedThreadPool(16);
+    private final ThreadService threadService;
     private final RequestDispatcher dispatcher;
 
-    public HttpServer(RequestDispatcher dispatcher) { this.dispatcher = dispatcher; }
+    public HttpServer(ThreadService threadService, RequestDispatcher dispatcher) {
+        this.threadService = threadService;
+        this.dispatcher = dispatcher;
+    }
 
     public void start(int port) throws Exception {
         try (ServerSocket server = new ServerSocket(port)) {
+            System.out.println("Server started on port " + port);
             while (true) {
-                Socket conn = server.accept();
-                pool.execute(new ConnectionHandler(conn, dispatcher));
+                Socket socket = server.accept();
+                ConnectionHandler handler = new ConnectionHandler(socket, dispatcher);
+                threadService.execute(handler);
             }
+        } finally {
+            threadService.shutdown();
         }
     }
 }

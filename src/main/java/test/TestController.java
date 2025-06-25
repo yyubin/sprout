@@ -4,6 +4,7 @@ import sprout.beans.annotation.Controller;
 import sprout.mvc.annotation.*;
 
 @Controller
+@RequestMapping("/api")
 public class TestController {
 
     private final TestService testService;

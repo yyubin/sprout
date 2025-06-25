@@ -7,11 +7,11 @@ import java.io.*;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
-class ConnectionHandler implements Runnable {
+public class ConnectionHandler implements Runnable {
     private final Socket socket;
     private final RequestDispatcher dispatcher;
 
-    ConnectionHandler(Socket socket, RequestDispatcher dispatcher) {
+    public ConnectionHandler(Socket socket, RequestDispatcher dispatcher) {
         this.socket = socket; this.dispatcher = dispatcher;
     }
 
