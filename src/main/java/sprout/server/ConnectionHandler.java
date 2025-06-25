@@ -2,6 +2,7 @@ package sprout.server;
 
 import sprout.mvc.dispatcher.RequestDispatcher;
 import sprout.mvc.http.HttpResponse;
+import sprout.mvc.http.ResponseEntity;
 
 import java.io.*;
 import java.net.Socket;
@@ -22,7 +23,7 @@ public class ConnectionHandler implements Runnable {
             String raw = readRawRequest(in);
             if (raw.isBlank()) return;
 
-            HttpResponse<?> resp = dispatcher.dispatch(raw);
+            ResponseEntity<?> resp = dispatcher.dispatch(raw);
             writeResponse(out, resp);
 
         } catch (Exception e) {
@@ -47,10 +48,10 @@ public class ConnectionHandler implements Runnable {
         return sb.toString();
     }
 
-    private void writeResponse(BufferedWriter out, HttpResponse<?> res) throws IOException {
+    private void writeResponse(BufferedWriter out, ResponseEntity<?> res) throws IOException {
         if (res == null) return;
-        String body = res.getBody();
-        out.write("HTTP/1.1 " + res.getResponseCode().getCode() + " " + res.getResponseCode().getMessage() + "\r\n");
+        String body = (String) res.getBody();
+        out.write("HTTP/1.1 " + res.getStatusCode().getCode() + " " + res.getStatusCode().getMessage() + "\r\n");
         out.write("Content-Type: application/json\r\n");
         out.write("Content-Length: " + body.getBytes(StandardCharsets.UTF_8).length + "\r\n");
         out.write("\r\n");
