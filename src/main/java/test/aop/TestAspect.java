@@ -9,7 +9,7 @@ import sprout.aop.annotation.Aspect;
 public class TestAspect {
 
     @Around(annotation = {Auth.class})
-    public void authCheck(ProceedingJoinPoint joinPoint) throws Throwable {
+    public Object authCheck(ProceedingJoinPoint joinPoint) throws Throwable {
         System.out.println("Auth Check");
         for (Object arg : joinPoint.getArgs()) {
             System.out.println(arg);
@@ -20,7 +20,7 @@ public class TestAspect {
             System.out.println(param);
         }
 
-        joinPoint.proceed();
+        return joinPoint.proceed();
     }
 
 

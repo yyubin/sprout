@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 
 @Component
 public class AspectPostProcessor implements BeanPostProcessor {
@@ -71,8 +72,7 @@ public class AspectPostProcessor implements BeanPostProcessor {
         Set<Class<?>> aspectClasses = reflections.getTypesAnnotatedWith(Aspect.class);
 
         for (Class<?> aspectClass : aspectClasses) {
-            Object aspectInstance = container.get(aspectClass);
-            List<Advisor> advisorsForThisAspect = createAdvisorsFromAspect(aspectInstance);
+            List<Advisor> advisorsForThisAspect = createAdvisorsFromAspect(aspectClass);
             System.out.println(aspectClass.getName() + " has " + advisorsForThisAspect.size() + " advisors: " + advisorsForThisAspect);
             for (Advisor advisor : advisorsForThisAspect) {
                 advisorRegistry.registerAdvisor(advisor);
@@ -81,14 +81,15 @@ public class AspectPostProcessor implements BeanPostProcessor {
         System.out.println("advisorRegistry#getAllAdvisors()" + advisorRegistry.getAllAdvisors());
     }
 
-    private List<Advisor> createAdvisorsFromAspect(Object aspectInstance) {
+    private List<Advisor> createAdvisorsFromAspect(Class<?> aspectClass) {
         List<Advisor> advisors = new ArrayList<>();
-        Class<?> aspectClass = aspectInstance.getClass();
 
-        for (Method method : aspectClass.getDeclaredMethods()) {
-            // 변경: AdviceFactory를 사용하여 Advisor 객체 전체를 가져옴
-            Optional<Advisor> advisor = adviceFactory.createAdvisor(aspectInstance, method);
-            advisor.ifPresent(advisors::add);
+        Supplier<Object> aspectSupplier = () -> container.get(aspectClass);
+
+        for (Method m : aspectClass.getDeclaredMethods()) {
+            if (m.isAnnotationPresent(Around.class)) {
+                adviceFactory.createAdvisor(aspectClass, m, aspectSupplier).ifPresent(advisors::add);
+            }
         }
         return advisors;
     }

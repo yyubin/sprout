@@ -49,7 +49,6 @@ public class ConnectionHandler implements Runnable {
 
     private void writeResponse(BufferedWriter out, ResponseEntity<?> res) throws IOException {
         String body = (String) res.getBody();
-
         out.write("HTTP/1.1 " + res.getStatusCode().getCode() + " " + res.getStatusCode().getMessage() + "\r\n");
         out.write("Content-Type: application/json\r\n");
         out.write("Content-Length: " + body.getBytes(StandardCharsets.UTF_8).length + "\r\n");

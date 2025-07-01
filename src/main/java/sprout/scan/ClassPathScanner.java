@@ -9,6 +9,7 @@ import sprout.beans.ConstructorBeanDefinition;
 import sprout.beans.MethodBeanDefinition;
 import sprout.beans.annotation.*;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -18,18 +19,15 @@ import java.util.stream.Collectors;
 @Component
 public class ClassPathScanner {
 
-    public Collection<BeanDefinition> scan(ConfigurationBuilder configBuilder) {
+    public Collection<BeanDefinition> scan(ConfigurationBuilder configBuilder, Class<? extends Annotation>... componentAnnotations) {
         configBuilder.addScanners(Scanners.TypesAnnotated, Scanners.SubTypes);
         Reflections r = new Reflections(configBuilder);
 
         // @Component, @Service 등 어노테이션 기반의 빈 타입 탐색
         Set<Class<?>> componentCandidates = new HashSet<>();
-        componentCandidates.addAll(r.getTypesAnnotatedWith(Component.class));
-        componentCandidates.addAll(r.getTypesAnnotatedWith(Controller.class));
-        componentCandidates.addAll(r.getTypesAnnotatedWith(Service.class));
-        componentCandidates.addAll(r.getTypesAnnotatedWith(Repository.class));
-        componentCandidates.addAll(r.getTypesAnnotatedWith(Configuration.class));
-        componentCandidates.addAll(r.getTypesAnnotatedWith(Aspect.class));
+        for (Class<? extends Annotation> anno : componentAnnotations) {
+            componentCandidates.addAll(r.getTypesAnnotatedWith(anno));
+        }
 
         Set<Class<?>> concreteComponentTypes = componentCandidates.stream()
                 .filter(clazz -> !clazz.isInterface() && !clazz.isAnnotation() && !Modifier.isAbstract(clazz.getModifiers()))

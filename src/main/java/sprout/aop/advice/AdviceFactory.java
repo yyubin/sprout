@@ -9,7 +9,9 @@ import sprout.aop.annotation.Around;
 import sprout.beans.annotation.Component;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 @Component
 public class AdviceFactory {
@@ -19,23 +21,25 @@ public class AdviceFactory {
         this.pointcutFactory = pointcutFactory;
     }
 
-    public Optional<Advisor> createAdvisor(Object aspectInstance, Method method) {
+    public Optional<Advisor> createAdvisor(Class<?> aspectClass, Method method, Supplier<Object> aspectSupplier) {
         if (method.isAnnotationPresent(Around.class)) {
             Around around = method.getAnnotation(Around.class);
-            Pointcut pointcut = pointcutFactory.createPointcut(around.annotation(), around.pointcut());
 
-            Advice aroundAdvice = new AspectMethodInterceptor(aspectInstance, method);
-            return Optional.of(new DefaultAdvisor(pointcut, aroundAdvice, 1));
+            Pointcut pointcut =
+                    pointcutFactory.createPointcut(
+                            around.annotation(),   // Class<? extends Annotation>[]
+                            around.pointcut()      // regex
+                    );
+
+            Supplier<Object> safeSupplier =
+                    (Modifier.isStatic(method.getModifiers()) ? () -> null : aspectSupplier);
+
+            Advice advice = new AspectMethodInterceptor(safeSupplier, method);
+            return Optional.of(new DefaultAdvisor(pointcut, advice, 0));
         }
-        // TODO: @After 어노테이션도 유사하게 처리
-        // if (method.isAnnotationPresent(After.class)) {
-        //     After after = method.getAnnotation(After.class);
-        //     Pointcut pointcut = pointcutFactory.createPointcut(after.annotation(), after.pointcut());
-        //     int order = after.order();
-        //     Advice afterAdvice = new AfterAdvice(aspectInstance, method); // AfterAdvice도 sprout.aop.Advice를 구현해야 함
-        //     return Optional.of(new Advisor(pointcut, afterAdvice, order));
-        // }
 
-        return Optional.empty(); // 해당 어노테이션이 없으면 빈 Optional 반환
+        /* ---------- TODO: @After, @Before, ... ---------- */
+
+        return Optional.empty();
     }
 }

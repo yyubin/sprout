@@ -1,5 +1,5 @@
 package sprout.aop;
 
-public abstract class ProceedingJoinPoint implements JoinPoint{
-    public abstract Object proceed() throws Throwable;
+public interface ProceedingJoinPoint extends JoinPoint{
+    Object proceed() throws Throwable;
 }
