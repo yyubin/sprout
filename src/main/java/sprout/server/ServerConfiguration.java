@@ -17,11 +17,9 @@ public class ServerConfiguration {
             int poolSize = appConfig.getIntProperty("server.thread-pool-size", 10);
             System.out.println("Initializing with Platform Threads. Pool size: " + poolSize);
             return new ThreadPoolService(poolSize);
-
-        } else {
-            System.out.println("Initializing with Virtual Threads.");
-            return new VirtualThreadService();
         }
+        System.out.println("Initializing with Virtual Threads.");
+        return new VirtualThreadService();
     }
 
 }

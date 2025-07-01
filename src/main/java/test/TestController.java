@@ -40,6 +40,9 @@ public class TestController {
         return testDto.toString();
     }
 
-
+    @GetMapping("/auth")
+    public String authCheck() {
+        return testService.authCheck();
+    }
 
 }

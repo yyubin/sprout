@@ -10,7 +10,7 @@ import app.message.ExceptionMessage;
 import app.repository.interfaces.BoardRepository;
 import app.service.interfaces.BoardServiceInterface;
 import legacy.config.annotations.Priority;
-import sprout.aop.annotation.BeforeAuthCheck;
+import legacy.BeforeAuthCheck;
 import sprout.beans.annotation.Requires;
 import sprout.beans.annotation.Service;
 

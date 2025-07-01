@@ -2,18 +2,13 @@ package sprout.scan;
 
 import org.reflections.Reflections;
 import org.reflections.scanners.Scanners;
-import org.reflections.scanners.SubTypesScanner;
-import org.reflections.scanners.TypeAnnotationsScanner;
 import org.reflections.util.ConfigurationBuilder;
-import org.reflections.util.FilterBuilder;
-import sprout.aop.annotation.BeforeAuthCheck;
-import sprout.beans.BeanCreationMethod;
+import sprout.aop.annotation.Aspect;
 import sprout.beans.BeanDefinition;
 import sprout.beans.ConstructorBeanDefinition;
 import sprout.beans.MethodBeanDefinition;
 import sprout.beans.annotation.*;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -34,6 +29,7 @@ public class ClassPathScanner {
         componentCandidates.addAll(r.getTypesAnnotatedWith(Service.class));
         componentCandidates.addAll(r.getTypesAnnotatedWith(Repository.class));
         componentCandidates.addAll(r.getTypesAnnotatedWith(Configuration.class));
+        componentCandidates.addAll(r.getTypesAnnotatedWith(Aspect.class));
 
         Set<Class<?>> concreteComponentTypes = componentCandidates.stream()
                 .filter(clazz -> !clazz.isInterface() && !clazz.isAnnotation() && !Modifier.isAbstract(clazz.getModifiers()))

@@ -1,22 +1,27 @@
 package sprout.context;
 
-import app.service.MemberAuthService;
 import net.sf.cglib.proxy.Enhancer;
+import org.reflections.Reflections;
 import org.reflections.scanners.Scanners;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 import org.reflections.util.FilterBuilder;
-import sprout.aop.MethodProxyHandler;
+import sprout.aop.AspectPostProcessor;
+import sprout.aop.advisor.Advisor;
+import sprout.aop.advisor.AdvisorRegistry;
+import sprout.aop.advisor.DefaultPointcutFactory;
+import sprout.aop.advisor.PointcutFactory;
+import sprout.aop.annotation.Aspect;
 import sprout.beans.BeanCreationMethod;
 import sprout.beans.BeanDefinition;
 import sprout.beans.ConstructorBeanDefinition;
 import sprout.beans.annotation.Component;
 import sprout.beans.internal.BeanGraph;
+import sprout.beans.processor.BeanPostProcessor;
 import sprout.scan.ClassPathScanner;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.util.*;
 
@@ -69,12 +74,20 @@ public class Container {
         configBuilder.filterInputsBy(filter);
 
         registerSingletonInstance("container", this);
+
         Collection<BeanDefinition> defs = scanner.scan(configBuilder);
         defs.add(new ConstructorBeanDefinition("container", Container.class, null, new Class[0]));
         List<BeanDefinition> order = new BeanGraph(defs).topologicallySorted();
 
         order.forEach(this::instantiatePrimary);
         postProcessListInjections();
+
+        AspectPostProcessor aspectPostProcessor = get(AspectPostProcessor.class);
+        if (aspectPostProcessor != null) {
+            aspectPostProcessor.initialize(basePackages);
+        }
+
+        applyBeanPostProcessors();
     }
 
     private void registerSingletonInstance(String name, Object instance) {
@@ -236,6 +249,73 @@ public class Container {
             primaryTypeToNameMap.putIfAbsent(p, name);
             typeToNamesMap.computeIfAbsent(p, k -> new HashSet<>()).add(name);
         }
+    }
+
+    private void applyBeanPostProcessors() {
+        // 등록된 모든 빈 후처리기를 가져옴
+        List<BeanPostProcessor> postProcessors = getAll(BeanPostProcessor.class);
+
+        // 모든 싱글톤 빈에 대해 후처리기 적용
+        List<String> beanNames = new ArrayList<>(singletons.keySet()); // ConcurrentModificationException 방지
+        for (String beanName : beanNames) {
+            Object originalBean = singletons.get(beanName);
+            Object processedBean = originalBean;
+
+            for (BeanPostProcessor processor : postProcessors) {
+                processedBean = processor.postProcessBeforeInitialization(beanName, processedBean);
+            }
+
+            // 초기화 후 처리 (프록시 적용)
+            for (BeanPostProcessor processor : postProcessors) {
+                processedBean = processor.postProcessAfterInitialization(beanName, processedBean);
+            }
+
+            // 만약 프록시가 생성되었다면, 기존 빈을 프록시로 교체
+            if (processedBean != originalBean) {
+                singletons.put(beanName, processedBean); // 맵의 값을 프록시로 업데이트
+                // typeToNamesMap 등의 매핑도 업데이트 필요
+                updateBeanMappings(beanName, originalBean.getClass(), processedBean.getClass());
+            }
+        }
+    }
+
+    private void updateBeanMappings(String name, Class<?> originalType, Class<?> newType) {
+        // 1. originalType에 대한 매핑 제거 (name이 originalType의 유일한 기본 빈이 아닌 경우)
+        // primaryTypeToNameMap에서 해당 name이 originalType에 대한 primary 매핑이었으면 제거
+        if (primaryTypeToNameMap.get(originalType) != null && primaryTypeToNameMap.get(originalType).equals(name)) {
+            primaryTypeToNameMap.remove(originalType);
+        }
+
+        // typeToNamesMap에서 originalType에 해당하는 name 제거
+        Set<String> originalNamesForType = typeToNamesMap.get(originalType);
+        if (originalNamesForType != null) {
+            originalNamesForType.remove(name);
+            if (originalNamesForType.isEmpty()) {
+                typeToNamesMap.remove(originalType);
+            }
+        }
+
+        primaryTypeToNameMap.putIfAbsent(newType, name);
+        // 새로운 타입(프록시 타입)을 해당 빈의 모든 타입 매핑에 추가
+        typeToNamesMap.computeIfAbsent(newType, k -> new HashSet<>()).add(name);
+
+        for (Class<?> iface : newType.getInterfaces()) {
+            primaryTypeToNameMap.putIfAbsent(iface, name);
+            typeToNamesMap.computeIfAbsent(iface, k -> new HashSet<>()).add(name);
+        }
+        // 프록시의 상위 클래스들에 대해 매핑 업데이트
+        for (Class<?> p = newType.getSuperclass();
+             p != null && p != Object.class;
+             p = p.getSuperclass()) {
+            primaryTypeToNameMap.putIfAbsent(p, name);
+            typeToNamesMap.computeIfAbsent(p, k -> new HashSet<>()).add(name);
+        }
+
+        // 참고: 프록시는 원본 빈의 인터페이스/상속 계층을 유지하므로
+        // 원본 타입이 가지고 있던 인터페이스나 상위 클래스 매핑은
+        // 프록시 타입이 이들을 구현/상속하므로 자연스럽게 유지
+        // 다만, primaryTypeToNameMap에서 originalType이 primary였던 경우
+        // newType이 그 자리를 대체하게 되므로, primaryTypeToNameMap에서 originalType을 제거하는 로직이 필요
     }
 
     public void registerRuntimeBean(String name, Object bean) {

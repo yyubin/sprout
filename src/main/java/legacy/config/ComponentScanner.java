@@ -1,14 +1,13 @@
 package legacy.config;
 
 import legacy.config.annotations.Priority;
-import sprout.aop.MethodProxyHandler;
-import sprout.aop.annotation.BeforeAuthCheck;
+import legacy.MethodProxyHandler;
+import legacy.BeforeAuthCheck;
 import sprout.beans.annotation.*;
 import org.reflections.Reflections;
 import app.service.MemberAuthService;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
 import java.util.*;
 
 public class ComponentScanner {

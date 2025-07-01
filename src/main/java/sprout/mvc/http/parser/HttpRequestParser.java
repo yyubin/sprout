@@ -1,11 +1,7 @@
 package sprout.mvc.http.parser;
 
-import legacy.http.request.ObjectMapperConfig;
 import sprout.beans.annotation.Component;
-import sprout.beans.annotation.Requires;
 import sprout.mvc.http.HttpRequest;
-
-import java.util.Map;
 
 @Component
 public class HttpRequestParser {

@@ -1,6 +1,5 @@
-package sprout.aop;
+package legacy;
 
-import sprout.aop.annotation.BeforeAuthCheck;
 import app.domain.grade.MemberGrade;
 import app.exception.NotLoggedInException;
 import app.exception.UnauthorizedAccessException;

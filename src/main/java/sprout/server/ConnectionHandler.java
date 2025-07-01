@@ -1,7 +1,6 @@
 package sprout.server;
 
 import sprout.mvc.dispatcher.RequestDispatcher;
-import sprout.mvc.http.HttpResponse;
 import sprout.mvc.http.ResponseEntity;
 
 import java.io.*;
@@ -49,8 +48,8 @@ public class ConnectionHandler implements Runnable {
     }
 
     private void writeResponse(BufferedWriter out, ResponseEntity<?> res) throws IOException {
-        if (res == null) return;
         String body = (String) res.getBody();
+
         out.write("HTTP/1.1 " + res.getStatusCode().getCode() + " " + res.getStatusCode().getMessage() + "\r\n");
         out.write("Content-Type: application/json\r\n");
         out.write("Content-Length: " + body.getBytes(StandardCharsets.UTF_8).length + "\r\n");
