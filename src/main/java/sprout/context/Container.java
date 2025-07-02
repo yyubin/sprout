@@ -1,14 +1,12 @@
 package sprout.context;
 
 import net.sf.cglib.proxy.Enhancer;
-import org.reflections.Reflections;
 import org.reflections.scanners.Scanners;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 import org.reflections.util.FilterBuilder;
 import sprout.aop.AspectPostProcessor;
 import sprout.aop.advice.AdviceFactory;
-import sprout.aop.advisor.Advisor;
 import sprout.aop.advisor.AdvisorRegistry;
 import sprout.aop.advisor.DefaultPointcutFactory;
 import sprout.aop.advisor.PointcutFactory;
@@ -16,6 +14,7 @@ import sprout.aop.annotation.Aspect;
 import sprout.beans.BeanCreationMethod;
 import sprout.beans.BeanDefinition;
 import sprout.beans.ConstructorBeanDefinition;
+import sprout.beans.InfrastructureBean;
 import sprout.beans.annotation.*;
 import sprout.beans.internal.BeanGraph;
 import sprout.beans.processor.BeanPostProcessor;
@@ -25,6 +24,8 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.*;
+
+import static java.util.stream.Collectors.toList;
 
 @Component
 public class Container {
@@ -79,43 +80,44 @@ public class Container {
 
         registerSingletonInstance("container", this);
 
-        // AdvisorRegistry 등록
-        AdvisorRegistry advisorRegistry = new AdvisorRegistry();
-        registerSingletonInstance("advisorRegistry", advisorRegistry);
 
-        PointcutFactory pointcutFactory = new DefaultPointcutFactory();
-        registerSingletonInstance("pointcutFactory", pointcutFactory);
-
-        AdviceFactory adviceFactory = new AdviceFactory(pointcutFactory);
-        registerSingletonInstance("adviceFactory", adviceFactory);
-
-        // AspectPostProcessor 등록
-        AspectPostProcessor aspectPostProcessor = new AspectPostProcessor(advisorRegistry, this, adviceFactory);
-        registerSingletonInstance("aspectPostProcessor", aspectPostProcessor);
-
-        Collection<BeanDefinition> defs = scanner.scan(configBuilder,
+        Collection<BeanDefinition> allDefs = scanner.scan(configBuilder,
                 Component.class,
                 Controller.class,
                 Service.class,
                 Repository.class,
-                Configuration.class, // @Configuration 자체도 빈이므로 여기에 포함
-                Aspect.class // @Aspect 클래스 자체도 빈이므로 여기에 포함
+                Configuration.class,
+                Aspect.class
         );
 
-        defs.add(new ConstructorBeanDefinition("container", Container.class, null, new Class[0]));
-        List<BeanDefinition> order = new BeanGraph(defs).topologicallySorted();
+        List<BeanDefinition> infraDefs = new ArrayList<>(allDefs.stream()
+                .filter(bd -> BeanPostProcessor.class.isAssignableFrom(bd.getType()) ||
+                        InfrastructureBean.class.isAssignableFrom(bd.getType()))
+                .toList());
 
-        AspectPostProcessor registeredAspectPostProcessor = get(AspectPostProcessor.class); // 이미 위에서 수동 등록됨
-        if (registeredAspectPostProcessor != null) {
-            registeredAspectPostProcessor.initialize(basePackages); // @Aspect 클래스들을 스캔하고 Advisor 등록
-        }
+        List<BeanDefinition> appDefs = new ArrayList<>(allDefs);
+        appDefs.removeAll(infraDefs);
+
+        // 2-phased initial
+        beanPostProcessors = new ArrayList<>();
+        instantiateGroup(infraDefs, false, basePackages);
 
         beanPostProcessors = getAll(BeanPostProcessor.class);
+        instantiateGroup(appDefs, true, basePackages);
+    }
+
+    private void instantiateGroup(List<BeanDefinition> defs, boolean isApp, List<String> basePackages) {
+        List<BeanDefinition> order = new BeanGraph(defs).topologicallySorted();
+
+        if (isApp) {
+            AspectPostProcessor registeredAspectPostProcessor = get(AspectPostProcessor.class);
+            if (registeredAspectPostProcessor != null) {
+                registeredAspectPostProcessor.initialize(basePackages);
+            }
+        }
 
         order.forEach(this::instantiatePrimary);
         postProcessListInjections();
-
-        // applyBeanPostProcessors();
     }
 
     private void registerSingletonInstance(String name, Object instance) {
@@ -135,9 +137,9 @@ public class Container {
         for (Class<?> p = type.getSuperclass();
              p != null && p != Object.class;
              p = p.getSuperclass()) {
-            primaryTypeToNameMap.putIfAbsent(p, name);
-            typeToNamesMap.computeIfAbsent(p, k -> new HashSet<>()).add(name);
-        }
+                primaryTypeToNameMap.putIfAbsent(p, name);
+                typeToNamesMap.computeIfAbsent(p, k -> new HashSet<>()).add(name);
+            }
     }
 
     public <T> T get(Class<T> type) {

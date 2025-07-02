@@ -1,5 +1,6 @@
 package sprout.aop.advisor;
 
+import sprout.beans.InfrastructureBean;
 import sprout.beans.annotation.Component;
 
 import java.lang.reflect.Method;
@@ -7,7 +8,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
-public class AdvisorRegistry {
+public class AdvisorRegistry implements InfrastructureBean {
     private final List<Advisor> advisors = new ArrayList<>();
     private final Map<Class<?>, List<Advisor>> cachedAdvisors = new ConcurrentHashMap<>();
 

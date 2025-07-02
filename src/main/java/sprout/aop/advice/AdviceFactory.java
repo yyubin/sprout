@@ -6,6 +6,7 @@ import sprout.aop.advisor.DefaultAdvisor;
 import sprout.aop.advisor.Pointcut;
 import sprout.aop.advisor.PointcutFactory;
 import sprout.aop.annotation.Around;
+import sprout.beans.InfrastructureBean;
 import sprout.beans.annotation.Component;
 
 import java.lang.reflect.Method;
@@ -14,7 +15,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 @Component
-public class AdviceFactory {
+public class AdviceFactory implements InfrastructureBean {
     private final PointcutFactory pointcutFactory;
 
     public AdviceFactory(PointcutFactory pointcutFactory) {

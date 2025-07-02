@@ -19,7 +19,6 @@ public interface BeanDefinition {
 
     // AOP 프록시 여부
     boolean isProxyTarget();
-    // List<AdviceDefinition> getAdvices(); // 또는 어떤 Advice들이 적용될지 리스트로 가질 수도 있음
 
     // Configuration 클래스 프록시 여부
     boolean isConfigurationClassProxyNeeded();

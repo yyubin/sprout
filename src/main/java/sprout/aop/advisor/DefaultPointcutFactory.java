@@ -1,4 +1,5 @@
 package sprout.aop.advisor;
+import sprout.beans.InfrastructureBean;
 import sprout.beans.annotation.Component;
 
 import java.lang.annotation.Annotation;
@@ -6,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
-public class DefaultPointcutFactory implements PointcutFactory {
+public class DefaultPointcutFactory implements PointcutFactory, InfrastructureBean {
 
     @Override
     public Pointcut createPointcut(Class<? extends Annotation>[] annotationTypes, String regexExpression) {
