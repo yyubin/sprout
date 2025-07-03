@@ -87,10 +87,10 @@ public class AspectPostProcessor implements BeanPostProcessor {
         Supplier<Object> aspectSupplier = () -> container.get(aspectClass);
 
         for (Method m : aspectClass.getDeclaredMethods()) {
-            if (m.isAnnotationPresent(Around.class)) {
-                adviceFactory.createAdvisor(aspectClass, m, aspectSupplier).ifPresent(advisors::add);
-            }
+            adviceFactory.createAdvisor(aspectClass, m, aspectSupplier)
+                    .ifPresent(advisors::add);
         }
+
         return advisors;
     }
 

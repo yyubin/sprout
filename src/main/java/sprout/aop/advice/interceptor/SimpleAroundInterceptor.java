@@ -1,5 +1,7 @@
-package sprout.aop;
+package sprout.aop.advice.interceptor;
 
+import sprout.aop.MethodInvocation;
+import sprout.aop.ProceedingJoinPoint;
 import sprout.aop.advice.Advice;
 import sprout.aop.internal.PjpAdapter;
 
@@ -7,11 +9,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.function.Supplier;
 
-public class AspectMethodInterceptor implements Advice {
+public class SimpleAroundInterceptor implements Advice {
     private final Supplier<Object> aspectProvider;
     private final Method adviceMethod;
 
-    public AspectMethodInterceptor(Supplier<Object> aspectProvider, Method method) {
+    public SimpleAroundInterceptor(Supplier<Object> aspectProvider, Method method) {
         this.aspectProvider = aspectProvider;
         this.adviceMethod = method;
         if (adviceMethod.getParameterCount() != 1 || !ProceedingJoinPoint.class.isAssignableFrom(adviceMethod.getParameterTypes()[0])) {
