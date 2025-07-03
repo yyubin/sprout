@@ -16,6 +16,7 @@ import sprout.aop.annotation.Aspect;
 import sprout.beans.annotation.Component;
 import sprout.beans.processor.BeanPostProcessor;
 import sprout.context.Container;
+import sprout.context.CtorMeta;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -111,10 +112,11 @@ public class AspectPostProcessor implements BeanPostProcessor {
 
         if (needsProxy) {
             System.out.println("Applying AOP proxy to bean: " + beanName + " (" + targetClass.getName() + ")");
+            CtorMeta meta = container.lookupCtorMeta(bean);
             Enhancer enhancer = new Enhancer();
             enhancer.setSuperclass(targetClass);
             enhancer.setCallback(new BeanMethodInterceptor(bean, advisorRegistry));
-            return enhancer.create();
+            return enhancer.create(meta.paramTypes(), meta.args());
         }
         return bean;
     }

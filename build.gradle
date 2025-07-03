@@ -47,7 +47,7 @@ dependencies {
 
     implementation 'org.yaml:snakeyaml:1.29'
 
-
+    implementation("org.objenesis:objenesis:3.3")
 
 
 

@@ -31,6 +31,7 @@ public class Container {
 
     private final Map<Class<?>, String> primaryTypeToNameMap = new HashMap<>(); // 기본 빈 매핑
     private final Map<Class<?>, Set<String>> typeToNamesMap = new HashMap<>(); // 모든 빈 매핑 (동일 타입 여러 개 처리)
+    private final Map<Object, CtorMeta> ctorCache = new IdentityHashMap<>();
 
     private List<BeanPostProcessor> beanPostProcessors;
 
@@ -207,6 +208,8 @@ public class Container {
                 throw new IllegalArgumentException("Unsupported bean creation method: " + def.getCreationMethod());
             }
 
+            ctorCache.put(beanInstance, new CtorMeta(def.getConstructorArgumentTypes(), deps));
+
             Object processedBean = beanInstance; // 처리될 빈 인스턴스 (초기에는 원본)
 
             // postProcessBeforeInitialization 적용
@@ -225,6 +228,10 @@ public class Container {
         } catch (Exception e) {
             throw new RuntimeException("Bean instantiation failed for " + def.getType().getName(), e);
         }
+    }
+
+    public CtorMeta lookupCtorMeta(Object bean) {
+        return ctorCache.get(bean);
     }
 
     private Object[] resolveDependencies(Class<?>[] dependencyTypes, Parameter[] params, Class<?> currentBeanType) {
