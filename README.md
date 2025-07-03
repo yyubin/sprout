@@ -1,48 +1,46 @@
 # 🌱 **Sprout**
 
-A lightweight Java web framework built from scratch to demystify how the Spring Framework works.
-While it proudly “reinvents the wheel (twice),” **simplicity, readability, and extensibility** are its core values.
+A lightweight Java web framework built from scratch to demystify **how Spring works under the hood**. While it proudly *reinvents the wheel (twice)*, **clarity · hackability · extensibility** remain its guiding values.
 
 ---
 
-## ✨ Key Features
+## ✨ Core Features
 
-| Area                    | Current Status                                                                                                                                                                                                                                                                                                                                              |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **IoC / DI Container**  | Scans `@Component`, `@Service`, `@Controller`, `@Repository`, `@Configuration` and manages them as singletons<br/>– Constructor-based injection<br/>– Automatic injection of `List<T>` beans<br/>– Cyclic-dependency detection via topological sort                                                                                                         |
-| **Bean Definitions**    | `ConstructorBeanDefinition` / `MethodBeanDefinition`<br/>– Supports both constructor and factory-method instantiation strategies                                                                                                                                                                                                                            |
-| **Configuration Proxy** | Applies CGLIB proxy when `@Configuration(proxyBeanMethods = true)` is used → caches repeated `@Bean` method calls                                                                                                                                                                                                                                           |
-| **Web Layer**           | • `RequestMappingRegistry` + pattern matching (supports `{var}`)<br/>• `HandlerMethodScanner` for automatic controller registration<br/>• Argument resolvers for `@PathVariable`, `@RequestParam`, etc.<br/>• `RequestDispatcher` handles parsing, binding, invocation<br/>• `ResponseEntity` standardization & `ResponseResolver` auto-converts DTO/`void` |
-| **Server**              | **Config-driven threading model**: switch between virtual threads (default) and a platform-thread pool via `application.yml`                                                                                                                                                                                                                                |
-| **Configuration**       | **YAML support**: external configuration injection through `application.yml` (AppConfig)                                                                                                                                                                                                                                                                    |
-| **Exception Handling**  | Built-in handling for custom exceptions (`BadRequestException`, `UnsupportedHttpMethod`, …)                                                                                                                                                                                                                                                                 |
-| **Bootstrap**           | One-liner startup: `SproutApplication.run()` initializes the container and launches the server                                                                                                                                                                                                                                                              |
+| Area                    | Status & Highlights                                                                                                                                                                                                                                                                                                      |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **IoC / DI Container**  | • Scans `@Component`, `@Service`, `@Controller`, `@Repository`, `@Configuration`, `@Aspect`.<br>• Constructor‑based injection.<br>• Automatic `List<T>` population.<br>• Cyclic‑dependency detection (topological sort).                                                                                                 |
+| **Bean Definitions**    | • `ConstructorBeanDefinition` & `MethodBeanDefinition`.<br>• Factory‑method or constructor strategy.<br>• **Ctor‑Meta cache** – enables safe proxying of beans with required‑args constructors.                                                                                                                          |
+| **AOP (NEW in 0.2)**    | • Annotation‑driven (`@Before`, `@After`, `@Around`).<br>• AspectJ‑style pointcuts (`*`, `..`, `?`).<br>• Advisor/Advice/Pointcut hierarchy inspired by Spring.<br>• CGLIB subclassing + Objenesis fallback → works even when beans lack a no‑arg constructor.<br>• Supports proxy‑per‑target & orderable advisor chain. |
+| **Configuration Proxy** | CGLIB proxy for `@Configuration(proxyBeanMethods = true)` → caches repeated `@Bean` calls.                                                                                                                                                                                                                               |
+| **Web Layer**           | • Declarative routing with `@GetMapping`, `@PostMapping`, … (pattern `{var}` support).<br>• ArgumentResolvers for `@PathVariable`, `@RequestParam`, `@RequestBody`, …<br>• `RequestDispatcher` binds → invokes → resolves (`ResponseEntity`, DTO, `void`).                                                               |
+| **Server**              | **Config‑driven threading** → swap between virtual threads (Java 21) and platform‑thread pools via `application.yml`.                                                                                                                                                                                                    |
+| **Configuration**       | YAML support with relaxed‑binding injection (`AppConfig`).                                                                                                                                                                                                                                                               |
+| **Exception Handling**  | Built‑in HTTP exceptions (`BadRequest`, `MethodNotAllowed`, …).                                                                                                                                                                                                                                                          |
+| **Bootstrap**           | One‑liner `SproutApplication.run()` sets up container *and* starts server.                                                                                                                                                                                                                                               |
 
 ---
 
 ## 🏃‍♂️ Quick Start
 
-1. **Clone and build**
+1. **Clone & build**
 
 ```bash
-git clone https://github.com/yyubin/sprout.git
-cd sprout
-./gradlew build
+$ git clone https://github.com/yyubin/sprout.git
+$ cd sprout && ./gradlew build
 ```
 
-2. **Run the application**
-   *CGLIB proxies require extra JVM flags on Java 17+.*
-   *Virtual-thread mode needs Java 21+.*
+2. **Run the sample app**  *(Java 21+, CGLIB module‑opens flags required)*
 
 ```bash
-java --add-opens=java.base/java.lang=ALL-UNNAMED \
-     --add-opens=java.base/java.lang.reflect=ALL-UNNAMED \
-     --add-opens=java.base/java.io=ALL-UNNAMED \
-     --add-opens=java.base/java.util=ALL-UNNAMED \
-     -jar build/libs/sprout.jar
+$ java \
+  --add-opens=java.base/java.lang=ALL-UNNAMED \
+  --add-opens=java.base/java.lang.reflect=ALL-UNNAMED \
+  --add-opens=java.base/java.io=ALL-UNNAMED \
+  --add-opens=java.base/java.util=ALL-UNNAMED \
+  -jar build/libs/sprout.jar
 ```
 
-3. **Example**
+3. **Minimal example**
 
 ```java
 // DemoApplication.java
@@ -55,29 +53,33 @@ public class DemoApplication {
 ```
 
 ```java
+// app/LoggingAspect.java
+@Aspect
+public class LoggingAspect {
+    @Around(pointcut = "app..*Service.*")
+    public Object logExecTime(ProceedingJoinPoint pjp) throws Throwable {
+        long t0 = System.nanoTime();
+        try {
+            return pjp.proceed();
+        } finally {
+            System.out.printf("%s took %d µs%n", pjp.getSignature().toLongName(),
+                              (System.nanoTime()-t0)/1_000);
+        }
+    }
+}
+```
+
+```java
 // app/TestController.java
 @Controller
 @RequestMapping("/api")
 public class TestController {
+    private final GreetingService svc;
+    public TestController(GreetingService svc) { this.svc = svc; }
 
-    private final TestService service;
-
-    public TestController(TestService service) {
-        this.service = service;
-    }
-
-    // Returning a DTO → automatically wrapped in ResponseEntity.ok(...)
     @GetMapping("/hello/{id}")
     public MessageDto hello(@PathVariable Long id) {
-        String message = service.greet(id);
-        return new MessageDto(message);
-    }
-
-    // Returning ResponseEntity → full control over status & headers
-    @PostMapping("/greetings")
-    public ResponseEntity<MessageDto> createGreeting(@RequestBody GreetingRequest request) {
-        MessageDto newGreeting = service.create(request);
-        return ResponseEntity.created(newGreeting);   // 201 Created
+        return new MessageDto(svc.greet(id));
     }
 }
 ```
@@ -86,28 +88,28 @@ public class TestController {
 
 ## 🗺️ Roadmap
 
-| Milestone | Planned Feature        | Description                                                                      |
-| --------- | ---------------------- | -------------------------------------------------------------------------------- |
-| **v0.2**  | **AOP**                | Implement `@Around` advice using CGLIB proxies (logging, transactions, …)        |
-| **v0.3**  | **Middleware Layer**   | Interceptor pipeline, global exception handling, `@Cacheable` annotation support |
-| **v0.4**  | **NIO Server**         | Evaluate non-blocking I/O with `java.nio.channels`                               |
-| **v0.5**  | **Data Access**        | Introduce a simple `JdbcTemplate` and `RowMapper`-style mini-ORM                 |
-| **v1.0**  | **Production Release** | Stabilize & complete documentation                                               |
+| Release           | Planned / Done                                                            | Notes                                                                |
+| ----------------- | ------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| **v0.2 (latest)** | **AOP core delivered** (`@Before`/`@After`/`@Around`, AspectJ pointcuts). | ✔️ Done                                                              |
+| **v0.3**          | **Middleware & Global Interceptors**                                      | Request/response filters, declarative CORS, global exception mapper. |
+| **v0.4**          | **NIO Server**                                                            | Evaluate `java.nio.channels` + Loom structured concurrency.          |
+| **v0.5**          | **Data‑Access Layer**                                                     | Lightweight `JdbcTemplate` + transaction advice.                     |
+| **v1.0**          | **Production‑ready**                                                      | Stability hardening, docs & samples complete.                        |
 
-> ⚠️ *Subject to change — the project is primarily for learning.*
+*Roadmap is aspirational & may evolve as the learning journey continues.*
 
 ---
 
 ## 🙏 Acknowledgements
 
-* **Spring Framework** — reference architecture & endless inspiration
-* **Reflections**, **CGLIB**, **Jackson** — runtime metaprogramming & serialization backbone
+* **Spring Framework** — reference architecture & endless inspiration.
+* **Reflections**, **CGLIB**, **Objenesis**, **Jackson** — runtime metaprogramming & serialization backbone.
 
 ---
 
 ## 🤝 Contributing
 
-Pull requests are warmly welcome! Check out the roadmap, pick an open issue, or suggest a new enhancement — we’d love your help improving Sprout.
+Pull requests and issue reports are very welcome! Pick a roadmap item or suggest your own — let’s grow Sprout together.
 
 ---
 
