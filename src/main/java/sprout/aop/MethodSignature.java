@@ -6,6 +6,8 @@ import java.util.stream.Collectors;
 
 public class MethodSignature implements Signature{
     private final Method method;
+    private volatile String cachedToString;
+    private volatile String cachedLongName;
 
     public MethodSignature(Method method) {
         this.method = method;
@@ -18,8 +20,16 @@ public class MethodSignature implements Signature{
 
     @Override
     public String toLongName() {
-        // 메서드의 전체 시그니처를 반환 (예: public java.lang.String com.example.MyService.myMethod(java.lang.String, int))
-        return method.toGenericString();
+        String local = cachedLongName;
+        if (local == null) {                      // 첫 호출
+            synchronized (this) {
+                if (cachedLongName == null) {     // 2차 확인
+                    cachedLongName = method.toGenericString();
+                }
+                local = cachedLongName;
+            }
+        }
+        return local;
     }
 
     @Override
@@ -38,11 +48,20 @@ public class MethodSignature implements Signature{
 
     @Override
     public String toString() {
-        return getReturnType().getSimpleName() + " " +
-                getDeclaringType().getSimpleName() + "." + getName() + "(" +
-                Arrays.stream(getParameterTypes())
-                        .map(Class::getSimpleName)
-                        .collect(Collectors.joining(", ")) +
-                ")";
+        String local = cachedToString;
+        if (local != null) return local;
+
+        synchronized (this) {
+            if (cachedToString == null) {
+                cachedToString =
+                        getReturnType().getSimpleName() + " " +
+                                getDeclaringType().getSimpleName() + "." + getName() + "(" +
+                                Arrays.stream(getParameterTypes())
+                                        .map(Class::getSimpleName)
+                                        .collect(Collectors.joining(", ")) +
+                                ")";
+            }
+            return cachedToString;
+        }
     }
 }
