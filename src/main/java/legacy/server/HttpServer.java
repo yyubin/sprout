@@ -64,11 +64,11 @@ public class HttpServer {
 
             System.out.println("Received Request:\n" + rawRequest);
 
-            HttpResponse<?> result = (HttpResponse<?>) requestHandler.handleRequest(rawRequest.toString());
+            HttpResponse result = (HttpResponse) requestHandler.handleRequest(rawRequest.toString());
             if (result != null) {
-                String responseBody = result.getResponseCode().getCode() + " " + result.getResponseCode().getMessage() + " " + result.getBody();
+                String responseBody = result.getResponseEntity().getStatusCode().getCode() + " " + result.getResponseEntity().getStatusCode().getMessage() + " " + result.getResponseEntity().getBody();
 
-                String responseHeaders = "HTTP/1.1 " + result.getResponseCode().getCode() + " " + result.getResponseCode().getMessage() + "\r\n" +
+                String responseHeaders = "HTTP/1.1 " + result.getResponseEntity().getStatusCode().getCode() + " " + result.getResponseEntity().getStatusCode().getMessage() + "\r\n" +
                         "Content-Type: application/json\r\n" +
                         "Content-Length: " + responseBody.getBytes(StandardCharsets.UTF_8).length + "\r\n" +
                         "\r\n";

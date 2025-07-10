@@ -1,55 +1,25 @@
 package sprout.mvc.http;
 
+import java.util.HashMap;
+import java.util.Map;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import legacy.config.Container;
-import legacy.http.request.ObjectMapperConfig;
+public class HttpResponse {
+    private ResponseEntity<?> responseEntity;
+    private final Map<String, String> headers = new HashMap<>();
 
-public class HttpResponse<T> {
-
-    private ObjectMapper objectMapper = new ObjectMapper();
-    private String description;
-    private ResponseCode responseCode;
-    private String body;
-
-    public HttpResponse(String description, ResponseCode responseCode, T body) throws JsonProcessingException {
-        this.description = description;
-        this.responseCode = responseCode;
-        this.body = objectMapper.writeValueAsString(body);
+    public void setResponseEntity(ResponseEntity<?> responseEntity) {
+        this.responseEntity = responseEntity;
     }
 
-    public String getDescription() {
-        return description;
+    public ResponseEntity<?> getResponseEntity() {
+        return responseEntity;
     }
 
-    public ResponseCode getResponseCode() {
-        return responseCode;
+    public void addHeader(String key, String value) {
+        this.headers.put(key, value);
     }
 
-    public String getBody() {
-        return body;
+    public Map<String, String> getHeaders() {
+        return headers;
     }
-
-    @Override
-    public String toString() {
-        return "HttpResponse{" +
-                "description='" + description + '\'' +
-                ", responseCode=" + responseCode +
-                ", body='" + body + '\'' +
-                '}';
-    }
-
-    public static <T> HttpResponse<String> ok(T payload) throws JsonProcessingException {
-        return new HttpResponse<>("OK", ResponseCode.SUCCESS, payload.toString());
-    }
-
-    public static HttpResponse<String> badRequest(String message) throws JsonProcessingException {
-        return new HttpResponse<>("Bad Request", ResponseCode.BAD_REQUEST, ResponseCode.BAD_REQUEST.getMessage());
-    }
-
-    public static HttpResponse<String> serverError(String message) throws JsonProcessingException {
-        return new HttpResponse<>("Server Error", ResponseCode.INTERNAL_SERVER_ERROR, ResponseCode.INTERNAL_SERVER_ERROR.getMessage());
-    }
-
 }
