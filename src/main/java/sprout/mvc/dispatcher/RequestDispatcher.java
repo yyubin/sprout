@@ -46,11 +46,11 @@ public class RequestDispatcher {
     private void doDispatch(HttpRequest<?> req, HttpResponse res) {
         HandlerMethod hm = null;
         Exception dispatchException = null;
+        InterceptorChain interceptorChain = new InterceptorChain(interceptors);
         try {
             hm = mapping.findHandler(req.getPath(), req.getMethod());
             if (hm == null) throw new BadRequestException();
 
-            InterceptorChain interceptorChain = new InterceptorChain(interceptors);
             if (!interceptorChain.applyPreHandle(req, res, hm)) {
                 return;
             }
@@ -70,7 +70,6 @@ public class RequestDispatcher {
             dispatchException = e;
         } finally {
             if (hm != null) {
-                InterceptorChain interceptorChain = new InterceptorChain(interceptors);
                 interceptorChain.applyAfterCompletion(req, res, hm, dispatchException);
             }
         }
