@@ -49,6 +49,9 @@ dependencies {
 
     implementation("org.objenesis:objenesis:3.3")
 
+    implementation 'com.zaxxer:HikariCP:5.1.0'
+    runtimeOnly 'mysql:mysql-connector-java:8.0.33'
+
 
 
 }

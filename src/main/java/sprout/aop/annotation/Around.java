@@ -1,7 +1,5 @@
 package sprout.aop.annotation;
 
-import test.aop.Auth;
-
 import java.lang.annotation.*;
 
 @Target({ElementType.METHOD, ElementType.TYPE})

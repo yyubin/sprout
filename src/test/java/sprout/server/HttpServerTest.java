@@ -7,18 +7,15 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import sprout.mvc.dispatcher.RequestDispatcher;
+import sprout.mvc.http.parser.HttpRequestParser;
 
-import java.lang.reflect.Field;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
 
 class HttpServerTest {
 
@@ -30,6 +27,9 @@ class HttpServerTest {
     @Mock
     private ThreadService mockThreadService;
 
+    @Mock
+    private HttpRequestParser mockRequestParser;
+
     private ExecutorService testPool;
 
     private int testPort;
@@ -37,7 +37,10 @@ class HttpServerTest {
 
     private void startServer(int port) {
         serverThread = new Thread(() -> {
-            try { httpServer.start(port); } catch (Exception ignored) {}
+            try {
+                httpServer.start(port);
+            } catch (Exception ignored) {
+            }
         });
         serverThread.start();
     }
@@ -47,10 +50,7 @@ class HttpServerTest {
         MockitoAnnotations.openMocks(this);
         testPool = Executors.newFixedThreadPool(1);
 
-        httpServer = new HttpServer(mockThreadService, mockDispatcher);
-        Field poolField = HttpServer.class.getDeclaredField("pool");
-        poolField.setAccessible(true);
-        poolField.set(httpServer, testPool);
+        httpServer = new HttpServer(mockThreadService, mockDispatcher, mockRequestParser);
 
         try (ServerSocket s = new ServerSocket(0)) {
             testPort = s.getLocalPort();
@@ -59,18 +59,16 @@ class HttpServerTest {
 
     @AfterEach
     void tearDown() throws Exception {
-        // 서버 스레드를 안전하게 종료하기 위해 인터럽트 시도
         if (serverThread != null && serverThread.isAlive()) {
             serverThread.interrupt();
-            serverThread.join(2000); // 스레드가 종료될 때까지 최대 2초 대기
+            serverThread.join(2000);
         }
 
         if (testPool != null) {
-            testPool.shutdownNow(); // 스레드 풀 강제 종료
+            testPool.shutdownNow();
             testPool.awaitTermination(1, TimeUnit.SECONDS);
         }
 
-        // 간혹 포트가 바로 해제되지 않아 다음 테스트에 영향을 줄 수 있으므로 잠시 대기
         TimeUnit.MILLISECONDS.sleep(100);
     }
 
@@ -89,28 +87,20 @@ class HttpServerTest {
             client.getOutputStream().write(httpRequest.getBytes());
             client.getOutputStream().flush();
         }
-//        verify(mockDispatcher,
-//                timeout(1000).atLeastOnce())   // 1초 내에 최소 1회
-//                .dispatch(anyString());
     }
 
     @Test
     @DisplayName("이미 사용 중인 포트면 BindException")
     void start_portAlreadyInUse_throwsBindException() throws Exception {
 
-        /* 새 임시 포트 확보 */
         int busyPort;
         try (ServerSocket probe = new ServerSocket(0)) {
             busyPort = probe.getLocalPort();
         }
 
-        /* 그 포트를 우리가 먼저 점유 */
         try (ServerSocket conflict = new ServerSocket(busyPort)) {
 
-            HttpServer another = new HttpServer(mockThreadService, mockDispatcher);
-            Field poolField = HttpServer.class.getDeclaredField("pool");
-            poolField.setAccessible(true);
-            poolField.set(another, Executors.newSingleThreadExecutor());
+            HttpServer another = new HttpServer(mockThreadService, mockDispatcher, mockRequestParser);
 
             assertThrows(java.net.BindException.class,
                     () -> another.start(busyPort));
