@@ -1,5 +1,6 @@
 package sprout.security.authentication;
 
+import sprout.beans.InfrastructureBean;
 import sprout.beans.annotation.Component;
 import sprout.security.authentication.exception.*;
 import sprout.security.core.Authentication;
@@ -9,7 +10,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class ProviderManager implements AuthenticationManager{
+public class ProviderManager implements AuthenticationManager, InfrastructureBean {
     private final AuthenticationEventPublisher eventPublisher;
     private final List<AuthenticationProvider> providers;
     private final AuthenticationManager parent;

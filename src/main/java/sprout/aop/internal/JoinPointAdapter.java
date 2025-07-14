@@ -4,6 +4,8 @@ import sprout.aop.JoinPoint;
 import sprout.aop.MethodInvocation;
 import sprout.aop.Signature;
 
+import java.lang.reflect.Method;
+
 public class JoinPointAdapter implements JoinPoint {
 
     private final MethodInvocation invocation;
@@ -20,4 +22,7 @@ public class JoinPointAdapter implements JoinPoint {
 
     @Override
     public Object getTarget()         { return invocation.getTarget(); }
+
+    @Override
+    public Method getMethod()          { return invocation.getMethod(); }
 }

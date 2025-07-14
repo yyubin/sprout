@@ -1,5 +1,6 @@
 package sprout.security.authentication;
 
+import sprout.beans.InfrastructureBean;
 import sprout.security.authentication.exception.AccountExpiredException;
 import sprout.security.authentication.exception.BadCredentialsException;
 import sprout.security.authentication.exception.CredentialExpiredException;
@@ -11,7 +12,7 @@ import sprout.security.core.UserDetailsService;
 
 import javax.naming.AuthenticationException;
 
-public class DaoAuthenticationProvider implements AuthenticationProvider{
+public class DaoAuthenticationProvider implements AuthenticationProvider, InfrastructureBean {
 
     private final UserDetailsService userDetailsService;
     private final PasswordEncoder passwordEncoder;

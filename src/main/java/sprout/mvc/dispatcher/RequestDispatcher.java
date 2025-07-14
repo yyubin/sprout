@@ -13,6 +13,7 @@ import sprout.mvc.invoke.HandlerMethod;
 import sprout.mvc.invoke.HandlerMethodInvoker;
 import sprout.mvc.mapping.HandlerMapping;
 import app.exception.BadRequestException;
+import sprout.security.context.SecurityContextHolder;
 
 import java.io.IOException;
 import java.util.List;
@@ -40,7 +41,13 @@ public class RequestDispatcher {
     }
 
     public void dispatch(HttpRequest<?> req, HttpResponse res) throws IOException {
-        new FilterChain(filters, this::doDispatch).doFilter(req, res);
+        SecurityContextHolder.createEmptyContext();
+        try {
+            new FilterChain(filters, this::doDispatch).doFilter(req, res);
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+
     }
 
     private void doDispatch(HttpRequest<?> req, HttpResponse res) {

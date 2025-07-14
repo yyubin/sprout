@@ -46,7 +46,7 @@ public class SecurityAutoConfigurationRegistrar implements InfrastructureBean, B
             }
 
             if (existingDefs.stream().noneMatch(def -> UserDetailsService.class.isAssignableFrom(def.getType()))) {
-                Constructor<?> constructor = DefaultUserDetailsService.class.getConstructor(AppConfig.class);
+                Constructor<?> constructor = DefaultUserDetailsService.class.getConstructor(AppConfig.class, PasswordEncoder.class);
                 Class<?>[] constructorArgumentsTypes = constructor.getParameterTypes();
                 additionalDefs.add(new ConstructorBeanDefinition("userDetailsService", DefaultUserDetailsService.class, constructor, constructorArgumentsTypes));
             }

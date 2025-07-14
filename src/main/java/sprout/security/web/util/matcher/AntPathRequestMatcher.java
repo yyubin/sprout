@@ -1,5 +1,6 @@
 package sprout.security.web.util.matcher;
 
+import sprout.beans.InfrastructureBean;
 import sprout.mvc.http.HttpMethod;
 import sprout.mvc.http.HttpRequest;
 import sprout.mvc.mapping.PathPattern;
@@ -7,7 +8,7 @@ import sprout.mvc.mapping.PathPattern;
 import java.util.Map;
 import java.util.Objects;
 
-public class AntPathRequestMatcher implements RequestMatcher{
+public class AntPathRequestMatcher implements RequestMatcher, InfrastructureBean {
     private final String pattern;
     private final HttpMethod httpMethod;
     private final boolean caseSensitive;

@@ -1,5 +1,6 @@
 package sprout.security.authentication;
 
+import sprout.beans.InfrastructureBean;
 import sprout.config.AppConfig;
 import sprout.security.authentication.exception.UsernameNotFoundException;
 import sprout.security.authentication.password.BCryptPasswordEncoder;
@@ -8,7 +9,7 @@ import sprout.security.core.*;
 
 import java.util.List;
 
-public class DefaultUserDetailsService implements UserDetailsService {
+public class DefaultUserDetailsService implements UserDetailsService, InfrastructureBean {
 
     private final AppConfig appConfig;
     private final PasswordEncoder passwordEncoder;
