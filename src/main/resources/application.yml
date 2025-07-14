@@ -5,6 +5,5 @@ server:
 sprout:
   database:
     url: jdbc:mysql://localhost:3306/sprout
-    driver: com.mysql.cj.jdbc.Driver
-    username: sprout
+    username: root
     password: tygh8868!

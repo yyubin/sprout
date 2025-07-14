@@ -8,6 +8,7 @@ public enum ResponseCode {
     BAD_REQUEST(400, ResponseMessage.BAD_REQUEST),
     UNAUTHORIZED(401, ResponseMessage.UNAUTHORIZED),
     FORBIDDEN(403, ResponseMessage.FORBIDDEN),
+    METHOD_NOT_ALLOWED(405, ResponseMessage.BAD_REQUEST),
     INTERNAL_SERVER_ERROR(500, ResponseMessage.INTERNAL_SERVER_ERROR);
 
     private final int code;

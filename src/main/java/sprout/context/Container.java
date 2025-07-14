@@ -9,9 +9,11 @@ import sprout.aop.AspectPostProcessor;
 import sprout.aop.annotation.Aspect;
 import sprout.beans.BeanCreationMethod;
 import sprout.beans.BeanDefinition;
+import sprout.beans.ConstructorBeanDefinition;
 import sprout.beans.InfrastructureBean;
 import sprout.beans.annotation.*;
 import sprout.beans.internal.BeanGraph;
+import sprout.beans.processor.BeanDefinitionRegistrar;
 import sprout.beans.processor.BeanPostProcessor;
 import sprout.scan.ClassPathScanner;
 
@@ -60,7 +62,7 @@ public class Container {
         beanPostProcessors = null;
     }
 
-    public void bootstrap(List<String> basePackages) {
+    public void bootstrap(List<String> basePackages) throws NoSuchMethodException {
         ConfigurationBuilder configBuilder = new ConfigurationBuilder();
         for (String pkg : basePackages) {
             configBuilder.addUrls(ClasspathHelper.forPackage(pkg));
@@ -76,7 +78,6 @@ public class Container {
 
         registerSingletonInstance("container", this);
 
-
         Collection<BeanDefinition> allDefs = scanner.scan(configBuilder,
                 Component.class,
                 Controller.class,
@@ -85,6 +86,21 @@ public class Container {
                 Configuration.class,
                 Aspect.class
         );
+
+        List<BeanDefinitionRegistrar> registrars = allDefs.stream()
+                .filter(bd -> BeanDefinitionRegistrar.class.isAssignableFrom(bd.getType()))
+                .map(bd -> {
+                    try {
+                        return (BeanDefinitionRegistrar) bd.getType().getDeclaredConstructor().newInstance();
+                    } catch (Exception e) {
+                        throw new RuntimeException("Failed to instantiate BeanDefinitionRegistrar: " + bd.getType().getName(), e);
+                    }
+                })
+                .toList();
+
+        for (BeanDefinitionRegistrar registrar : registrars) {
+            allDefs.addAll(registrar.registerAdditionalBeanDefinitions(allDefs));
+        }
 
         List<BeanDefinition> infraDefs = new ArrayList<>(allDefs.stream()
                 .filter(bd -> BeanPostProcessor.class.isAssignableFrom(bd.getType()) ||
@@ -189,7 +205,12 @@ public class Container {
             if (def.getCreationMethod() == BeanCreationMethod.CONSTRUCTOR) {
                 Constructor<?> constructor = def.getConstructor();
                 methodParams = constructor.getParameters();
-                deps = resolveDependencies(def.getConstructorArgumentTypes(), methodParams, def.getType());
+
+                if (def instanceof ConstructorBeanDefinition && ((ConstructorBeanDefinition) def).getConstructorArguments() != null) {
+                    deps = ((ConstructorBeanDefinition) def).getConstructorArguments();
+                } else {
+                    deps = resolveDependencies(def.getConstructorArgumentTypes(), methodParams, def.getType());
+                }
                 if (def.isConfigurationClassProxyNeeded()) {
                     Enhancer enhancer = new Enhancer();
                     enhancer.setSuperclass(def.getType());

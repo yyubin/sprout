@@ -8,6 +8,7 @@ public class ConstructorBeanDefinition implements BeanDefinition {
     private final Class<?> type;
     private final Constructor<?> constructor;
     private final Class<?>[] constructorArgumentTypes;
+    private final Object[] constructorArguments;
     private boolean isProxyTarget = false; // AOP
     private boolean isConfigurationClassProxyNeeded = false; // @Configuration
 
@@ -16,6 +17,19 @@ public class ConstructorBeanDefinition implements BeanDefinition {
         this.type = type;
         this.constructor = constructor;
         this.constructorArgumentTypes = constructorArgumentTypes;
+        this.constructorArguments = null;
+    }
+
+    public ConstructorBeanDefinition(String name, Class<?> type, Constructor<?> constructor, Class<?>[] constructorArgumentTypes, Object[] constructorArguments) {
+        this.name = name;
+        this.type = type;
+        this.constructor = constructor;
+        this.constructorArgumentTypes = constructorArgumentTypes;
+        this.constructorArguments = constructorArguments;
+    }
+
+    public Object[] getConstructorArguments() {
+        return constructorArguments;
     }
 
     @Override public String getName() { return name; }

@@ -1,6 +1,7 @@
 package sprout.config;
 
 import org.yaml.snakeyaml.Yaml;
+import sprout.beans.InfrastructureBean;
 import sprout.beans.annotation.Component;
 
 import java.io.InputStream;
@@ -8,7 +9,7 @@ import java.util.Collections;
 import java.util.Map;
 
 @Component
-public class AppConfig {
+public class AppConfig implements InfrastructureBean {
 
     private final Map<String, Object> properties;
 
