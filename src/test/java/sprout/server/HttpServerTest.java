@@ -22,6 +22,9 @@ class HttpServerTest {
     private HttpServer httpServer;
 
     @Mock
+    private ServerStrategy mockServerStrategy;
+
+    @Mock
     private RequestDispatcher mockDispatcher;
 
     @Mock
@@ -50,7 +53,7 @@ class HttpServerTest {
         MockitoAnnotations.openMocks(this);
         testPool = Executors.newFixedThreadPool(1);
 
-        httpServer = new HttpServer(mockThreadService, mockDispatcher, mockRequestParser);
+        httpServer = new HttpServer(mockServerStrategy);
 
         try (ServerSocket s = new ServerSocket(0)) {
             testPort = s.getLocalPort();
@@ -100,7 +103,7 @@ class HttpServerTest {
 
         try (ServerSocket conflict = new ServerSocket(busyPort)) {
 
-            HttpServer another = new HttpServer(mockThreadService, mockDispatcher, mockRequestParser);
+            HttpServer another = new HttpServer(mockServerStrategy);
 
             assertThrows(java.net.BindException.class,
                     () -> another.start(busyPort));
