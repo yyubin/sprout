@@ -2,6 +2,7 @@ package sprout.boot;
 
 import sprout.beans.annotation.ComponentScan;
 import sprout.context.Container;
+import sprout.mvc.advice.ControllerAdviceRegistry;
 import sprout.mvc.mapping.HandlerMethodScanner;
 import sprout.server.HttpServer;
 
@@ -19,6 +20,9 @@ public final class SproutApplication {
 
         HandlerMethodScanner handlerMethodScanner = ctx.get(HandlerMethodScanner.class);
         handlerMethodScanner.scanControllers();
+
+        ControllerAdviceRegistry controllerAdviceRegistry = ctx.get(ControllerAdviceRegistry.class);
+        controllerAdviceRegistry.scanControllerAdvices();
 
         HttpServer server = ctx.get(HttpServer.class);
         server.start(8080);

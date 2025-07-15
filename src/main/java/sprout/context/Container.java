@@ -15,6 +15,7 @@ import sprout.beans.annotation.*;
 import sprout.beans.internal.BeanGraph;
 import sprout.beans.processor.BeanDefinitionRegistrar;
 import sprout.beans.processor.BeanPostProcessor;
+import sprout.mvc.advice.annotation.ControllerAdvice;
 import sprout.scan.ClassPathScanner;
 
 import java.lang.reflect.Constructor;
@@ -84,7 +85,8 @@ public class Container {
                 Service.class,
                 Repository.class,
                 Configuration.class,
-                Aspect.class
+                Aspect.class,
+                ControllerAdvice.class
         );
 
         List<BeanDefinitionRegistrar> registrars = allDefs.stream()
