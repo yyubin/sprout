@@ -7,6 +7,7 @@ import sprout.core.interceptor.Interceptor;
 import sprout.core.interceptor.InterceptorChain;
 import sprout.mvc.advice.ControllerAdviceRegistry;
 import sprout.mvc.advice.ExceptionHandlerObject;
+import sprout.mvc.advice.ResponseAdvice;
 import sprout.mvc.exception.ExceptionResolver;
 import sprout.mvc.http.*;
 import sprout.mvc.invoke.HandlerMethod;
@@ -27,6 +28,7 @@ public class RequestDispatcher {
     private final HandlerMapping mapping;
     private final HandlerMethodInvoker invoker;
     private final List<ResponseResolver> responseResolvers;
+    private final List<ResponseAdvice> responseAdvices;
     private final List<Filter> filters;
     private final List<Interceptor> interceptors;
     private final List<ExceptionResolver> exceptionResolvers;
@@ -34,6 +36,7 @@ public class RequestDispatcher {
     public RequestDispatcher(HandlerMapping mapping,
                              HandlerMethodInvoker invoker,
                              List<ResponseResolver> responseResolvers,
+                             List<ResponseAdvice> responseAdvices,
                              List<Filter> filters,
                              List<Interceptor> interceptors,
                              List<ExceptionResolver> exceptionResolvers
@@ -41,6 +44,7 @@ public class RequestDispatcher {
         this.mapping = mapping;
         this.invoker = invoker;
         this.responseResolvers = responseResolvers;
+        this.responseAdvices = responseAdvices;
         this.filters = filters;
         this.interceptors = interceptors;
         this.exceptionResolvers = exceptionResolvers;
@@ -100,14 +104,29 @@ public class RequestDispatcher {
     }
 
     private void setResponseResolvers(Object returnValue, HttpRequest<?> req, HttpResponse res) {
+        if (res.isCommitted()) return; // 이미 응답 설정된 경우 무시
+
+        Object processed = applyResponseAdvices(returnValue, req);
+
         for (ResponseResolver resolver : responseResolvers) {
-            if (resolver.supports(returnValue)) {
-                ResponseEntity<?> responseEntity = resolver.resolve(returnValue, req);
+            if (resolver.supports(processed)) {
+                ResponseEntity<?> responseEntity = resolver.resolve(processed, req);
                 res.setResponseEntity(responseEntity);
                 return;
             }
         }
-        throw new IllegalStateException("No suitable ResponseResolver found for return value: " + returnValue);
+
+        throw new IllegalStateException("No suitable ResponseResolver found for return value: " + processed);
+    }
+
+    private Object applyResponseAdvices(Object returnValue, HttpRequest<?> req) {
+        Object current = returnValue;
+        for (ResponseAdvice advice : responseAdvices) {
+            if (advice.supports(current, req)) {
+                current = advice.beforeBodyWrite(current, req);
+            }
+        }
+        return current;
     }
 
 }

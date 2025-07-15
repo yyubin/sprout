@@ -1,11 +1,13 @@
 package sprout.mvc.http.resolvers;
 
 import sprout.beans.annotation.Component;
+import sprout.beans.annotation.Order;
 import sprout.mvc.http.HttpRequest;
 import sprout.mvc.http.ResponseEntity;
 import sprout.mvc.http.ResponseResolver;
 
 @Component
+@Order(3)
 public class ObjectBodyResponseResolver implements ResponseResolver {
     @Override
     public boolean supports(Object returnValue) {

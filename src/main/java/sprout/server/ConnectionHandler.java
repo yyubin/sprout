@@ -9,6 +9,7 @@ import sprout.mvc.http.parser.HttpRequestParser;
 import java.io.*;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 public class ConnectionHandler implements Runnable {
     private final Socket socket;
@@ -63,11 +64,22 @@ public class ConnectionHandler implements Runnable {
     }
 
     private void writeResponse(BufferedWriter out, ResponseEntity<?> res) throws IOException {
-        if (res == null) return; // Or handle as an error
-        String body = (String) res.getBody();
+        if (res == null) return;
+
+        String body = res.getBody() != null ? res.getBody().toString() : "";
         out.write("HTTP/1.1 " + res.getStatusCode().getCode() + " " + res.getStatusCode().getMessage() + "\r\n");
-        out.write("Content-Type: application/json\r\n");
+
+        // Content-Type
+        out.write("Content-Type: " + res.getContentType() + "\r\n");
+
+        // Content-Length
         out.write("Content-Length: " + body.getBytes(StandardCharsets.UTF_8).length + "\r\n");
+
+        // Custom headers
+        for (Map.Entry<String, String> header : res.getHeaders().entrySet()) {
+            out.write(header.getKey() + ": " + header.getValue() + "\r\n");
+        }
+
         out.write("\r\n");
         out.write(body);
         out.flush();

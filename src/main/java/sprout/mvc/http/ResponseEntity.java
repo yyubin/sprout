@@ -8,11 +8,30 @@ public class ResponseEntity<T>{
     private final ResponseCode statusCode;
     private final Map<String, String> headers;
     private final T body;
+    private String contentType = "application/json";
 
     public ResponseEntity(T body, Map<String, String> headers, ResponseCode statusCode) {
         this.body = body;
-        this.headers = Collections.unmodifiableMap(headers);
+        this.headers = headers;
         this.statusCode = statusCode;
+    }
+
+    public ResponseEntity(ResponseCode statusCode, T body) {
+        this.statusCode = statusCode;
+        this.body = body;
+        this.headers = Collections.emptyMap();
+    }
+
+    public String getContentType() {
+        return contentType;
+    }
+
+    public void setContentType(String contentType) {
+        this.contentType = contentType;
+    }
+
+    public void addHeader(String key, String value) {
+        headers.put(key, value);
     }
 
     public ResponseCode getStatusCode() {
