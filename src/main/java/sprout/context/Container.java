@@ -284,8 +284,16 @@ public class Container {
                 }
             }
 
+            List<Object> sortedBeansForList = uniqueBeansForList.stream()
+                    .sorted(Comparator.comparingInt(bean -> {
+                        Class<?> clazz = bean.getClass();
+                        Order order = clazz.getAnnotation(Order.class);
+                        return (order != null) ? order.value() : Integer.MAX_VALUE;
+                    }))
+                    .toList();
+
             pending.listToPopulate.clear();
-            pending.listToPopulate.addAll(uniqueBeansForList);
+            pending.listToPopulate.addAll(sortedBeansForList);
 
             System.out.println("  Populated List<" + pending.genericType.getName() + "> in a bean with " + uniqueBeansForList.size() + " elements.");
         }
