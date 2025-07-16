@@ -5,10 +5,11 @@ import sprout.mvc.http.HttpMethod;
 
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class RequestMappingRegistry {
-    private final Map<PathPattern, Map<HttpMethod, RequestMappingInfo>> mappings = new LinkedHashMap<>();
+    private final Map<PathPattern, Map<HttpMethod, RequestMappingInfo>> mappings = new ConcurrentHashMap<>();
 
     public void register(PathPattern pathPattern, HttpMethod httpMethod, Object controller, Method handlerMethod) {
         System.out.println("Registering request mapping for " + pathPattern.getOriginalPattern() + " with http method " + httpMethod);

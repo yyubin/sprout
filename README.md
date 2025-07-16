@@ -86,6 +86,52 @@ public class TestController {
 ```
 
 ---
+### 🔌 WebSocket Support (Experimental)
+
+Sprout now includes **low-level WebSocket server support**, implemented entirely over raw `Socket` I/O — no Tomcat, no Undertow, just **pure BIO** madness.
+
+| Feature | Highlights |
+| --- | --- |
+| **HTTP Upgrade → WS handshake** | Parses HTTP handshake requests manually, responds with RFC 6455-compliant upgrade headers. |
+| **`WebSocketSession` abstraction** | Track session state, send/receive messages, path/query parameter access. |
+| **Frame-level protocol** | Encodes/decodes WebSocket frames manually: opcode routing, masking, fragmentation handling planned. |
+| **Custom routing** | Messages are dispatched to `@MessageMapping` methods via `destination` field in incoming JSON. |
+| **Argument resolution** | JSON payloads auto-bound via pluggable `WebSocketArgumentResolver`s. |
+| **Session lifecycle hooks** | Supports `@OnOpen`, `@OnMessage`, `@OnClose`, `@OnError` via reflection-based `WebSocketEndpointInfo`. |
+| **Pluggable frame codecs** | Swap `WebSocketFrameParser` / `WebSocketFrameEncoder` implementations for binary/custom handling. |
+| **Thread model** | Session message loops respect configured thread model (`platform` or `virtual`). |
+
+> Note: This implementation is BIO-based and suitable for educational purposes or light workloads.
+>
+>
+> **NIO support** is planned for [v0.5](https://www.notion.so/WebSocket-23297bb367288011a487caf25d2b7543?pvs=21).
+>
+
+**Example:**
+
+```java
+@WebSocketEndpoint("/ws/chat")
+public class ChatSocket {
+
+    @OnOpen
+    public void onOpen(WebSocketSession session) {
+        System.out.println("WebSocket opened: " + session.getId());
+    }
+
+    @MessageMapping("/chat.send")
+    public void handleMessage(WebSocketSession session, @RequestBody ChatMessage msg) {
+        System.out.println("Message from " + session.getId() + ": " + msg.getText());
+    }
+
+    @OnClose
+    public void onClose(WebSocketSession session) {
+        System.out.println("WebSocket closed: " + session.getId());
+    }
+}
+
+```
+
+---
 
 ## 🗺️ Roadmap
 | Release | Planned / Done | Notes |

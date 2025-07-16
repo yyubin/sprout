@@ -3,24 +3,37 @@ package sprout.mvc.http.parser;
 import sprout.beans.annotation.Component;
 import sprout.mvc.http.HttpRequest;
 
+import java.util.Map;
+
 @Component
 public class HttpRequestParser {
     private final RequestLineParser lineParser;
     private final QueryStringParser qsParser;
+    private final HttpHeaderParser headerParser;
 
-    public HttpRequestParser(RequestLineParser lineParser, QueryStringParser qsParser) {
+    public HttpRequestParser(RequestLineParser lineParser, QueryStringParser qsParser, HttpHeaderParser headerParser) {
         this.lineParser = lineParser;
         this.qsParser = qsParser;
+        this.headerParser = headerParser;
     }
 
     public HttpRequest<?> parse(String raw) {
         String[] parts = split(raw);
-        String headerPart = parts[0];
+        String headerAndRequestLinePart = parts[0];
         String bodyPart   = parts[1];
-        String firstLine  = headerPart.split("\r?\n",2)[0];
+        String firstLine  = headerAndRequestLinePart.split("\r?\n",2)[0];
+
         var rl    = lineParser.parse(firstLine);
         var query = qsParser.parse(rl.rawPath());
-        return new HttpRequest<>(rl.method(), rl.cleanPath(), bodyPart, query);
+
+        String rawHeadersOnly = "";
+        int firstLineEnd = headerAndRequestLinePart.indexOf("\n");
+        if (firstLineEnd != -1) {
+            rawHeadersOnly = headerAndRequestLinePart.substring(firstLineEnd + 1);
+        }
+        Map<String, String> headers = headerParser.parse(rawHeadersOnly);
+
+        return new HttpRequest<>(rl.method(), rl.cleanPath(), bodyPart, query, headers);
     }
 
     private String[] split(String raw) {

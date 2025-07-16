@@ -2,24 +2,31 @@ package sprout.mvc.http;
 
 import app.util.Session;
 
+import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 
 public class HttpRequest<T> {
 
-    private HttpMethod method;
-    private String path;
-    private T body;
-    private Map<String, String> queryParams;
-    private String sessionId;
+    private final HttpMethod method;
+    private final String path;
+    private final T body;
+    private final Map<String, String> queryParams;
+    private final Map<String, String> headers;
+    private final String sessionId;
 
-    public HttpRequest(HttpMethod method, String path, T body, Map<String, String> queryParams) {
+    public HttpRequest(HttpMethod method, String path, T body, Map<String, String> queryParams, Map<String, String> headers) {
         this.method = method;
         this.path = path;
         this.body = body;
-        this.queryParams = queryParams;
+        this.queryParams = Collections.unmodifiableMap(Objects.requireNonNull(queryParams, "Query parameters cannot be null"));;
+        this.headers = Collections.unmodifiableMap(Objects.requireNonNull(headers, "Headers cannot be null"));;
         this.sessionId = Session.getSessionId();
     }
 
+    public Map<String, String> getHeaders() {
+        return headers;
+    }
 
     public HttpMethod getMethod() {
         return method;

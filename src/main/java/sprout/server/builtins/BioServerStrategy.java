@@ -1,14 +1,17 @@
-package sprout.server;
+package sprout.server.builtins;
 
 import sprout.beans.annotation.Component;
 import sprout.mvc.dispatcher.RequestDispatcher;
 import sprout.mvc.http.parser.HttpRequestParser;
+import sprout.server.ConnectionHandler;
+import sprout.server.ServerStrategy;
+import sprout.server.ThreadService;
 
 import java.net.ServerSocket;
 import java.net.Socket;
 
 @Component
-public class BioServerStrategy implements ServerStrategy{
+public class BioServerStrategy implements ServerStrategy {
 
     private final ThreadService threadService;
     private final RequestDispatcher dispatcher;

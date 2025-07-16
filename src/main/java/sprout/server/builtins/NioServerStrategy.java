@@ -1,4 +1,4 @@
-package sprout.server;
+package sprout.server.builtins;
 
 public class NioServerStrategy {
 }

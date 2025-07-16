@@ -17,6 +17,7 @@ import sprout.beans.processor.BeanDefinitionRegistrar;
 import sprout.beans.processor.BeanPostProcessor;
 import sprout.mvc.advice.annotation.ControllerAdvice;
 import sprout.scan.ClassPathScanner;
+import sprout.server.websocket.annotation.WebSocketHandler;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -86,7 +87,8 @@ public class Container {
                 Repository.class,
                 Configuration.class,
                 Aspect.class,
-                ControllerAdvice.class
+                ControllerAdvice.class,
+                WebSocketHandler.class
         );
 
         List<BeanDefinitionRegistrar> registrars = allDefs.stream()

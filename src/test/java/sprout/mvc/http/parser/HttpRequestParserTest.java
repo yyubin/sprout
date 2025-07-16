@@ -30,12 +30,15 @@ class HttpRequestParserTest {
     @Mock
     private QueryStringParser mockQueryStringParser;
 
+    @Mock
+    private HttpHeaderParser mockHeaderParser;
+
     @BeforeEach
     void setUp() {
         // Mockito 목 객체 초기화
         MockitoAnnotations.openMocks(this);
         // 테스트할 HttpRequestParser 인스턴스 생성, Mock 객체 주입
-        httpRequestParser = new HttpRequestParser(mockRequestLineParser, mockQueryStringParser);
+        httpRequestParser = new HttpRequestParser(mockRequestLineParser, mockQueryStringParser, mockHeaderParser);
     }
 
     @Test
