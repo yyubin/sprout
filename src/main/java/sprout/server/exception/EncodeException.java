@@ -1,5 +1,7 @@
 package sprout.server.exception;
 
+import sprout.server.websocket.exception.WebSocketException;
+
 public class EncodeException extends WebSocketException {
     public EncodeException(String message) {
         super(message);

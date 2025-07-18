@@ -7,6 +7,7 @@ import sprout.server.ProtocolHandler;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.Socket;
 import java.util.List;
 import java.util.Objects;
@@ -24,7 +25,8 @@ public class DefaultConnectionManager implements ConnectionManager {
 
     @Override
     public void handleConnection(Socket socket) throws Exception {
-        BufferedInputStream bufferedIn = new BufferedInputStream(socket.getInputStream());
+        InputStream originalInputStream = socket.getInputStream();
+        BufferedInputStream bufferedIn = new BufferedInputStream(originalInputStream);
         String detectedProtocol = "UNKNOWN";
 
         for (ProtocolDetector detector : detectors) {
@@ -45,13 +47,19 @@ public class DefaultConnectionManager implements ConnectionManager {
             return;
         }
 
+        boolean handlerFound = false;
         for (ProtocolHandler handler : handlers) {
             if (handler.supports(detectedProtocol)) {
                 System.out.println("Handling connection with " + handler.getClass().getSimpleName() + " for protocol " + detectedProtocol);
-                handler.handle(socket); // 위임
-                return;
+                handler.handle(socket);
+                handlerFound = true;
+                break;
             }
         }
 
+        if (!handlerFound) {
+            System.err.println("No handler found for protocol: " + detectedProtocol + ". Closing socket: " + socket);
+            socket.close();
+        }
     }
 }

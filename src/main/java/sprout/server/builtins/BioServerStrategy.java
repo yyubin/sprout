@@ -4,9 +4,11 @@ import sprout.beans.annotation.Component;
 import sprout.mvc.dispatcher.RequestDispatcher;
 import sprout.mvc.http.parser.HttpRequestParser;
 import sprout.server.ConnectionHandler;
+import sprout.server.ConnectionManager;
 import sprout.server.ServerStrategy;
 import sprout.server.ThreadService;
 
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -14,14 +16,12 @@ import java.net.Socket;
 public class BioServerStrategy implements ServerStrategy {
 
     private final ThreadService threadService;
-    private final RequestDispatcher dispatcher;
-    private final HttpRequestParser parser;
+    private final ConnectionManager connectionManager;
     private volatile boolean running = true;
 
-    public BioServerStrategy(ThreadService threadService, RequestDispatcher dispatcher, HttpRequestParser parser) {
+    public BioServerStrategy(ThreadService threadService, ConnectionManager connectionManager) {
         this.threadService = threadService;
-        this.dispatcher = dispatcher;
-        this.parser = parser;
+        this.connectionManager = connectionManager;
     }
 
     @Override
@@ -29,7 +29,17 @@ public class BioServerStrategy implements ServerStrategy {
         try (ServerSocket server = new ServerSocket(port)) {
             while (running) {
                 Socket socket = server.accept();
-                threadService.execute(new ConnectionHandler(socket, dispatcher, parser));
+                threadService.execute(() -> {
+                    try {
+                        connectionManager.handleConnection(socket);
+                    } catch (Exception e) {
+                        System.err.println("Error handling connection: " + e.getMessage());
+                        e.printStackTrace();
+                        try {
+                            if (!socket.isClosed()) socket.close();
+                        } catch (IOException ex) { /* ignore */ }
+                    }
+                });
             }
         }
     }

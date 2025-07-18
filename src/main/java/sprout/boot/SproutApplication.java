@@ -5,6 +5,7 @@ import sprout.context.Container;
 import sprout.mvc.advice.ControllerAdviceRegistry;
 import sprout.mvc.mapping.HandlerMethodScanner;
 import sprout.server.HttpServer;
+import sprout.server.websocket.endpoint.WebSocketHandlerScanner;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,6 +24,9 @@ public final class SproutApplication {
 
         ControllerAdviceRegistry controllerAdviceRegistry = ctx.get(ControllerAdviceRegistry.class);
         controllerAdviceRegistry.scanControllerAdvices();
+
+        WebSocketHandlerScanner webSocketHandlerScanner = ctx.get(WebSocketHandlerScanner.class);
+        webSocketHandlerScanner.scanWebSocketHandlers();
 
         HttpServer server = ctx.get(HttpServer.class);
         server.start(8080);

@@ -2,16 +2,17 @@ package sprout.server.websocket;
 
 import sprout.mvc.http.HttpRequest;
 import sprout.server.argument.WebSocketArgumentResolver;
+import sprout.server.websocket.exception.WebSocketException;
 import sprout.server.websocket.endpoint.WebSocketEndpointInfo;
-import sprout.server.websocket.message.WebSocketMessageParser;
+import sprout.server.websocket.exception.WebSocketProtocolException;
+import sprout.server.websocket.message.*;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -27,13 +28,15 @@ public class DefaultWebSocketSession implements WebSocketSession{
     private final WebSocketFrameParser frameParser;
     private final WebSocketFrameEncoder frameEncoder;
     private final List<WebSocketArgumentResolver> argumentResolvers;
-    private final WebSocketMessageParser messageParser;
+    private final List<WebSocketMessageDispatcher> messageDispatchers;
     private final InputStream in;
     private final OutputStream out;
     private volatile boolean open = true;
     private final Map<String, Object> userProperties = new ConcurrentHashMap<>();
+    private StringBuilder fragmentedTextMessageBuffer = new StringBuilder();
+    private ByteArrayOutputStream fragmentedBinaryMessageBuffer = new ByteArrayOutputStream();
 
-    public DefaultWebSocketSession(String id, Socket socket, HttpRequest<?> handshakeRequest, WebSocketEndpointInfo endpointInfo, WebSocketFrameParser frameParser, WebSocketFrameEncoder frameEncoder, Map<String, String> pathParameters, List<WebSocketArgumentResolver> webSocketArgumentResolvers, WebSocketMessageParser webSocketMessageParser) throws IOException {
+    public DefaultWebSocketSession(String id, Socket socket, HttpRequest<?> handshakeRequest, WebSocketEndpointInfo endpointInfo, WebSocketFrameParser frameParser, WebSocketFrameEncoder frameEncoder, Map<String, String> pathParameters, List<WebSocketArgumentResolver> webSocketArgumentResolvers, List<WebSocketMessageDispatcher> messageDispatchers) throws IOException {
         this.id = id;
         this.socket = socket;
         this.handshakeRequest = handshakeRequest;
@@ -44,7 +47,7 @@ public class DefaultWebSocketSession implements WebSocketSession{
         this.out = socket.getOutputStream();
         this.pathParameters = pathParameters;
         this.argumentResolvers = webSocketArgumentResolvers;
-        this.messageParser = webSocketMessageParser;
+        this.messageDispatchers = messageDispatchers;
     }
 
     @Override
@@ -55,6 +58,11 @@ public class DefaultWebSocketSession implements WebSocketSession{
             open = false;
             socket.close();
         }
+    }
+
+    @Override
+    public HttpRequest<?> getHandshakeRequest() {
+        return handshakeRequest;
     }
 
     @Override
@@ -72,14 +80,16 @@ public class DefaultWebSocketSession implements WebSocketSession{
 
     @Override
     public void sendPing(byte[] data) throws IOException {
-        // TODO: frameEncoder.encodePing(data) 구현 후 사용
-        throw new UnsupportedOperationException("Ping frame encoding not yet implemented.");
+        byte[] frame = frameEncoder.encodeControlFrame(0x9, data);
+        out.write(frame);
+        out.flush();
     }
 
     @Override
     public void sendPong(byte[] data) throws IOException {
-        // TODO: frameEncoder.encodePong(data) 구현 후 사용
-        throw new UnsupportedOperationException("Pong frame encoding not yet implemented.");
+        byte[] frame = frameEncoder.encodeControlFrame(0xA, data);
+        out.write(frame);
+        out.flush();
     }
 
     @Override
@@ -99,91 +109,264 @@ public class DefaultWebSocketSession implements WebSocketSession{
 
     @Override
     public void startMessageLoop() throws Exception {
-        while (isOpen()) {
+        Thread messageThread = new Thread(() -> {
             try {
-                WebSocketFrame frame = frameParser.parse(in); // InputStream에서 프레임 파싱
+                while (isOpen()) {
+                    WebSocketFrame frame = frameParser.parse(in); // 이 부분에서 블로킹 발생 가능
+                    if (WebSocketFrameDecoder.isCloseFrame(frame)) {
+                        System.out.println("Received Close frame from client " + id);
+                        callOnCloseMethod(CloseCodes.getCloseCode(1000)); // @OnClose 호출
+                        break; // 루프 종료
+                    } else if (WebSocketFrameDecoder.isPingFrame(frame)) {
+                        System.out.println("Received Ping frame from client " + id);
+                        sendPong(frame.getPayloadBytes());
+                    } else if (WebSocketFrameDecoder.isPongFrame(frame)) {
+                        System.out.println("Received Pong frame from client " + id);
+                        // Pong 수신 처리 (주로 Keep-alive 확인용, 별도 로직 불필요)
+                    } else if (WebSocketFrameDecoder.isDataFrame(frame)) {
+                        // 텍스트 또는 바이너리 데이터 프레임 처리
+                        dispatchMessage(frame);
+                    } else {
+                        System.err.println("Unknown or unsupported WebSocket opcode: " + frame.getOpcode());
+                        // 프로토콜 오류 처리 (연결 종료)
+                        callOnErrorMethod(new WebSocketException("Unknown WebSocket opcode: " + frame.getOpcode()));
+                        break; // 루프 종료
+                    }
 
-                if (WebSocketFrameDecoder.isCloseFrame(frame)) {
-                    System.out.println("Received Close frame from client " + id);
-                    // 클라이언트가 보낸 Close 프레임 처리 (Pong으로 응답 후 종료)
-                    // TODO: CloseCode 및 reason 파싱 후 @OnClose 호출
-                    close(); // 세션 종료
-                    break;
-                } else if (WebSocketFrameDecoder.isPingFrame(frame)) {
-                    System.out.println("Received Ping frame from client " + id);
-                    sendPong(frame.getPayload()); // Ping에 Pong으로 응답
-                } else if (WebSocketFrameDecoder.isPongFrame(frame)) {
-                    System.out.println("Received Pong frame from client " + id);
-                    // Pong 수신 처리 (주로 Keep-alive 확인용)
-                } else if (WebSocketFrameDecoder.isDataFrame(frame)) {
-                    // 텍스트 또는 바이너리 데이터 프레임 처리
-                    // TODO: Fragmented messages (FIN=false) 처리 로직 추가 (현재는 단일 FIN=true 프레임만 가정)
-                    dispatchMessage(frame);
-                } else {
-                    System.err.println("Unknown or unsupported WebSocket opcode: " + frame.getOpcode());
-                    // TODO: 프로토콜 오류 처리 (연결 종료)
-                    close();
-                    break;
+                    // TODO: NIO로 전환 시 Thread.sleep(100) 제거
+                    Thread.sleep(100); // BIO 환경에서 CPU 과부하 방지 (지속적인 I/O가 없을 때 과도한 CPU 사용 방지)
                 }
             } catch (IOException e) {
-                if (isOpen()) { // 세션이 아직 열려있는데 IOException 발생 시 (클라이언트 연결 끊김)
+                if (isOpen()) { // 세션이 아직 열려있는데 IOException 발생 시
                     System.err.println("I/O error in WebSocket session " + id + ": " + e.getMessage());
-                    throw e; // 상위로 예외 전파하여 @OnError 호출되도록
+                    try {
+                        callOnErrorMethod(e); // @OnError 호출
+                    } catch (Exception ex) {
+                        throw new RuntimeException(ex);
+                    }
                 }
-                break; // 세션이 이미 닫혔다면 루프 종료
-            } catch (Exception e) { // 프레임 파싱 오류 등
-                System.err.println("Error parsing WebSocket frame for session " + id + ": " + e.getMessage());
-                throw e; // 상위로 예외 전파하여 @OnError 호출되도록
+            } catch (Exception e) {
+                System.err.println("Error in WebSocket session " + id + " message loop: " + e.getMessage());
+                e.printStackTrace(); // 스택 트레이스 출력 (디버깅용)
+                try {
+                    callOnErrorMethod(e); // @OnError 호출
+                } catch (Exception ex) {
+                    throw new RuntimeException(ex);
+                }
+            } finally {
+                // 루프 종료 시 (정상 종료든 오류든) 소켓 닫기
+                try {
+                    // TODO: @OnClose 호출 시 클라이언트로부터 받은 CloseCode/reason 전달 (선택 사항)
+                    // 지금은 DefaultWebSocketSession.close()가 인자 없이 클로즈 프레임만 보내므로,
+                    // 여기서는 DefaultWebSocketSession.close()를 직접 호출합니다.
+                    // onclose 핸들러 호출은 반드시 이전에 이루어져야 합니다.
+                    if (isOpen()) { // 아직 열려있는 경우에만 @OnClose 호출
+                        callOnCloseMethod(CloseCodes.CLOSED_ABNORMALLY); // 비정상 종료 코드 전달
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error during @OnClose method call or final session close: " + e.getMessage());
+                    e.printStackTrace();
+                } finally {
+                    // 최종 소켓 닫기는 WebSocketSession.close()가 책임집니다.
+                    // WebSocketSession.close()가 idempotent(멱등)해야 함 (여러 번 호출되어도 문제 없도록).
+                    try {
+                        close(); // 세션의 내부 상태를 '닫힘'으로 설정하고 소켓 닫기
+                    } catch (IOException e) {
+                        System.err.println("Error during final socket close for session " + id + ": " + e.getMessage());
+                    }
+                }
             }
-            // TODO: NIO로 전환 시 Thread.sleep(100) 제거
-            // Thread.sleep(100); // BIO 환경에서 CPU 과부하 방지
+        });
+        messageThread.setName("WebSocket-MessageLoop-" + id);
+        messageThread.setDaemon(true); // 애플리케이션 종료 시 함께 종료되도록 데몬 스레드로 설정
+        messageThread.start(); // 스레드 시작
+    }
+
+    public void dispatchMessage(WebSocketFrame frame) throws Exception {
+        String textMessageContent = null; // 최종 디스패치할 메시지 내용
+        byte[] binaryMessageContent = null; // 최종 디스패치할 바이너리 메시지 내용
+
+        try (InputStream payloadInputStream = frame.getPayloadStream();
+             Reader reader = new InputStreamReader(payloadInputStream, StandardCharsets.UTF_8);
+            ) { // payloadStream을 얻음
+            if (frame.isFin()) {
+                if (frame.getOpcode() == 0x0) { // 연속 프레임의 마지막 (FIN=true, Opcode=0x0)
+                    if (fragmentedTextMessageBuffer.length() > 0) { // 텍스트 연속
+                        char[] buf = new char[1024]; int len; while ((len = reader.read(buf)) != -1) { fragmentedTextMessageBuffer.append(buf, 0, len); }
+                        textMessageContent = fragmentedTextMessageBuffer.toString();
+                        fragmentedTextMessageBuffer = new StringBuilder(); // 버퍼 비우기
+                    } else if (fragmentedBinaryMessageBuffer.size() > 0) { // 바이너리 연속
+                        readAllBytes(payloadInputStream, fragmentedBinaryMessageBuffer);
+                        binaryMessageContent = fragmentedBinaryMessageBuffer.toByteArray();
+                        fragmentedBinaryMessageBuffer.reset(); // 버퍼 비우기
+                    } else { // 이전 연속 프레임이 없는데 마지막 연속 프레임이 온 경우 -> 프로토콜 오류
+                        throw new WebSocketProtocolException("Protocol Error: Received continuation frame (0x0) with FIN=true, but no preceding fragmented message.");
+                    }
+                } else if (frame.getOpcode() == 0x1) { // 단일 텍스트 프레임 (FIN=true, Opcode=0x1)
+                    if (!fragmentedTextMessageBuffer.isEmpty() || fragmentedBinaryMessageBuffer.size() > 0) {
+                        throw new WebSocketProtocolException("Protocol Error: FIN=true and Opcode is not 0x0, but fragmented buffer is not empty.");
+                    }
+                    textMessageContent = readAll(reader); // 스트리밍 방식으로 읽어 String으로 변환
+                } else if (frame.getOpcode() == 0x2) { // 단일 바이너리 프레임
+                    if (!fragmentedTextMessageBuffer.isEmpty() || fragmentedBinaryMessageBuffer.size() > 0) {
+                        throw new WebSocketProtocolException("Protocol Error: FIN=true and Opcode is not 0x0, but fragmented buffer is not empty.");
+                    }
+                    binaryMessageContent = readAllBytes(payloadInputStream);
+                } else { // 알 수 없는 Opcode 또는 컨트롤 프레임의 FIN=true는 이미 상위에서 처리
+                    System.err.println("Unknown or unsupported WebSocket opcode in final frame: " + frame.getOpcode());
+                    throw new WebSocketProtocolException("Unknown WebSocket opcode in final frame: " + frame.getOpcode());
+                }
+
+                // --- 완전한 메시지가 재조립된 후, 메시지 디스패처 체인에게 위임 ---
+                // 이 시점에서는 fragmentedTextMessageBuffer 또는 fragmentedBinaryMessageBuffer에 완전한 메시지가 있음
+                // InvocationContext를 업데이트하여 completePayload를 제공 (text/binary)
+                String completeTextPayload = (fragmentedTextMessageBuffer.length() > 0) ? fragmentedTextMessageBuffer.toString() : null;
+                byte[] completeBinaryPayload = (fragmentedBinaryMessageBuffer.size() > 0) ? fragmentedBinaryMessageBuffer.toByteArray() : null;
+
+                // 버퍼를 비워 다음 메시지를 준비
+                fragmentedTextMessageBuffer = new StringBuilder();
+                fragmentedBinaryMessageBuffer.reset();
+
+                MessagePayload messagePayload = new DefaultMessagePayload(completeTextPayload, completeBinaryPayload);
+                InvocationContext contextWithPayload = new DefaultInvocationContext(this, pathParameters, messagePayload);
+
+                boolean dispatched = false;
+                for (WebSocketMessageDispatcher dispatcher : messageDispatchers) {
+                    // dispatcher.supports()는 frame과 contextWithPayload를 모두 사용해서 판단
+                    if (dispatcher.supports(frame, contextWithPayload)) {
+                        if (dispatcher.dispatch(frame, contextWithPayload)) { // dispatch도 frame과 contextWithPayload 사용
+                            dispatched = true;
+                            break;
+                        }
+                    }
+                }
+                if (!dispatched) {
+                    System.err.println("No suitable WebSocketMessageDispatcher found for frame: " + frame.getOpcode() + " (FIN: " + frame.isFin() + ")");
+                    // TODO: 처리 못 한 메시지에 대한 에러 응답
+                }
+                return; // 완전한 메시지 처리 완료
+
+            } else { // 최종 프레임이 아닌 경우 (부분 메시지)
+                if (frame.getOpcode() == 0x1) { // 첫 텍스트 조각
+                    if (!fragmentedTextMessageBuffer.isEmpty() || fragmentedBinaryMessageBuffer.size() > 0) {
+                        throw new WebSocketProtocolException("Protocol Error: First fragmented frame must have Opcode 0x1 or 0x2, got " + frame.getOpcode() + " with non-empty buffer.");
+                    }
+                    char[] buf = new char[1024]; int len; while ((len = reader.read(buf)) != -1) { fragmentedTextMessageBuffer.append(buf, 0, len); }
+                    System.out.println("Received first fragmented text frame. Buffering...");
+                    return; // 메시지 디스패치하지 않고 다음 프레임 기다림
+                } else if (frame.getOpcode() == 0x2) { // 첫 바이너리 조각
+                    if (!fragmentedTextMessageBuffer.isEmpty() || fragmentedBinaryMessageBuffer.size() > 0) {
+                        throw new WebSocketProtocolException("Protocol Error: First fragmented frame must have Opcode 0x1 or 0x2, got " + frame.getOpcode() + " with non-empty buffer.");
+                    }
+                    readAllBytes(payloadInputStream, fragmentedBinaryMessageBuffer);
+                    System.out.println("Received first fragmented binary frame. Buffering...");
+                    return;
+                } else if (frame.getOpcode() == 0x0) { // 연속 프레임 (텍스트 또는 바이너리)
+                    if (fragmentedTextMessageBuffer.length() > 0) { // 텍스트 메시지 연속
+                        char[] buf = new char[1024]; int len; while ((len = reader.read(buf)) != -1) { fragmentedTextMessageBuffer.append(buf, 0, len); }
+                        System.out.println("Received fragmented text continuation frame. Buffering...");
+                    } else if (fragmentedBinaryMessageBuffer.size() > 0) { // 바이너리 메시지 연속
+                        readAllBytes(payloadInputStream, fragmentedBinaryMessageBuffer);
+                        System.out.println("Received fragmented binary continuation frame. Buffering...");
+                    } else { // 연속 프레임인데 버퍼가 비어있다면 프로토콜 오류
+                        throw new WebSocketProtocolException("Protocol Error: Received continuation frame (0x0) with empty buffer.");
+                    }
+                    return; // 메시지 디스패치하지 않고 다음 프레임 기다림
+                } else { // 컨트롤 프레임 (FIN=false) 또는 알 수 없는 Opcode
+                    // 컨트롤 프레임은 FIN=true여야 합니다. 여기로 오면 프로토콜 오류
+                    throw new WebSocketProtocolException("Protocol Error: Control frame (opcode " + frame.getOpcode() + ") received with FIN=false.");
+                }
+            }
         }
     }
 
-    private void dispatchMessage(WebSocketFrame frame) throws Exception {
-        String messagePath = messageParser.extractDestination(frame); // <-- 파서 사용
-        String messagePayload = messageParser.extractPayload(frame); // <-- 파서 사용 (payload 추출)
-
-        if (messagePath == null || messagePath.isBlank()) {
-            System.err.println("WebSocket message has no destination path. Skipping dispatch.");
-            // TODO: 클라이언트에게 오류 응답 전송 고려
-            return;
+    private String readAll(Reader reader) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        char[] buf = new char[1024];
+        int len;
+        while ((len = reader.read(buf)) != -1) {
+            sb.append(buf, 0, len);
         }
+        return sb.toString();
+    }
 
-        Method messageMappingMethod = endpointInfo.getMessageMappingMethod(messagePath);
+    private void readAllBytes(InputStream in, ByteArrayOutputStream out) throws IOException {
+        byte[] buf = new byte[1024];
+        int len;
+        while ((len = in.read(buf)) != -1) {
+            out.write(buf, 0, len);
+        }
+    }
 
-        if (messageMappingMethod != null) {
-            Parameter[] parameters = messageMappingMethod.getParameters();
-            Object[] args = new Object[parameters.length];
+    private byte[] readAllBytes(InputStream in) throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        byte[] buf = new byte[1024];
+        int len;
+        while ((len = in.read(buf)) != -1) {
+            out.write(buf, 0, len);
+        }
+        return out.toByteArray();
+    }
 
-            for (int i = 0; i < parameters.length; i++) {
-                boolean resolved = false;
-                for (WebSocketArgumentResolver resolver : argumentResolvers) {
-                    if (resolver.supports(parameters[i])) {
-                        args[i] = resolver.resolve(parameters[i], this, messagePayload); // <-- payload 전달
-                        resolved = true;
-                        break;
-                    }
-                }
-                if (!resolved) {
-                    throw new IllegalArgumentException("No WebSocketArgumentResolver found for parameter: " + parameters[i].getName() + " in method " + messageMappingMethod.getName());
+    @Override
+    public WebSocketEndpointInfo getEndpointInfo() {
+        return endpointInfo;
+    }
+
+    @Override
+    public void callOnOpenMethod() throws Exception{
+        Method onOpenMethod = endpointInfo.getOnOpenMethod();
+        if (onOpenMethod == null) return;
+
+        // InvocationContext 생성
+        InvocationContext context = new DefaultInvocationContext(handshakeRequest, this, pathParameters);
+
+        Object[] args = resolveArgs(onOpenMethod, context);
+        onOpenMethod.invoke(endpointInfo.getHandlerBean(), args);
+    }
+
+    @Override
+    public void callOnErrorMethod(Throwable error) throws Exception {
+        Method onErrorMethod = endpointInfo.getOnErrorMethod();
+        if (onErrorMethod == null) return;
+
+        // InvocationContext 생성
+        InvocationContext context = new DefaultInvocationContext(this, pathParameters, error);
+
+        Object[] args = resolveArgs(onErrorMethod, context);
+        onErrorMethod.invoke(endpointInfo.getHandlerBean(), args);
+    }
+
+    @Override
+    public void callOnCloseMethod(CloseCode closeCode) throws Exception {
+        Method onCloseMethod = endpointInfo.getOnCloseMethod();
+        if (onCloseMethod == null) return;
+
+        // InvocationContext 생성
+        InvocationContext context = new DefaultInvocationContext(this, pathParameters, closeCode);
+
+        Object[] args = resolveArgs(onCloseMethod, context);
+        onCloseMethod.invoke(endpointInfo.getHandlerBean(), args);
+    }
+
+    private Object[] resolveArgs(Method method, InvocationContext context) throws Exception {
+        Parameter[] parameters = method.getParameters();
+        Object[] args = new Object[parameters.length];
+
+        for (int i = 0; i < parameters.length; i++) {
+            boolean resolved = false;
+            for (WebSocketArgumentResolver resolver : argumentResolvers) {
+                if (resolver.supports(parameters[i], context)) { // <- InvocationContext 전달
+                    args[i] = resolver.resolve(parameters[i], context); // <- InvocationContext 전달
+                    resolved = true;
+                    break;
                 }
             }
-
-            try {
-                messageMappingMethod.invoke(endpointInfo.getHandlerBean(), args);
-            } catch (InvocationTargetException e) {
-                // @MessageMapping 메서드 내부에서 발생한 실제 예외를 처리
-                System.err.println("Exception in @MessageMapping method " + messageMappingMethod.getName() + ": " + e.getTargetException().getMessage());
-                e.getTargetException().printStackTrace();
-                // TODO: @OnError 호출 또는 적절한 에러 메시지 클라이언트에게 전송
-                throw e; // 상위로 전파
+            if (!resolved) {
+                throw new IllegalArgumentException("No WebSocketArgumentResolver found for parameter: " + parameters[i].getName() + " in method " + method.getName() + " for phase " + context.phase());
             }
-        } else {
-            System.err.println("No @MessageMapping found for path: " + messagePath);
-            // TODO: 매칭되는 핸들러가 없을 경우 에러 메시지 클라이언트에게 전송
-            // (예: 클라이언트에게 404 Not Found에 해당하는 웹소켓 에러 프레임 전송)
         }
+        return args;
     }
 
     @Override
@@ -202,10 +385,9 @@ public class DefaultWebSocketSession implements WebSocketSession{
 
     @Override
     public String getQueryString() {
-        // HttpRequest에 원본 쿼리 스트링이 있다면 사용
-        // 현재 HttpRequest는 Map<String, String>으로 쿼리 파라미터를 저장하므로,
-        // 원본 쿼리 스트링을 다시 조합하거나, HttpRequest에 원본 쿼리 스트링 필드를 추가해야 합니다.
-        return ""; // TODO: 실제 쿼리 스트링 반환 로직 구현
+        return handshakeRequest.getQueryParams().entrySet().stream()
+                .map(entry -> entry.getKey() + "=" + entry.getValue())
+                .collect(java.util.stream.Collectors.joining("&"));
     }
 
     @Override
@@ -214,7 +396,7 @@ public class DefaultWebSocketSession implements WebSocketSession{
     }
 
     // MessageHandler 관련 메서드는 JSR-356의 Session 인터페이스에 있으나,
-    // 현재 Sprout는 @MessageMapping 기반이므로 직접 구현하지 않아도 될 수 있습니다.
+    // 현재 Sprout는 @MessageMapping 기반이므로 직접 구현하지 않아도 될 수 있음
     @Override
     public Set<MessageHandler> getMessageHandlers() {
         return null; // TODO: 필요 시 구현

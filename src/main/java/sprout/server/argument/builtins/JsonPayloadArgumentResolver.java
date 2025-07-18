@@ -2,8 +2,9 @@ package sprout.server.argument.builtins;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import sprout.beans.annotation.Component;
+import sprout.server.websocket.InvocationContext;
 import sprout.server.argument.WebSocketArgumentResolver;
-import sprout.server.websocket.WebSocketSession;
+import sprout.server.websocket.LifecyclePhase;
 
 import java.lang.reflect.Parameter;
 
@@ -16,13 +17,15 @@ public class JsonPayloadArgumentResolver implements WebSocketArgumentResolver {
     }
 
     @Override
-    public boolean supports(Parameter parameter) {
-        // 단순히 JSON 파싱이 가능한 모든 객체를 지원한다고 가정
-        return true; // 나중엔 @Payload 같은 애노테이션으로 제한 가능
+    public boolean supports(Parameter parameter, InvocationContext context){
+        return context.phase() == LifecyclePhase.MESSAGE &&
+                context.payload() != null &&
+                !parameter.getType().equals(String.class);
     }
 
     @Override
-    public Object resolve(Parameter parameter, WebSocketSession session, String messagePayload) throws Exception {
+    public Object resolve(Parameter parameter, InvocationContext context) throws Exception {
+        String messagePayload = context.payload();
         return objectMapper.readValue(messagePayload, parameter.getType());
     }
 }

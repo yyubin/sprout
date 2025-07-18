@@ -8,6 +8,18 @@ import java.nio.charset.StandardCharsets;
 public class DefaultWebSocketFrameEncoder implements WebSocketFrameEncoder{
 
     @Override
+    public byte[] encodeControlFrame(int opcode, byte[] payload) {
+        if (payload.length > 125) {
+            throw new IllegalArgumentException("Control frame payload too big (must be <= 125)");
+        }
+        byte[] frame = new byte[2 + payload.length];
+        frame[0] = (byte) (0x80 | opcode); // FIN + opcode
+        frame[1] = (byte) (payload.length); // No mask, just payload length
+        System.arraycopy(payload, 0, frame, 2, payload.length);
+        return frame;
+    }
+
+    @Override
     public byte[] encodeText(String message) {
         byte[] payload = message.getBytes(StandardCharsets.UTF_8);
         int payloadLen = payload.length;

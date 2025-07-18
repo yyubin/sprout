@@ -1,4 +1,4 @@
-package sprout.server.exception;
+package sprout.server.websocket.exception;
 
 public class WebSocketException extends RuntimeException {
     public WebSocketException(String message) {

@@ -58,4 +58,8 @@ public class HttpRequest<T> {
                 ", sessionId='" + sessionId + '\'' +
                 '}';
     }
+
+    public boolean isValid() {
+        return this.method != null && !this.path.isBlank();
+    }
 }

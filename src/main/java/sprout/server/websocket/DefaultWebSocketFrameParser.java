@@ -52,12 +52,15 @@ public class DefaultWebSocketFrameParser implements WebSocketFrameParser {
             totalRead += read;
         }
 
+        InputStream payloadInputStream = new LimitedInputStream(in, actualPayloadLen);
+
+        // 마스킹된 경우, 마스킹 해제 로직이 적용된 InputStream을 제공해야 함
+        // 이는 MaskingInputStream 같은 별도의 래퍼 클래스를 만들 수 있음
         if (masked) {
-            for (int i = 0; i < payloadData.length; i++) {
-                payloadData[i] ^= maskingKey[i % 4];
-            }
+            // 이 MaskingInputStream은 LimitedInputStream에서 읽은 바이트를 실시간으로 언마스킹
+            payloadInputStream = new MaskingInputStream(payloadInputStream, maskingKey);
         }
 
-        return new WebSocketFrame(fin, opcode, payloadData);
+        return new WebSocketFrame(fin, opcode, payloadInputStream);
     }
 }
