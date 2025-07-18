@@ -11,17 +11,17 @@ public class DefaultMessagePayload implements MessagePayload{
 
     @Override
     public boolean isText() {
-        return stringPayload != null;
+        return !stringPayload.isEmpty();
     }
 
     @Override
     public boolean isBinary() {
-        return binaryPayload != null;
+        return binaryPayload.length > 0;
     }
 
     @Override
     public String asText() {
-        if (stringPayload == null) {
+        if (isBinary()) {
             return new String(binaryPayload);
         }
         return stringPayload;
@@ -29,7 +29,7 @@ public class DefaultMessagePayload implements MessagePayload{
 
     @Override
     public byte[] asBinary() {
-        if (binaryPayload == null) {
+        if (isText()) {
             return asText().getBytes();
         }
         return binaryPayload;

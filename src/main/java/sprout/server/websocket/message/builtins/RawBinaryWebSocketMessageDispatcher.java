@@ -1,14 +1,13 @@
 package sprout.server.websocket.message.builtins;
 
 import sprout.beans.annotation.Component;
-import sprout.server.websocket.DefaultInvocationContext;
-import sprout.server.websocket.InvocationContext;
+import sprout.server.websocket.*;
 import sprout.server.argument.WebSocketArgumentResolver;
-import sprout.server.websocket.WebSocketFrame;
-import sprout.server.websocket.WebSocketSession;
 import sprout.server.websocket.endpoint.WebSocketEndpointInfo;
 import sprout.server.websocket.message.WebSocketMessageDispatcher;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.List;
@@ -29,7 +28,7 @@ public class RawBinaryWebSocketMessageDispatcher implements WebSocketMessageDisp
     }
 
     @Override
-    public boolean dispatch(WebSocketFrame frame, InvocationContext context) throws Exception {
+    public DispatchResult dispatch(WebSocketFrame frame, InvocationContext context) throws Exception {
         byte[] rawBinaryPayload = context.getMessagePayload().asBinary();
         String destination = "/binary"; // 임시 목적지, 또는 메시지 내용에서 추출
         WebSocketEndpointInfo currentEndpointInfo = (context.session() instanceof WebSocketSession) ?
@@ -38,20 +37,29 @@ public class RawBinaryWebSocketMessageDispatcher implements WebSocketMessageDisp
 
         if (currentEndpointInfo == null) {
             System.err.println("EndpointInfo not available in context for binary dispatch. Cannot dispatch message.");
-            return false;
+            return new DispatchResult(false, false);
         }
         Method messageMappingMethod = currentEndpointInfo.getMessageMappingMethod(destination);
         if (messageMappingMethod == null) {
             System.err.println("No @MessageMapping found for binary path: " + destination);
-            return false;
+            return new DispatchResult(false, false);
         }
 
-        InvocationContext updatedContext = new DefaultInvocationContext(context.session(), context.pathVars(), context.getMessagePayload());
+        InvocationContext updatedContext = new DefaultInvocationContext(context.session(), context.pathVars(), context.getMessagePayload(), frame);
 
         Object[] args = resolveArgs(messageMappingMethod, updatedContext); // ArgumentResolver 사용
         messageMappingMethod.invoke(currentEndpointInfo.getHandlerBean(), args);
 
-        return true;
+        return new DispatchResult(true, wasStreamPassedToHandler(messageMappingMethod));
+    }
+
+    private boolean wasStreamPassedToHandler(Method handlerMethod) {
+        if (handlerMethod == null) return false;
+
+        for (Parameter param : handlerMethod.getParameters()) {
+            if (InputStream.class.isAssignableFrom(param.getType())) return true;
+        }
+        return false;
     }
 
     private Object[] resolveArgs(Method method, InvocationContext context) throws Exception {

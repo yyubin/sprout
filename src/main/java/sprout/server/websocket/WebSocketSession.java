@@ -5,6 +5,7 @@ import sprout.mvc.http.HttpRequest;
 import sprout.server.websocket.endpoint.WebSocketEndpointInfo;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -47,4 +48,6 @@ public interface WebSocketSession {
     void callOnOpenMethod() throws Exception;
 
     WebSocketEndpointInfo getEndpointInfo();
+
+    InputStream getInputStream();
 }

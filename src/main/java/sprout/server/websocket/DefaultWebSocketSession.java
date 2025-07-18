@@ -183,114 +183,135 @@ public class DefaultWebSocketSession implements WebSocketSession{
     }
 
     public void dispatchMessage(WebSocketFrame frame) throws Exception {
-        String textMessageContent = null; // 최종 디스패치할 메시지 내용
-        byte[] binaryMessageContent = null; // 최종 디스패치할 바이너리 메시지 내용
+        String textMessageContent = null;
+        byte[] binaryMessageContent = null;
 
-        try (InputStream payloadInputStream = frame.getPayloadStream();
-             Reader reader = new InputStreamReader(payloadInputStream, StandardCharsets.UTF_8);
-            ) { // payloadStream을 얻음
-            if (frame.isFin()) {
-                if (frame.getOpcode() == 0x0) { // 연속 프레임의 마지막 (FIN=true, Opcode=0x0)
-                    if (fragmentedTextMessageBuffer.length() > 0) { // 텍스트 연속
-                        char[] buf = new char[1024]; int len; while ((len = reader.read(buf)) != -1) { fragmentedTextMessageBuffer.append(buf, 0, len); }
-                        textMessageContent = fragmentedTextMessageBuffer.toString();
-                        fragmentedTextMessageBuffer = new StringBuilder(); // 버퍼 비우기
-                    } else if (fragmentedBinaryMessageBuffer.size() > 0) { // 바이너리 연속
-                        readAllBytes(payloadInputStream, fragmentedBinaryMessageBuffer);
-                        binaryMessageContent = fragmentedBinaryMessageBuffer.toByteArray();
-                        fragmentedBinaryMessageBuffer.reset(); // 버퍼 비우기
-                    } else { // 이전 연속 프레임이 없는데 마지막 연속 프레임이 온 경우 -> 프로토콜 오류
-                        throw new WebSocketProtocolException("Protocol Error: Received continuation frame (0x0) with FIN=true, but no preceding fragmented message.");
-                    }
-                } else if (frame.getOpcode() == 0x1) { // 단일 텍스트 프레임 (FIN=true, Opcode=0x1)
-                    if (!fragmentedTextMessageBuffer.isEmpty() || fragmentedBinaryMessageBuffer.size() > 0) {
-                        throw new WebSocketProtocolException("Protocol Error: FIN=true and Opcode is not 0x0, but fragmented buffer is not empty.");
-                    }
-                    textMessageContent = readAll(reader); // 스트리밍 방식으로 읽어 String으로 변환
-                } else if (frame.getOpcode() == 0x2) { // 단일 바이너리 프레임
-                    if (!fragmentedTextMessageBuffer.isEmpty() || fragmentedBinaryMessageBuffer.size() > 0) {
-                        throw new WebSocketProtocolException("Protocol Error: FIN=true and Opcode is not 0x0, but fragmented buffer is not empty.");
-                    }
-                    binaryMessageContent = readAllBytes(payloadInputStream);
-                } else { // 알 수 없는 Opcode 또는 컨트롤 프레임의 FIN=true는 이미 상위에서 처리
-                    System.err.println("Unknown or unsupported WebSocket opcode in final frame: " + frame.getOpcode());
-                    throw new WebSocketProtocolException("Unknown WebSocket opcode in final frame: " + frame.getOpcode());
+        // payloadInputStream은 이제 try-with-resources로 감싸지 않습니다.
+        // 이는 frame.getPayloadStream()이 이미 LimitedInputStream이기 때문이며,
+        // 이 스트림은 WebSocketSession의 lifecycle에 따라 나중에 닫힙니다.
+        // Reader는 필요할 때마다 새롭게 생성하여 사용합니다.
+
+        // 1. FIN 비트 및 프레임 타입에 따른 메시지 재조립
+        if (frame.isFin()) {
+            if (frame.getOpcode() == 0x0) { // 연속 프레임의 마지막 (FIN=true, Opcode=0x0)
+                if (fragmentedTextMessageBuffer.length() > 0) { // 텍스트 연속
+                    readAllCharsFromStream(frame.getPayloadStream(), fragmentedTextMessageBuffer); // 스트림에서 직접 읽기
+                    textMessageContent = fragmentedTextMessageBuffer.toString();
+                    fragmentedTextMessageBuffer = new StringBuilder(); // 버퍼 비우기
+                } else if (fragmentedBinaryMessageBuffer.size() > 0) { // 바이너리 연속
+                    readAllBytesFromStream(frame.getPayloadStream(), fragmentedBinaryMessageBuffer); // 스트림에서 직접 읽기
+                    binaryMessageContent = fragmentedBinaryMessageBuffer.toByteArray();
+                    fragmentedBinaryMessageBuffer.reset(); // 버퍼 비우기
+                } else {
+                    throw new WebSocketProtocolException("Protocol Error: Received continuation frame (0x0) with FIN=true, but no preceding fragmented message.");
                 }
+            } else if (frame.getOpcode() == 0x1) { // 단일 텍스트 프레임 (FIN=true, Opcode=0x1)
+                if (!fragmentedTextMessageBuffer.isEmpty() || fragmentedBinaryMessageBuffer.size() > 0) {
+                    throw new WebSocketProtocolException("Protocol Error: FIN=true and Opcode is not 0x0, but fragmented buffer is not empty.");
+                }
+                textMessageContent = readAllCharsFromStream(frame.getPayloadStream()); // 스트림에서 직접 읽기
+            } else if (frame.getOpcode() == 0x2) { // 단일 바이너리 프레임
+                if (!fragmentedTextMessageBuffer.isEmpty() || fragmentedBinaryMessageBuffer.size() > 0) {
+                    throw new WebSocketProtocolException("Protocol Error: FIN=true and Opcode is not 0x0, but fragmented buffer is not empty.");
+                }
+                binaryMessageContent = readAllBytesFromStream(frame.getPayloadStream()); // 스트림에서 직접 읽기
+            } else { // 알 수 없는 Opcode 또는 컨트롤 프레임의 FIN=true는 이미 상위에서 처리
+                System.err.println("Unknown or unsupported WebSocket opcode in final frame: " + frame.getOpcode());
+                throw new WebSocketProtocolException("Unknown WebSocket opcode in final frame: " + frame.getOpcode());
+            }
 
-                // --- 완전한 메시지가 재조립된 후, 메시지 디스패처 체인에게 위임 ---
-                // 이 시점에서는 fragmentedTextMessageBuffer 또는 fragmentedBinaryMessageBuffer에 완전한 메시지가 있음
-                // InvocationContext를 업데이트하여 completePayload를 제공 (text/binary)
-                String completeTextPayload = (fragmentedTextMessageBuffer.length() > 0) ? fragmentedTextMessageBuffer.toString() : null;
-                byte[] completeBinaryPayload = (fragmentedBinaryMessageBuffer.size() > 0) ? fragmentedBinaryMessageBuffer.toByteArray() : null;
+            // --- 완전한 메시지가 재조립된 후, 메시지 디스패처 체인에게 위임 ---
+            String completeTextPayload = textMessageContent; // 이미 완성됨
+            byte[] completeBinaryPayload = binaryMessageContent; // 이미 완성됨
 
-                // 버퍼를 비워 다음 메시지를 준비
-                fragmentedTextMessageBuffer = new StringBuilder();
-                fragmentedBinaryMessageBuffer.reset();
+            // 버퍼를 비워 다음 메시지를 준비 (단일 프레임이어도 비워야 함)
+            fragmentedTextMessageBuffer = new StringBuilder(); // 새로운 StringBuilder 인스턴스 생성
+            fragmentedBinaryMessageBuffer.reset(); // reset만 하면 재사용 가능
 
-                MessagePayload messagePayload = new DefaultMessagePayload(completeTextPayload, completeBinaryPayload);
-                InvocationContext contextWithPayload = new DefaultInvocationContext(this, pathParameters, messagePayload);
+            MessagePayload messagePayload = new DefaultMessagePayload(completeTextPayload, completeBinaryPayload);
 
-                boolean dispatched = false;
+            // InvocationContext 생성 시 messagePayload와 frame.getPayloadStream() (LimitedInputStream) 전달
+            InvocationContext contextWithPayload = new DefaultInvocationContext(
+                    this, pathParameters, messagePayload, frame // frame 자체도 전달
+            );
+
+            DispatchResult result = null;
+            try {
                 for (WebSocketMessageDispatcher dispatcher : messageDispatchers) {
-                    // dispatcher.supports()는 frame과 contextWithPayload를 모두 사용해서 판단
                     if (dispatcher.supports(frame, contextWithPayload)) {
-                        if (dispatcher.dispatch(frame, contextWithPayload)) { // dispatch도 frame과 contextWithPayload 사용
-                            dispatched = true;
+                        result = dispatcher.dispatch(frame, contextWithPayload);
+                        if (result.isHandled()) {
                             break;
                         }
                     }
                 }
-                if (!dispatched) {
-                    System.err.println("No suitable WebSocketMessageDispatcher found for frame: " + frame.getOpcode() + " (FIN: " + frame.isFin() + ")");
-                    // TODO: 처리 못 한 메시지에 대한 에러 응답
+            } finally {
+                if (result == null || result.shouldCloseStream()) {
+                    InputStream stream = contextWithPayload.getInputStream();
+                    if (stream != null) {
+                        try {
+                            stream.close();
+                        } catch (IOException e) {
+                            System.err.println("Failed to close payload input stream: " + e.getMessage());
+                        }
+                    }
                 }
-                return; // 완전한 메시지 처리 완료
+            }
 
-            } else { // 최종 프레임이 아닌 경우 (부분 메시지)
-                if (frame.getOpcode() == 0x1) { // 첫 텍스트 조각
-                    if (!fragmentedTextMessageBuffer.isEmpty() || fragmentedBinaryMessageBuffer.size() > 0) {
-                        throw new WebSocketProtocolException("Protocol Error: First fragmented frame must have Opcode 0x1 or 0x2, got " + frame.getOpcode() + " with non-empty buffer.");
-                    }
-                    char[] buf = new char[1024]; int len; while ((len = reader.read(buf)) != -1) { fragmentedTextMessageBuffer.append(buf, 0, len); }
-                    System.out.println("Received first fragmented text frame. Buffering...");
-                    return; // 메시지 디스패치하지 않고 다음 프레임 기다림
-                } else if (frame.getOpcode() == 0x2) { // 첫 바이너리 조각
-                    if (!fragmentedTextMessageBuffer.isEmpty() || fragmentedBinaryMessageBuffer.size() > 0) {
-                        throw new WebSocketProtocolException("Protocol Error: First fragmented frame must have Opcode 0x1 or 0x2, got " + frame.getOpcode() + " with non-empty buffer.");
-                    }
-                    readAllBytes(payloadInputStream, fragmentedBinaryMessageBuffer);
-                    System.out.println("Received first fragmented binary frame. Buffering...");
-                    return;
-                } else if (frame.getOpcode() == 0x0) { // 연속 프레임 (텍스트 또는 바이너리)
-                    if (fragmentedTextMessageBuffer.length() > 0) { // 텍스트 메시지 연속
-                        char[] buf = new char[1024]; int len; while ((len = reader.read(buf)) != -1) { fragmentedTextMessageBuffer.append(buf, 0, len); }
-                        System.out.println("Received fragmented text continuation frame. Buffering...");
-                    } else if (fragmentedBinaryMessageBuffer.size() > 0) { // 바이너리 메시지 연속
-                        readAllBytes(payloadInputStream, fragmentedBinaryMessageBuffer);
-                        System.out.println("Received fragmented binary continuation frame. Buffering...");
-                    } else { // 연속 프레임인데 버퍼가 비어있다면 프로토콜 오류
-                        throw new WebSocketProtocolException("Protocol Error: Received continuation frame (0x0) with empty buffer.");
-                    }
-                    return; // 메시지 디스패치하지 않고 다음 프레임 기다림
-                } else { // 컨트롤 프레임 (FIN=false) 또는 알 수 없는 Opcode
-                    // 컨트롤 프레임은 FIN=true여야 합니다. 여기로 오면 프로토콜 오류
-                    throw new WebSocketProtocolException("Protocol Error: Control frame (opcode " + frame.getOpcode() + ") received with FIN=false.");
-                }
+            if (result == null || !result.isHandled()) {
+                System.err.println("No suitable WebSocketMessageDispatcher found for frame: " + frame.getOpcode() + " (FIN: " + frame.isFin() + ")");
+                // TODO: 처리 못 한 메시지에 대한 에러 응답
+            }
+            // return; // 메시지 처리 후 반환 (원래 dispatchMessage가 void가 아니었다면...)
+            // dispatchMessage는 void 이므로 그냥 return 하면 됩니다.
+
+        } else { // 최종 프레임이 아닌 경우 (부분 메시지)
+            // ... (기존 부분 메시지 버퍼링 로직 - readAllCharsFromStream, readAllBytesFromStream 사용) ...
+            if (frame.getOpcode() == 0x1) { // 첫 텍스트 조각
+                if (!fragmentedTextMessageBuffer.isEmpty() || fragmentedBinaryMessageBuffer.size() > 0) { throw new WebSocketProtocolException("Protocol Error: First fragmented frame must have Opcode 0x1 or 0x2, got " + frame.getOpcode() + " with non-empty buffer."); }
+                readAllCharsFromStream(frame.getPayloadStream(), fragmentedTextMessageBuffer);
+                System.out.println("Received first fragmented text frame. Buffering...");
+                return;
+            } else if (frame.getOpcode() == 0x2) { // 첫 바이너리 조각
+                if (!fragmentedTextMessageBuffer.isEmpty() || fragmentedBinaryMessageBuffer.size() > 0) { throw new WebSocketProtocolException("Protocol Error: First fragmented frame must have Opcode 0x1 or 0x2, got " + frame.getOpcode() + " with non-empty buffer."); }
+                readAllBytesFromStream(frame.getPayloadStream(), fragmentedBinaryMessageBuffer);
+                System.out.println("Received first fragmented binary frame. Buffering...");
+                return;
+            } else if (frame.getOpcode() == 0x0) { // 연속 프레임 (텍스트 또는 바이너리)
+                if (fragmentedTextMessageBuffer.length() > 0) { readAllCharsFromStream(frame.getPayloadStream(), fragmentedTextMessageBuffer); System.out.println("Received fragmented text continuation frame. Buffering..."); }
+                else if (fragmentedBinaryMessageBuffer.size() > 0) { readAllBytesFromStream(frame.getPayloadStream(), fragmentedBinaryMessageBuffer); System.out.println("Received fragmented binary continuation frame. Buffering..."); }
+                else { throw new WebSocketProtocolException("Protocol Error: Received continuation frame (0x0) with empty buffer."); }
+                return;
+            } else { // 컨트롤 프레임 (FIN=false) 또는 알 수 없는 Opcode
+                throw new WebSocketProtocolException("Protocol Error: Control frame (opcode " + frame.getOpcode() + ") received with FIN=false.");
+            }
+        }
+
+    }
+
+    private String readAllCharsFromStream(InputStream in) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        try (Reader reader = new InputStreamReader(in, StandardCharsets.UTF_8)) {
+            char[] buf = new char[1024];
+            int len;
+            while ((len = reader.read(buf)) != -1) {
+                sb.append(buf, 0, len);
+            }
+        } // reader가 여기서 닫히고, in(LimitedInputStream)은 닫히지 않습니다.
+        return sb.toString();
+    }
+
+    private void readAllCharsFromStream(InputStream in, StringBuilder sb) throws IOException {
+        try (Reader reader = new InputStreamReader(in, StandardCharsets.UTF_8)) {
+            char[] buf = new char[1024];
+            int len;
+            while ((len = reader.read(buf)) != -1) {
+                sb.append(buf, 0, len);
             }
         }
     }
 
-    private String readAll(Reader reader) throws IOException {
-        StringBuilder sb = new StringBuilder();
-        char[] buf = new char[1024];
-        int len;
-        while ((len = reader.read(buf)) != -1) {
-            sb.append(buf, 0, len);
-        }
-        return sb.toString();
-    }
-
-    private void readAllBytes(InputStream in, ByteArrayOutputStream out) throws IOException {
+    private void readAllBytesFromStream(InputStream in, ByteArrayOutputStream out) throws IOException {
         byte[] buf = new byte[1024];
         int len;
         while ((len = in.read(buf)) != -1) {
@@ -298,12 +319,16 @@ public class DefaultWebSocketSession implements WebSocketSession{
         }
     }
 
-    private byte[] readAllBytes(InputStream in) throws IOException {
+    private byte[] readAllBytesFromStream(InputStream in) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        byte[] buf = new byte[1024];
-        int len;
-        while ((len = in.read(buf)) != -1) {
-            out.write(buf, 0, len);
+        try {
+            byte[] buf = new byte[1024];
+            int len;
+            while ((len = in.read(buf)) != -1) {
+                out.write(buf, 0, len);
+            }
+        } finally {
+            // out은 여기서 닫지 않습니다. toByteArray()로 이미 내용이 복사됨.
         }
         return out.toByteArray();
     }
@@ -311,6 +336,11 @@ public class DefaultWebSocketSession implements WebSocketSession{
     @Override
     public WebSocketEndpointInfo getEndpointInfo() {
         return endpointInfo;
+    }
+
+    @Override
+    public InputStream getInputStream() {
+        return in;
     }
 
     @Override

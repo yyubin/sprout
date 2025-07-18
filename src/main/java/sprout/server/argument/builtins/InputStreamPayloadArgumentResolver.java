@@ -1,6 +1,7 @@
 package sprout.server.argument.builtins;
 
 import sprout.beans.annotation.Component;
+import sprout.server.argument.annotation.Payload;
 import sprout.server.websocket.InvocationContext;
 import sprout.server.argument.WebSocketArgumentResolver;
 import sprout.server.websocket.LifecyclePhase;
@@ -12,13 +13,16 @@ import java.lang.reflect.Parameter;
 public class InputStreamPayloadArgumentResolver implements WebSocketArgumentResolver {
     @Override
     public boolean supports(Parameter parameter, InvocationContext context) {
-        return context.phase() == LifecyclePhase.MESSAGE &&
+        return  parameter.isAnnotationPresent(Payload.class) &&
+                context.phase() == LifecyclePhase.MESSAGE &&
                 InputStream.class.isAssignableFrom(parameter.getType()) &&
-                context.getFrame() != null;
+                context.session().getInputStream() != null &&
+                context.getMessagePayload() == null &&
+                context.isFin();
     }
 
     @Override
     public Object resolve(Parameter parameter, InvocationContext context) throws Exception {
-        return null;
+        return context.getInputStream();
     }
 }

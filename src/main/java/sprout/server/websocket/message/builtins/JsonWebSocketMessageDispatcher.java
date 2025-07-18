@@ -2,16 +2,14 @@ package sprout.server.websocket.message.builtins;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import sprout.beans.annotation.Component;
-import sprout.server.websocket.DefaultInvocationContext;
-import sprout.server.websocket.InvocationContext;
+import sprout.server.websocket.*;
 import sprout.server.argument.WebSocketArgumentResolver;
-import sprout.server.websocket.WebSocketFrame;
-import sprout.server.websocket.WebSocketFrameDecoder;
-import sprout.server.websocket.WebSocketSession;
 import sprout.server.websocket.endpoint.WebSocketEndpointInfo;
 import sprout.server.websocket.message.ParsedMessage;
 import sprout.server.websocket.message.WebSocketMessageDispatcher;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.List;
@@ -19,7 +17,7 @@ import java.util.List;
 @Component
 public class JsonWebSocketMessageDispatcher implements WebSocketMessageDispatcher {
     private final ObjectMapper objectMapper;
-    private final List<WebSocketArgumentResolver> argumentResolvers; // 인자 리졸버도 주입
+    private final List<WebSocketArgumentResolver> argumentResolvers;
     private final WebSocketEndpointInfo endpointInfo;
 
     public JsonWebSocketMessageDispatcher(ObjectMapper objectMapper, List<WebSocketArgumentResolver> argumentResolvers, WebSocketEndpointInfo endpointInfo) {
@@ -39,7 +37,7 @@ public class JsonWebSocketMessageDispatcher implements WebSocketMessageDispatche
     }
 
     @Override
-    public boolean dispatch(WebSocketFrame frame, InvocationContext context) throws Exception {
+    public DispatchResult dispatch(WebSocketFrame frame, InvocationContext context) throws Exception {
         // InvocationContext에서 최종 조립된 메시지 페이로드를 가져옴
         String messageContent = context.getMessagePayload().asText(); // InvocationContext.payload()는 이미 최종 조립된 String
 
@@ -51,7 +49,7 @@ public class JsonWebSocketMessageDispatcher implements WebSocketMessageDispatche
 
         if (destination == null || destination.isBlank()) {
             System.err.println("WebSocket message has no destination path. Skipping dispatch.");
-            return false; // 처리 못 함 (다음 디스패처에게 기회)
+            return new DispatchResult(false, false);
         }
 
         // EndpointInfo는 InvocationContext나 Session에서 가져와야 함
@@ -61,22 +59,31 @@ public class JsonWebSocketMessageDispatcher implements WebSocketMessageDispatche
 
         if (currentEndpointInfo == null) {
             System.err.println("EndpointInfo not available in context. Cannot dispatch message.");
-            return false;
+            return new DispatchResult(false, false);
         }
 
         Method messageMappingMethod = currentEndpointInfo.getMessageMappingMethod(destination);
         if (messageMappingMethod == null) {
             System.err.println("No @MessageMapping found for path: " + destination);
-            return false; // 처리 못 함
+            return new DispatchResult(false, false);
         }
 
         // InvocationContext를 업데이트하거나 새롭게 생성 (페이로드는 이미 파싱된 JSON 본문)
-        InvocationContext updatedContext = new DefaultInvocationContext(context.session(), context.pathVars(), context.getMessagePayload());
+        InvocationContext updatedContext = new DefaultInvocationContext(context.session(), context.pathVars(), context.getMessagePayload(), frame);
 
         Object[] args = resolveArgs(messageMappingMethod, updatedContext); // ArgumentResolver 사용
         messageMappingMethod.invoke(currentEndpointInfo.getHandlerBean(), args);
 
-        return true;
+        return new DispatchResult(true, wasStreamPassedToHandler(messageMappingMethod));
+    }
+
+    private boolean wasStreamPassedToHandler(Method handlerMethod) {
+        if (handlerMethod == null) return false;
+
+        for (Parameter param : handlerMethod.getParameters()) {
+            if (InputStream.class.isAssignableFrom(param.getType())) return true;
+        }
+        return false;
     }
 
     private Object[] resolveArgs(Method method, InvocationContext context) throws Exception {
