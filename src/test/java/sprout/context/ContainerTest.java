@@ -20,7 +20,7 @@ class ContainerTest {
     }
 
     @Test
-    void container_shouldInstantiateAllBeans() {
+    void container_shouldInstantiateAllBeans() throws NoSuchMethodException {
         container.bootstrap(List.of("app.test"));
 
         assertNotNull(container.get(SomeComponent.class),          "SomeComponent 미생성");
@@ -31,7 +31,7 @@ class ContainerTest {
     }
 
     @Test
-    void container_shouldPerformConstructorInjection() {
+    void container_shouldPerformConstructorInjection() throws NoSuchMethodException {
         container.bootstrap(List.of("app.test"));
 
         ServiceWithDependency svc = container.get(ServiceWithDependency.class);
@@ -39,7 +39,7 @@ class ContainerTest {
     }
 
     @Test
-    void container_shouldPerformInterfaceInjection() {
+    void container_shouldPerformInterfaceInjection() throws NoSuchMethodException {
         container.bootstrap(List.of("app.test"));
 
         SomeService someService = container.get(SomeService.class);
@@ -48,7 +48,7 @@ class ContainerTest {
     }
 
     @Test
-    void container_shouldPerformListInjection() {
+    void container_shouldPerformListInjection() throws NoSuchMethodException {
         container.bootstrap(List.of("app.test"));
 
         ComponentWithListDependency comp = container.get(ComponentWithListDependency.class);

@@ -25,10 +25,8 @@ public class DefaultWebSocketFrameParser implements WebSocketFrameParser {
         long actualPayloadLen;
 
         if (payloadLen == 126) {
-            // 다음 2바이트 = 실제 길이
             actualPayloadLen = ((in.read() & 0xFF) << 8) | (in.read() & 0xFF);
         } else if (payloadLen == 127) {
-            // 다음 8바이트 = 실제 길이
             actualPayloadLen = 0;
             for (int i = 0; i < 8; i++) {
                 actualPayloadLen = (actualPayloadLen << 8) | (in.read() & 0xFF);
@@ -44,6 +42,9 @@ public class DefaultWebSocketFrameParser implements WebSocketFrameParser {
             }
         }
 
+        // --- BUG FIX ---
+        // [삭제] 불필요하게 페이로드를 미리 읽는 로직을 제거합니다.
+        /*
         byte[] payloadData = new byte[(int) actualPayloadLen];
         int totalRead = 0;
         while (totalRead < actualPayloadLen) {
@@ -51,13 +52,13 @@ public class DefaultWebSocketFrameParser implements WebSocketFrameParser {
             if (read == -1) break;
             totalRead += read;
         }
+        */
 
+        // 헤더와 마스킹 키 까지만 읽은 스트림을 LimitedInputStream으로 감쌉니다.
         InputStream payloadInputStream = new LimitedInputStream(in, actualPayloadLen);
 
-        // 마스킹된 경우, 마스킹 해제 로직이 적용된 InputStream을 제공해야 함
-        // 이는 MaskingInputStream 같은 별도의 래퍼 클래스를 만들 수 있음
         if (masked) {
-            // 이 MaskingInputStream은 LimitedInputStream에서 읽은 바이트를 실시간으로 언마스킹
+            // 이 MaskingInputStream은 LimitedInputStream에서 읽은 바이트를 실시간으로 언마스킹합니다.
             payloadInputStream = new MaskingInputStream(payloadInputStream, maskingKey);
         }
 

@@ -1,8 +1,11 @@
 package sprout.server.websocket.message;
 
 public class ParsedMessage {
-    private final String destination;
-    private final String payload;
+    private String destination;
+    private String payload;
+
+    public ParsedMessage() {
+    }
 
     public ParsedMessage(String destination, String payload) {
         this.destination = destination;

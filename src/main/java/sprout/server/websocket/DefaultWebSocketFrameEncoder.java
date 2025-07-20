@@ -2,6 +2,8 @@ package sprout.server.websocket;
 
 import sprout.beans.annotation.Component;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 @Component
@@ -24,35 +26,33 @@ public class DefaultWebSocketFrameEncoder implements WebSocketFrameEncoder{
         byte[] payload = message.getBytes(StandardCharsets.UTF_8);
         int payloadLen = payload.length;
 
-        int headerSize = 2; // 기본 헤더 크기
-        if (payloadLen >= 126 && payloadLen <= 65535) {
-            headerSize += 2;
-        } else if (payloadLen > 65535) {
-            headerSize += 8;
-        }
-
-        byte[] frame = new byte[headerSize + payloadLen];
+        ByteArrayOutputStream frameStream = new ByteArrayOutputStream();
 
         // 첫 번째 바이트: FIN + opcode (텍스트 = 0x1)
-        frame[0] = (byte) 0x81;
+        frameStream.write(0x81);
 
-        // 두 번째 바이트: MASK 비트 없음 (0), 서버는 마스킹 안 함
+        // 두 번째 바이트 및 확장 길이 필드
         if (payloadLen < 126) {
-            frame[1] = (byte) payloadLen;
+            frameStream.write((byte) payloadLen);
         } else if (payloadLen <= 65535) {
-            frame[1] = 126;
-            frame[2] = (byte) ((payloadLen >> 8) & 0xFF);
-            frame[3] = (byte) (payloadLen & 0xFF);
+            frameStream.write(126);
+            frameStream.write((payloadLen >> 8) & 0xFF);
+            frameStream.write(payloadLen & 0xFF);
         } else {
-            frame[1] = 127;
+            frameStream.write(127);
             for (int i = 0; i < 8; i++) {
-                frame[2 + i] = (byte) ((payloadLen >> (8 * (7 - i))) & 0xFF);
+                frameStream.write((byte) ((long)payloadLen >> (8 * (7 - i)) & 0xFF));
             }
         }
 
-        // payload 복사
-        System.arraycopy(payload, 0, frame, headerSize, payloadLen);
+        // 페이로드 복사
+        try {
+            frameStream.write(payload);
+        } catch (IOException e) {
+            // ByteArrayOutputStream은 IOException을 던지지 않음
+            throw new RuntimeException(e);
+        }
 
-        return frame;
+        return frameStream.toByteArray();
     }
 }
