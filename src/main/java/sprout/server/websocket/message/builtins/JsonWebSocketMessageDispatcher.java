@@ -74,7 +74,7 @@ public class JsonWebSocketMessageDispatcher implements WebSocketMessageDispatche
         Object[] args = resolveArgs(messageMappingMethod, updatedContext); // ArgumentResolver 사용
         messageMappingMethod.invoke(currentEndpointInfo.getHandlerBean(), args);
 
-        return new DispatchResult(true, wasStreamPassedToHandler(messageMappingMethod));
+        return new DispatchResult(true, !wasStreamPassedToHandler(messageMappingMethod));
     }
 
     private boolean wasStreamPassedToHandler(Method handlerMethod) {

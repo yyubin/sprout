@@ -84,4 +84,7 @@ public class DefaultInvocationContext implements InvocationContext{
     @Override
     public @Nullable InputStream getInputStream() { return inputStream; }
 
+    @Override
+    public @Nullable WebSocketFrame getFrame() { return frame; }
+
 }

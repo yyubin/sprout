@@ -20,4 +20,6 @@ public interface InvocationContext {
     MessagePayload getMessagePayload();
     @Nullable
     InputStream getInputStream();
+    @Nullable
+    WebSocketFrame getFrame();
 }
