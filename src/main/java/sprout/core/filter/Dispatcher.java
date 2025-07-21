@@ -7,5 +7,5 @@ import java.io.IOException;
 
 @FunctionalInterface
 public interface Dispatcher {
-    void dispatch(HttpRequest request, HttpResponse response) throws IOException;
+    void dispatch(HttpRequest<?> request, HttpResponse response) throws IOException;
 }

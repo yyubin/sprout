@@ -18,21 +18,24 @@ public class RequestMappingRegistry {
     }
 
     public RequestMappingInfo getHandlerMethod(String path, HttpMethod httpMethod) {
-        List<PathPattern> sortedPatterns = new ArrayList<>(mappings.keySet());
-        Collections.sort(sortedPatterns, Comparator.comparingInt(PathPattern::getVariableCount));
+        List<RequestMappingInfo> matchingHandlers = new ArrayList<>();
 
-        for (PathPattern registeredPattern : sortedPatterns) {
-            if (registeredPattern.matches(path)) { // 매칭 확인
+        // 1. 먼저 요청 경로와 일치하는 모든 핸들러를 찾는다.
+        for (PathPattern registeredPattern : mappings.keySet()) {
+            if (registeredPattern.matches(path)) {
                 Map<HttpMethod, RequestMappingInfo> methodMappings = mappings.get(registeredPattern);
-                if (methodMappings != null) {
-                    RequestMappingInfo info = methodMappings.get(httpMethod);
-                    if (info != null) {
-                        System.out.println("Found handler for " + registeredPattern.getOriginalPattern());
-                        return info;
-                    }
+                if (methodMappings != null && methodMappings.containsKey(httpMethod)) {
+                    matchingHandlers.add(methodMappings.get(httpMethod));
                 }
             }
         }
-        return null;
+        if (matchingHandlers.isEmpty()) {
+            return null;
+        }
+        // 2. 찾은 핸들러들을 PathPattern의 우선순위에 따라 정렬한다.
+        matchingHandlers.sort(Comparator.comparing(RequestMappingInfo::pattern));
+
+        // 3. 가장 우선순위가 높은 (가장 구체적인) 핸들러를 반환한다.
+        return matchingHandlers.get(0);
     }
 }

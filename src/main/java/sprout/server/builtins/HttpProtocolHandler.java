@@ -6,40 +6,56 @@ import sprout.mvc.http.HttpRequest;
 import sprout.mvc.http.HttpResponse;
 import sprout.mvc.http.ResponseEntity;
 import sprout.mvc.http.parser.HttpRequestParser;
+import sprout.server.AcceptableProtocolHandler;
 import sprout.server.ProtocolHandler;
+import sprout.server.ThreadService;
 
 import java.io.*;
 import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 @Component
-public class HttpProtocolHandler implements ProtocolHandler {
+public class HttpProtocolHandler implements AcceptableProtocolHandler {
+    private final ThreadService threadService;
     private final RequestDispatcher dispatcher;
     private final HttpRequestParser parser;
 
-    public HttpProtocolHandler(RequestDispatcher dispatcher, HttpRequestParser parser) {
+    public HttpProtocolHandler(RequestDispatcher dispatcher, HttpRequestParser parser, ThreadService threadService) {
         this.dispatcher = dispatcher;
         this.parser = parser;
+        this.threadService = threadService;
     }
 
     @Override
-    public void handle(Socket socket) throws Exception {
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-             BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()))) {
+    public void accept(SocketChannel channel, Selector selector,  ByteBuffer initialBuffer) throws Exception {
+        channel.configureBlocking(true);
+        Socket socket = channel.socket();
 
-            String raw = readRawRequest(in);
-            if (raw.isBlank()) return;
+        threadService.execute(() -> {
+            System.out.println("Worker Thread for http allocated!");
+            try (InputStream in = socket.getInputStream();
+                BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()))) {
 
-            HttpRequest<?> req = parser.parse(raw);
-            HttpResponse res = new HttpResponse();
+                String raw = readRawRequest(initialBuffer, in);
+                System.out.println("Received request: " + raw);
 
-            dispatcher.dispatch(req, res);
+                if (raw.isBlank()) return;
 
-            writeResponse(out, res.getResponseEntity());
+                HttpRequest<?> req = parser.parse(raw);
+                HttpResponse res = new HttpResponse();
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+                dispatcher.dispatch(req, res);
+
+                writeResponse(out, res.getResponseEntity());
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     @Override
@@ -47,25 +63,25 @@ public class HttpProtocolHandler implements ProtocolHandler {
         return "HTTP/1.1".equals(protocol);
     }
 
-    private String readRawRequest(BufferedReader in) throws IOException {
-        StringBuilder sb = new StringBuilder();
-        String line;
-        int contentLength = 0;
+    private String readRawRequest(ByteBuffer initialBuffer, InputStream in) throws IOException {
+        // 1. 이미 읽은 초기 데이터를 먼저 가져옴
+        byte[] initialBytes = new byte[initialBuffer.remaining()];
+        initialBuffer.get(initialBytes);
+        String initialData = new String(initialBytes, StandardCharsets.UTF_8);
 
-        while ((line = in.readLine()) != null && !line.isEmpty()) {
-            sb.append(line).append("\r\n");
-            if (line.toLowerCase().startsWith("content-length:")) {
-                contentLength = Integer.parseInt(line.substring(line.indexOf(':') + 1).trim());
-            }
-        }
-        sb.append("\r\n");
+        // 2. 나머지 데이터를 스트림에서 읽어옴
+        // BufferedReader를 여기서 생성하여 나머지 스트림을 안전하게 읽음
+        BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+        StringBuilder remainingData = new StringBuilder();
 
-        if (contentLength > 0) {
-            char[] body = new char[contentLength];
-            in.read(body, 0, contentLength);
-            sb.append(body);
+        // HTTP 요청은 보통 한 번에 다 읽히므로, non-blocking 상태에서 read-ready가 되면
+        // 데이터가 있을 확률이 높다. 간단하게 처리.
+        // 더 견고하게 만들려면 헤더 끝(빈 줄)을 만날 때까지 읽는 로직이 필요.
+        while (reader.ready()) { // 데이터가 있을 때만 읽도록 시도
+            remainingData.append((char)reader.read());
         }
-        return sb.toString();
+
+        return initialData + remainingData.toString();
     }
 
     private void writeResponse(BufferedWriter out, ResponseEntity<?> res) throws IOException {
@@ -81,8 +97,10 @@ public class HttpProtocolHandler implements ProtocolHandler {
         out.write("Content-Length: " + body.getBytes(StandardCharsets.UTF_8).length + "\r\n");
 
         // Custom headers
-        for (Map.Entry<String, String> header : res.getHeaders().entrySet()) {
-            out.write(header.getKey() + ": " + header.getValue() + "\r\n");
+        if (res.getHeaders() != null) {
+            for (Map.Entry<String, String> header : res.getHeaders().entrySet()) {
+                out.write(header.getKey() + ": " + header.getValue() + "\r\n");
+            }
         }
 
         out.write("\r\n");

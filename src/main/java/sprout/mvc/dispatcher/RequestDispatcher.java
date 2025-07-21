@@ -1,6 +1,7 @@
 package sprout.mvc.dispatcher;
 
 import sprout.beans.annotation.Component;
+import sprout.core.filter.Dispatcher;
 import sprout.core.filter.Filter;
 import sprout.core.filter.FilterChain;
 import sprout.core.interceptor.Interceptor;
@@ -72,8 +73,16 @@ public class RequestDispatcher {
         Exception caughtException = null;
         InterceptorChain interceptorChain = new InterceptorChain(interceptors);
         try {
+            System.out.println(req.getPath() + "  " + req.getMethod().toString());
             hm = mapping.findHandler(req.getPath(), req.getMethod());
-            if (hm == null) throw new BadRequestException();
+            if (hm == null) {
+                // FIX: BadRequestException 대신 404 응답을 생성
+                System.err.println("No handler found for: " + req.getMethod() + " " + req.getPath());
+                res.setResponseEntity(
+                        new ResponseEntity<>("Not Found", null, ResponseCode.NOT_FOUND)
+                );
+                return; // 핸들러가 없으므로 즉시 종료
+            }
 
             if (!interceptorChain.applyPreHandle(req, res, hm)) {
                 return;

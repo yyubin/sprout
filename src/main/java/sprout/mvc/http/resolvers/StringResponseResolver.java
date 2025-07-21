@@ -19,6 +19,8 @@ public class StringResponseResolver implements ResponseResolver {
     public ResponseEntity<?> resolve(Object returnValue, HttpRequest request) {
         return ResponseEntityBuilder
                 .ok()
+                // FIX : stringValue 바디에 넣도록 추가
+                .body((String) returnValue)
                 .contentType("text/plain")
                 .build();
     }

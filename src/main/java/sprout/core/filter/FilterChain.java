@@ -16,11 +16,12 @@ public class FilterChain {
         this.dispatcher = dispatcher;
     }
 
-    public void doFilter(HttpRequest request, HttpResponse response) throws IOException {
+    public void doFilter(HttpRequest<?> request, HttpResponse response) throws IOException {
         if (currentFilterIndex < filters.size()) {
             filters.get(currentFilterIndex++).doFilter(request, response, this);
-        } else {
-            dispatcher.dispatch(request, response);
+            return;
         }
+        // 모든 필터 실행이 완료된 후에만 디스패처 호출
+        dispatcher.dispatch(request, response);
     }
 }

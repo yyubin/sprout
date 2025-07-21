@@ -1,6 +1,7 @@
 package sprout.boot;
 
 import sprout.beans.annotation.ComponentScan;
+import sprout.config.AppConfig;
 import sprout.context.ApplicationContext;
 import sprout.context.Container;
 import sprout.context.ContextInitializer;
@@ -21,18 +22,11 @@ public final class SproutApplication {
         List<String> packages = getPackagesToScan(primarySource);
 
         ApplicationContext applicationContext = new SproutApplicationContext(packages.toArray(new String[packages.size()]));
-
         applicationContext.refresh();
 
-
-        List<ContextInitializer> contextInitializers = applicationContext.getAllBeans(ContextInitializer.class);
-        for (ContextInitializer initializer : contextInitializers) {
-            initializer.initializeAfterRefresh(applicationContext);
-        }
-
         HttpServer server = applicationContext.getBean(HttpServer.class);
-
-        server.start(8080);
+        int port = applicationContext.getBean(AppConfig.class).getIntProperty("server.port", 8080);
+        server.start(port);
     }
 
     private static List<String> getPackagesToScan(Class<?> primarySource) {

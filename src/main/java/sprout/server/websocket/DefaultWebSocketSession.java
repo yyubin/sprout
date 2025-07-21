@@ -2,6 +2,7 @@ package sprout.server.websocket;
 
 import sprout.mvc.http.HttpRequest;
 import sprout.server.argument.WebSocketArgumentResolver;
+import sprout.server.websocket.exception.NotEnoughDataException;
 import sprout.server.websocket.exception.WebSocketException;
 import sprout.server.websocket.endpoint.WebSocketEndpointInfo;
 import sprout.server.websocket.exception.WebSocketProtocolException;
@@ -12,6 +13,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
@@ -21,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class DefaultWebSocketSession implements WebSocketSession{
     private final String id;
-    private final Socket socket;
+    private final SocketChannel channel;
     private final HttpRequest<?> handshakeRequest;
     private final Map<String, String> pathParameters;
     private final WebSocketEndpointInfo endpointInfo;
@@ -29,36 +33,42 @@ public class DefaultWebSocketSession implements WebSocketSession{
     private final WebSocketFrameEncoder frameEncoder;
     private final List<WebSocketArgumentResolver> argumentResolvers;
     private final List<WebSocketMessageDispatcher> messageDispatchers;
-    private final InputStream in;
-    private final OutputStream out;
+    private final CloseListener closeListener;
     private volatile boolean open = true;
     private final Map<String, Object> userProperties = new ConcurrentHashMap<>();
     private StringBuilder fragmentedTextMessageBuffer = new StringBuilder();
     private ByteArrayOutputStream fragmentedBinaryMessageBuffer = new ByteArrayOutputStream();
+    private final ByteBuffer readBuffer = ByteBuffer.allocate(65536);
     private int lastDataFrameOpcode = -1;
 
-    public DefaultWebSocketSession(String id, Socket socket, HttpRequest<?> handshakeRequest, WebSocketEndpointInfo endpointInfo, WebSocketFrameParser frameParser, WebSocketFrameEncoder frameEncoder, Map<String, String> pathParameters, List<WebSocketArgumentResolver> webSocketArgumentResolvers, List<WebSocketMessageDispatcher> messageDispatchers) throws IOException {
+    public DefaultWebSocketSession(String id, SocketChannel channel, HttpRequest<?> handshakeRequest, WebSocketEndpointInfo endpointInfo, WebSocketFrameParser frameParser, WebSocketFrameEncoder frameEncoder, Map<String, String> pathParameters, List<WebSocketArgumentResolver> webSocketArgumentResolvers, List<WebSocketMessageDispatcher> messageDispatchers, CloseListener closeListener) throws IOException {
         this.id = id;
-        this.socket = socket;
+        this.channel = channel;
         this.handshakeRequest = handshakeRequest;
         this.endpointInfo = endpointInfo;
         this.frameParser = frameParser;
         this.frameEncoder = frameEncoder;
-        this.in = socket.getInputStream();
-        this.out = socket.getOutputStream();
         this.pathParameters = pathParameters;
         this.argumentResolvers = webSocketArgumentResolvers;
         this.messageDispatchers = messageDispatchers;
+        this.closeListener = closeListener;
     }
 
     @Override
     public void close() throws IOException {
         if (open) {
             System.out.println("Closing WebSocket session: " + id);
-            out.write(CloseCodes.getCloseCode(lastDataFrameOpcode).getCode());
-            out.flush();
+            byte[] encoded = frameEncoder.encodeText("Closing WebSocket session: " + id + ", Close code is: " + CloseCodes.getCloseCode(lastDataFrameOpcode).getCode() + ".");
+            ByteBuffer buf = ByteBuffer.wrap(encoded);
+            while (buf.hasRemaining()) {
+                channel.write(buf);
+            }
             open = false;
-            socket.close();
+            channel.close();
+
+            if (closeListener != null) {
+                closeListener.onSessionClosed(this);
+            }
         }
     }
 
@@ -69,30 +79,38 @@ public class DefaultWebSocketSession implements WebSocketSession{
 
     @Override
     public void sendText(String message) throws IOException {
-        byte[] frame = frameEncoder.encodeText(message);
-        out.write(frame);
-        out.flush();
+        byte[] encoded = frameEncoder.encodeText(message);
+        ByteBuffer buf = ByteBuffer.wrap(encoded);
+        while (buf.hasRemaining()) {
+            channel.write(buf); // non-blocking write
+        }
     }
 
     @Override
     public void sendBinary(byte[] data) throws IOException {
-        byte[] frame = frameEncoder.encodeControlFrame(0x2, data);
-        out.write(frame);
-        out.flush();
+        byte[] encoded = frameEncoder.encodeControlFrame(0x2, data);
+        ByteBuffer buf = ByteBuffer.wrap(encoded);
+        while (buf.hasRemaining()) {
+            channel.write(buf);
+        }
     }
 
     @Override
     public void sendPing(byte[] data) throws IOException {
-        byte[] frame = frameEncoder.encodeControlFrame(0x9, data);
-        out.write(frame);
-        out.flush();
+        byte[] encoded = frameEncoder.encodeControlFrame(0x9, data);
+        ByteBuffer buf = ByteBuffer.wrap(encoded);
+        while (buf.hasRemaining()) {
+            channel.write(buf);
+        }
     }
 
     @Override
     public void sendPong(byte[] data) throws IOException {
-        byte[] frame = frameEncoder.encodeControlFrame(0xA, data);
-        out.write(frame);
-        out.flush();
+        byte[] encoded = frameEncoder.encodeControlFrame(0xA, data);
+        ByteBuffer buf = ByteBuffer.wrap(encoded);
+        while (buf.hasRemaining()) {
+            channel.write(buf);
+        }
     }
 
     @Override
@@ -102,7 +120,7 @@ public class DefaultWebSocketSession implements WebSocketSession{
 
     @Override
     public boolean isOpen() {
-        return open && !socket.isClosed();
+        return open && channel.isOpen();
     }
 
     @Override
@@ -111,54 +129,53 @@ public class DefaultWebSocketSession implements WebSocketSession{
     }
 
     @Override
-    public void startMessageLoop() throws Exception {
-        Thread messageThread = new Thread(() -> {
+    public void read(SelectionKey key) throws Exception {
+        int bytesRead = channel.read(readBuffer);
+        if (bytesRead == -1) {
+            callOnCloseMethod(CloseCodes.NO_STATUS_CODE);
+            close();
+            return;
+        }
+
+        readBuffer.flip();
+
+        while (readBuffer.remaining() > 0) {
+            // 파싱 전에 현재 위치를 마크 (파싱 실패 시 복구 위함)
+            readBuffer.mark();
+
+            // ByteBuffer를 직접 읽는 InputStream 어댑터 사용
+            InputStream frameInputStream = new ByteBufferInputStream(readBuffer);
+
             try {
-                while (isOpen()) {
-                    WebSocketFrame frame = frameParser.parse(in); // 이 부분에서 블로킹 발생 가능
-                    if (WebSocketFrameDecoder.isCloseFrame(frame)) {
-                        System.out.println("Received Close frame from client " + id);
-                        callOnCloseMethod(WebSocketFrameDecoder.getCloseCode(frame.getPayloadBytes())); // getPayloadBytes() 호출
-                        break; // 루프 종료
-                    } else if (WebSocketFrameDecoder.isPingFrame(frame)) {
-                        System.out.println("Received Ping frame from client " + id);
-                        sendPong(frame.getPayloadBytes()); // getPayloadBytes() 호출
-                    } else if (WebSocketFrameDecoder.isPongFrame(frame)) {
-                        System.out.println("Received Pong frame from client " + id);
-                        // Pong 수신 처리 (주로 Keep-alive 확인용, 별도 로직 불필요)
-                    } else if (WebSocketFrameDecoder.isDataFrame(frame)) {
-                        dispatchMessage(frame);
-                    } else {
-                        System.err.println("Unknown or unsupported WebSocket opcode: " + frame.getOpcode());
-                        callOnErrorMethod(new WebSocketException("Unknown WebSocket opcode: " + frame.getOpcode()));
-                        break;
-                    }
-                    Thread.sleep(100); // BIO 환경에서 CPU 과부하 방지 (TODO: NIO 전환 시 제거)
-                }
-            } catch (IOException e) {
-                if (isOpen()) {
-                    System.err.println("I/O error in WebSocket session " + id + ": " + e.getMessage());
-                    try { callOnErrorMethod(e); } catch (Exception ex) { throw new RuntimeException(ex); }
-                }
-            } catch (Exception e) {
-                System.err.println("Error in WebSocket session " + id + " message loop: " + e.getMessage());
-                e.printStackTrace();
-                try { callOnErrorMethod(e); } catch (Exception ex) { throw new RuntimeException(ex); }
-            } finally {
-                try {
-                    if (isOpen()) { callOnCloseMethod(CloseCodes.CLOSED_ABNORMALLY); }
-                } catch (Exception e) {
-                    System.err.println("Error during @OnClose method call or final session close: " + e.getMessage());
-                    e.printStackTrace();
-                } finally {
-                    try { close(); } catch (IOException e) { System.err.println("Error during final socket close for session " + id + ": " + e.getMessage()); }
-                }
+                WebSocketFrame frame = frameParser.parse(frameInputStream);
+                // 성공적으로 파싱되면, 실제 처리 로직 실행
+                processFrame(frame);
+            } catch (NotEnoughDataException e) {
+                // 버퍼에 아직 완전한 프레임이 없음 -> 다음 read 이벤트를 기다림
+                readBuffer.reset(); // 마크한 위치로 복구
+                break; // while 루프 종료
             }
-        });
-        messageThread.setName("WebSocket-MessageLoop-" + id);
-        messageThread.setDaemon(true);
-        messageThread.start();
+        }
+        readBuffer.compact();
     }
+
+    private void processFrame(WebSocketFrame frame) throws Exception {
+        if (WebSocketFrameDecoder.isCloseFrame(frame)) {
+            callOnCloseMethod(WebSocketFrameDecoder.getCloseCode(frame.getPayloadBytes()));
+            return;
+        } else if (WebSocketFrameDecoder.isPingFrame(frame)) {
+            System.out.println("Received Ping frame from client " + id);
+            sendPong(frame.getPayloadBytes());
+        } else if (WebSocketFrameDecoder.isPongFrame(frame)) {
+            System.out.println("Received Pong frame from client " + id);
+        } else if (WebSocketFrameDecoder.isDataFrame(frame)) {
+            dispatchMessage(frame);
+        } else {
+            System.err.println("Unknown or unsupported WebSocket opcode: " + frame.getOpcode());
+            callOnErrorMethod(new WebSocketException("Unknown WebSocket opcode: " + frame.getOpcode()));
+        }
+    }
+
 
     public void dispatchMessage(WebSocketFrame frame) throws Exception {
         if (frame.isFin()) {
@@ -311,11 +328,6 @@ public class DefaultWebSocketSession implements WebSocketSession{
     }
 
     @Override
-    public InputStream getInputStream() {
-        return in;
-    }
-
-    @Override
     public void callOnOpenMethod() throws Exception{
         Method onOpenMethod = endpointInfo.getOnOpenMethod();
         if (onOpenMethod == null) return;
@@ -397,20 +409,4 @@ public class DefaultWebSocketSession implements WebSocketSession{
         return this.pathParameters;
     }
 
-    // MessageHandler 관련 메서드는 JSR-356의 Session 인터페이스에 있으나,
-    // 현재 Sprout는 @MessageMapping 기반이므로 직접 구현하지 않아도 될 수 있음
-    @Override
-    public Set<MessageHandler> getMessageHandlers() {
-        return null; // TODO: 필요 시 구현
-    }
-
-    @Override
-    public void addMessageHandler(MessageHandler handler) {
-        // TODO: 필요 시 구현
-    }
-
-    @Override
-    public void removeMessageHandler(MessageHandler handler) {
-        // TODO: 필요 시 구현
-    }
 }

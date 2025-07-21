@@ -12,10 +12,7 @@ import sprout.beans.annotation.*;
 import sprout.beans.internal.BeanGraph;
 import sprout.beans.processor.BeanDefinitionRegistrar;
 import sprout.beans.processor.BeanPostProcessor;
-import sprout.context.ApplicationContext;
-import sprout.context.BeanFactory;
-import sprout.context.CtorMeta;
-import sprout.context.PostInfrastructureInitializer;
+import sprout.context.*;
 import sprout.mvc.advice.annotation.ControllerAdvice;
 import sprout.scan.ClassPathScanner;
 import sprout.server.websocket.annotation.WebSocketHandler;
@@ -126,6 +123,11 @@ public class SproutApplicationContext implements ApplicationContext {
         scanBeanDefinitions();
         instantiateInfrastructureBeans();
         instantiateAllSingletons();
+
+        List<ContextInitializer> contextInitializers = getAllBeans(ContextInitializer.class);
+        for (ContextInitializer initializer : contextInitializers) {
+            initializer.initializeAfterRefresh(this);
+        }
     }
 
     @Override

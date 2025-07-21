@@ -1,16 +1,17 @@
 package sprout.server.builtins;
 
 import sprout.beans.annotation.Component;
+import sprout.server.AcceptableProtocolHandler;
 import sprout.server.ConnectionManager;
 import sprout.server.ProtocolDetector;
 import sprout.server.ProtocolHandler;
 
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 import java.util.List;
-import java.util.Objects;
 
 @Component
 public class DefaultConnectionManager implements ConnectionManager {
@@ -24,15 +25,25 @@ public class DefaultConnectionManager implements ConnectionManager {
     }
 
     @Override
-    public void handleConnection(Socket socket) throws Exception {
-        InputStream originalInputStream = socket.getInputStream();
-        BufferedInputStream bufferedIn = new BufferedInputStream(originalInputStream);
+    public void acceptConnection(SelectionKey selectionKey, Selector selector) throws Exception {
+        ServerSocketChannel serverChannel = (ServerSocketChannel) selectionKey.channel();
+        SocketChannel clientChannel = serverChannel.accept();
+        clientChannel.configureBlocking(false);
+
+        ByteBuffer buffer = ByteBuffer.allocate(2048);
+        int bytesRead = clientChannel.read(buffer);
+
+        if (bytesRead <= 0) {
+            clientChannel.close();
+            return;
+        }
+
+        buffer.flip();
         String detectedProtocol = "UNKNOWN";
 
         for (ProtocolDetector detector : detectors) {
-            detectedProtocol = detector.detect(bufferedIn);
             try {
-                detectedProtocol = detector.detect(bufferedIn);
+                detectedProtocol = detector.detect(buffer);
                 if (!"UNKNOWN".equals(detectedProtocol) && detectedProtocol != null) {
                     break;
                 }
@@ -42,24 +53,21 @@ public class DefaultConnectionManager implements ConnectionManager {
         }
 
         if ("UNKNOWN".equals(detectedProtocol) || detectedProtocol == null) {
-            System.err.println("Unknown protocol detected. Closing socket: " + socket);
-            socket.close();
+            System.err.println("Unknown protocol detected. Closing socket: " + clientChannel.socket());
+            clientChannel.close();
             return;
         }
 
-        boolean handlerFound = false;
         for (ProtocolHandler handler : handlers) {
             if (handler.supports(detectedProtocol)) {
                 System.out.println("Handling connection with " + handler.getClass().getSimpleName() + " for protocol " + detectedProtocol);
-                handler.handle(socket);
-                handlerFound = true;
+                if (handler instanceof AcceptableProtocolHandler) {
+                    ((AcceptableProtocolHandler) handler).accept(clientChannel, selector, buffer);
+                    return; // 핸들러를 찾았으므로 종료
+                }
                 break;
             }
         }
 
-        if (!handlerFound) {
-            System.err.println("No handler found for protocol: " + detectedProtocol + ". Closing socket: " + socket);
-            socket.close();
-        }
     }
 }

@@ -9,6 +9,11 @@ import java.util.Objects;
 public record RequestMappingInfo(PathPattern pattern, HttpMethod httpMethod, Object controller, Method handlerMethod) {
 
     @Override
+    public PathPattern pattern() {
+        return pattern;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
-public class DefaultWebSocketContainer implements WebSocketContainer{
+public class DefaultWebSocketContainer implements WebSocketContainer, CloseListener{
 
     private final Map<String, Map<String, WebSocketSession>> sessionStore = new ConcurrentHashMap<>();
 
@@ -40,4 +40,8 @@ public class DefaultWebSocketContainer implements WebSocketContainer{
                 .orElse(null);
     }
 
+    @Override
+    public void onSessionClosed(WebSocketSession session) {
+        this.removeSession(session.getRequestPath(), session.getId());
+    }
 }
