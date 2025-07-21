@@ -3,6 +3,8 @@ package sprout.server;
 import sprout.beans.annotation.Bean;
 import sprout.beans.annotation.Configuration;
 import sprout.config.AppConfig;
+import sprout.context.ApplicationContext;
+import sprout.context.ContextPropagator;
 import sprout.server.builtins.ThreadPoolService;
 import sprout.server.builtins.VirtualThreadService;
 
@@ -10,7 +12,7 @@ import sprout.server.builtins.VirtualThreadService;
 public class ServerConfiguration {
 
     @Bean
-    public ThreadService threadService(AppConfig appConfig) {
+    public ThreadService threadService(ApplicationContext applicationContext, AppConfig appConfig) {
         String threadType = appConfig.getStringProperty("server.thread-type", "virtual");
 
         if ("platform".equalsIgnoreCase(threadType)) {
@@ -19,7 +21,7 @@ public class ServerConfiguration {
             return new ThreadPoolService(poolSize);
         }
         System.out.println("Initializing with Virtual Threads.");
-        return new VirtualThreadService();
+        return new VirtualThreadService(applicationContext.getAllBeans(ContextPropagator.class));
     }
 
 }

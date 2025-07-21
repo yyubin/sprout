@@ -4,7 +4,7 @@ import sprout.security.core.SecurityContext;
 
 import java.util.function.Supplier;
 
-final class ThreadLocalSecurityContextHolderStrategy implements SecurityContextHolderStrategy{
+public class ThreadLocalSecurityContextHolderStrategy implements SecurityContextHolderStrategy{
 
     private static final ThreadLocal<Supplier<SecurityContext>> contextHolder = new ThreadLocal<>();
 
