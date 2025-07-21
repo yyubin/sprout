@@ -31,7 +31,7 @@ public class MethodBeanDefinition implements BeanDefinition {
 
     @Override
     public Class<?>[] getFactoryMethodArgumentTypes() {
-        if (factoryMethodArgumentTypes != null && factoryMethodArgumentTypes.length > 0) {
+        if (factoryMethodArgumentTypes != null) {
             return factoryMethodArgumentTypes;
         }
         // 파라미터가 없는 경우 -> 반환 타입의 주 생성자 파라미터를 의존성으로 간주

@@ -1,6 +1,7 @@
 package sprout.mvc.advice;
 
 import sprout.beans.annotation.Component;
+import sprout.context.BeanFactory;
 import sprout.context.Container;
 import sprout.mvc.advice.annotation.ControllerAdvice;
 import sprout.mvc.advice.annotation.ExceptionHandler;
@@ -13,13 +14,11 @@ import java.util.stream.Collectors;
 @Component
 public class ControllerAdviceRegistry {
 
-    private final Container container;
     private final List<ExceptionHandlerObject> allExceptionHandlers = new ArrayList<>();
     private final Map<Class<? extends Throwable>, Optional<ExceptionHandlerObject>> cachedHandlers = new ConcurrentHashMap<>();
 
 
-    public ControllerAdviceRegistry(Container container) {
-        this.container = container;
+    public ControllerAdviceRegistry() {
     }
 
     public Optional<ExceptionHandlerObject> getExceptionHandler(Class<? extends Throwable> exceptionClass) {
@@ -60,8 +59,8 @@ public class ControllerAdviceRegistry {
         return (current != null) ? distance : Integer.MAX_VALUE; // 찾지 못하면 무한대
     }
 
-    public void scanControllerAdvices() {
-        Collection<Object> allBeans = container.beans();
+    public void scanControllerAdvices(BeanFactory context) {
+        Collection<Object> allBeans = context.getAllBeans();
         for (Object bean : allBeans) {
             if (bean.getClass().isAnnotationPresent(ControllerAdvice.class)) {
                 System.out.println("Found @ControllerAdvice: " + bean.getClass().getName());

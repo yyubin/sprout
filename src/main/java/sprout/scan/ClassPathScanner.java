@@ -8,6 +8,9 @@ import sprout.beans.BeanDefinition;
 import sprout.beans.ConstructorBeanDefinition;
 import sprout.beans.MethodBeanDefinition;
 import sprout.beans.annotation.*;
+import sprout.context.ApplicationContext;
+import sprout.context.BeanDefinitionRegistry;
+import sprout.context.BeanFactory;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
@@ -64,6 +67,7 @@ public class ClassPathScanner {
                 if (clazz.isAnnotationPresent(Configuration.class)) {
                     def.setConfigurationClassProxyNeeded(clazz.getAnnotation(Configuration.class).proxyBeanMethods());
                 }
+
                 definitions.add(def);
             } catch (NoSuchMethodException e) {
                 throw new IllegalStateException("No usable constructor for class " + clazz.getName(), e);
@@ -107,8 +111,18 @@ public class ClassPathScanner {
         if (List.class.isAssignableFrom(paramType)) {
             return true; // List 주입은 항상 가능하다고 가정
         }
+
+        if (isKnownInfrastructureType(paramType)) {
+            return true;
+        }
+
         // allKnownBeanTypes에 파라미터 타입과 일치하거나, 해당 타입을 구현/상속하는 타입이 있는지 확인
         return allKnownBeanTypes.stream().anyMatch(knownType -> paramType.isAssignableFrom(knownType));
+    }
+
+    private boolean isKnownInfrastructureType(Class<?> paramType) {
+        // ApplicationContext 외에 BeanFactory 등 다른 핵심 인터페이스도 추가할 수 있습니다.
+        return ApplicationContext.class.isAssignableFrom(paramType) || BeanFactory.class.isAssignableFrom(paramType) || BeanDefinitionRegistry.class.isAssignableFrom(paramType);
     }
 
     private String generateBeanName(Class<?> clazz) {

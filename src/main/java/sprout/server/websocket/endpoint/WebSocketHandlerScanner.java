@@ -2,6 +2,7 @@ package sprout.server.websocket.endpoint;
 
 import sprout.aop.annotation.Around;
 import sprout.beans.annotation.Component;
+import sprout.context.BeanFactory;
 import sprout.context.Container;
 import sprout.mvc.mapping.PathPattern;
 import sprout.mvc.mapping.PathPatternResolver;
@@ -20,19 +21,16 @@ import java.util.Map;
 
 @Component
 public class WebSocketHandlerScanner {
-
-    private final Container container;
     private final WebSocketEndpointRegistry endpointRegistry;
     private final PathPatternResolver pathPatternResolver;
 
-    public WebSocketHandlerScanner(Container container, WebSocketEndpointRegistry endpointRegistry, PathPatternResolver pathPatternResolver) {
-        this.container = container;
+    public WebSocketHandlerScanner(WebSocketEndpointRegistry endpointRegistry, PathPatternResolver pathPatternResolver) {
         this.endpointRegistry = endpointRegistry;
         this.pathPatternResolver = pathPatternResolver;
     }
 
-    public void scanWebSocketHandlers() {
-        Collection<Object> beans = container.beans();
+    public void scanWebSocketHandlers(BeanFactory context) {
+        Collection<Object> beans = context.getAllBeans();
         System.out.println(beans.size() + " beans found for WebSocket scan.");
 
         for (Object bean : beans) {

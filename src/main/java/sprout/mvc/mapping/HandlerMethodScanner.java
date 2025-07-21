@@ -2,6 +2,8 @@ package sprout.mvc.mapping;
 
 import sprout.beans.annotation.Component;
 import sprout.beans.annotation.Controller;
+import sprout.context.ApplicationContext;
+import sprout.context.BeanFactory;
 import sprout.context.Container;
 import sprout.mvc.annotation.*;
 import sprout.mvc.http.HttpMethod;
@@ -15,16 +17,14 @@ import java.util.Collection;
 public class HandlerMethodScanner {
     private final RequestMappingRegistry requestMappingRegistry;
     private final PathPatternResolver pathPatternResolver;
-    private final Container container;
 
-    public HandlerMethodScanner(RequestMappingRegistry requestMappingRegistry, PathPatternResolver pathPatternResolver, Container container) {
+    public HandlerMethodScanner(RequestMappingRegistry requestMappingRegistry, PathPatternResolver pathPatternResolver) {
         this.requestMappingRegistry = requestMappingRegistry;
         this.pathPatternResolver = pathPatternResolver;
-        this.container = container;
     }
 
-    public void scanControllers() {
-        Collection<Object> beans = container.beans();
+    public void scanControllers(BeanFactory context) {
+        Collection<Object> beans = context.getAllBeans();
         System.out.println(beans.size() + " beans found");
         for (Object bean : beans) {
             Class<?> beanClass = bean.getClass();

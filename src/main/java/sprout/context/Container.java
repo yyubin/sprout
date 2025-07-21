@@ -218,7 +218,7 @@ public class Container {
                 if (def.isConfigurationClassProxyNeeded()) {
                     Enhancer enhancer = new Enhancer();
                     enhancer.setSuperclass(def.getType());
-                    enhancer.setCallback(new ConfigurationMethodInterceptor(this));
+                    //enhancer.setCallback(new ConfigurationMethodInterceptor(this));
                     beanInstance = enhancer.create(def.getConstructorArgumentTypes(), deps);
                 } else {
                     beanInstance = def.getConstructor().newInstance(deps);

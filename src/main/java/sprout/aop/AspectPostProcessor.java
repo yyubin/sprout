@@ -15,6 +15,7 @@ import sprout.aop.annotation.Around;
 import sprout.aop.annotation.Aspect;
 import sprout.beans.annotation.Component;
 import sprout.beans.processor.BeanPostProcessor;
+import sprout.context.ApplicationContext;
 import sprout.context.Container;
 import sprout.context.CtorMeta;
 
@@ -30,13 +31,13 @@ import java.util.function.Supplier;
 @Component
 public class AspectPostProcessor implements BeanPostProcessor {
     private final AdvisorRegistry advisorRegistry;
-    private final Container container;
+    private final ApplicationContext container;
     private final AdviceFactory adviceFactory;
     private final AtomicBoolean initialized = new AtomicBoolean(false); // 초기화 여부 플래그
 
     private List<String> basePackages; // 스캔할 기본 패키지 목록
 
-    public AspectPostProcessor(AdvisorRegistry advisorRegistry, Container container, AdviceFactory adviceFactory) {
+    public AspectPostProcessor(AdvisorRegistry advisorRegistry, ApplicationContext container, AdviceFactory adviceFactory) {
         this.advisorRegistry = advisorRegistry;
         this.container = container;
         this.adviceFactory = adviceFactory;
@@ -85,7 +86,7 @@ public class AspectPostProcessor implements BeanPostProcessor {
     private List<Advisor> createAdvisorsFromAspect(Class<?> aspectClass) {
         List<Advisor> advisors = new ArrayList<>();
 
-        Supplier<Object> aspectSupplier = () -> container.get(aspectClass);
+        Supplier<Object> aspectSupplier = () -> container.getBean(aspectClass);
 
         for (Method m : aspectClass.getDeclaredMethods()) {
             adviceFactory.createAdvisor(aspectClass, m, aspectSupplier)

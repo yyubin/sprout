@@ -7,13 +7,12 @@ import sprout.beans.annotation.Component;
 
 import java.lang.reflect.Method;
 
-@Component
 public class ConfigurationMethodInterceptor implements MethodInterceptor {
 
-    private final Container container;
+    private final BeanFactory beanFactory;
 
-    public ConfigurationMethodInterceptor(Container container) {
-        this.container = container;
+    public ConfigurationMethodInterceptor(BeanFactory beanFactory) {
+        this.beanFactory = beanFactory;
     }
 
     @Override
@@ -32,15 +31,15 @@ public class ConfigurationMethodInterceptor implements MethodInterceptor {
         if (beanName.isEmpty()) beanName = method.getName();
 
         // 이미 등록돼 있으면 반환
-        if (container.containsBean(beanName)) {
-            return container.get(beanName);
+        if (beanFactory.containsBean(beanName)) {
+            return beanFactory.getBean(beanName);
         }
 
         // 아직이면 실제 메서드 실행하여 빈 생성
         Object beanInstance = proxy.invokeSuper(obj, args);
 
         // 컨테이너에 등록 (싱글톤 보장)
-        container.registerRuntimeBean(beanName, beanInstance);
+        beanFactory.registerRuntimeBean(beanName, beanInstance);
 
         return beanInstance;
     }

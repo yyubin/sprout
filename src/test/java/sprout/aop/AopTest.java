@@ -9,6 +9,7 @@ import sprout.aop.advisor.PointcutFactory;
 import sprout.aop.annotation.Around;
 import sprout.aop.annotation.Aspect;
 import sprout.beans.processor.BeanPostProcessor;
+import sprout.context.ApplicationContext;
 import sprout.context.Container;
 
 import java.util.ArrayList;
@@ -18,14 +19,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class AopTest {
 
-    private Container container;
+    private ApplicationContext container;
     private AspectPostProcessor aspectPostProcessor;
     private AdvisorRegistry advisorRegistry;
     private static List<String> executionLog = new ArrayList<>();
 
     @BeforeEach
     void setUp() {
-        container = Container.getInstance();
         container.reset();
         advisorRegistry = new AdvisorRegistry();
         aspectPostProcessor = new AspectPostProcessor(advisorRegistry, container, new AdviceFactory(Mockito.mock(PointcutFactory.class)));

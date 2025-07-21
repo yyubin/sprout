@@ -1,7 +1,11 @@
 package sprout.boot;
 
 import sprout.beans.annotation.ComponentScan;
+import sprout.context.ApplicationContext;
 import sprout.context.Container;
+import sprout.context.ContextInitializer;
+import sprout.context.builtins.DefaultListableBeanFactory;
+import sprout.context.builtins.SproutApplicationContext;
 import sprout.mvc.advice.ControllerAdviceRegistry;
 import sprout.mvc.mapping.HandlerMethodScanner;
 import sprout.server.HttpServer;
@@ -16,19 +20,18 @@ public final class SproutApplication {
     public static void run(Class<?> primarySource) throws Exception {
         List<String> packages = getPackagesToScan(primarySource);
 
-        Container ctx = Container.getInstance();
-        ctx.bootstrap(packages);
+        ApplicationContext applicationContext = new SproutApplicationContext(packages.toArray(new String[packages.size()]));
 
-        HandlerMethodScanner handlerMethodScanner = ctx.get(HandlerMethodScanner.class);
-        handlerMethodScanner.scanControllers();
+        applicationContext.refresh();
 
-        ControllerAdviceRegistry controllerAdviceRegistry = ctx.get(ControllerAdviceRegistry.class);
-        controllerAdviceRegistry.scanControllerAdvices();
 
-        WebSocketHandlerScanner webSocketHandlerScanner = ctx.get(WebSocketHandlerScanner.class);
-        webSocketHandlerScanner.scanWebSocketHandlers();
+        List<ContextInitializer> contextInitializers = applicationContext.getAllBeans(ContextInitializer.class);
+        for (ContextInitializer initializer : contextInitializers) {
+            initializer.initializeAfterRefresh(applicationContext);
+        }
 
-        HttpServer server = ctx.get(HttpServer.class);
+        HttpServer server = applicationContext.getBean(HttpServer.class);
+
         server.start(8080);
     }
 

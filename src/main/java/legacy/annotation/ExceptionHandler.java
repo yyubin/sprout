@@ -1,4 +1,4 @@
-package sprout.error.annotation;
+package legacy.annotation;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
