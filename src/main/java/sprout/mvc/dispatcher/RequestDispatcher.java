@@ -14,7 +14,6 @@ import sprout.mvc.invoke.HandlerMethod;
 import sprout.mvc.invoke.HandlerMethodInvoker;
 import sprout.mvc.mapping.HandlerMapping;
 import app.exception.BadRequestException;
-import sprout.security.context.SecurityContextHolder;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -32,6 +31,7 @@ public class RequestDispatcher {
     private final List<Filter> filters;
     private final List<Interceptor> interceptors;
     private final List<ExceptionResolver> exceptionResolvers;
+    private final List<DispatchHook> dispatchHooks;
 
     public RequestDispatcher(HandlerMapping mapping,
                              HandlerMethodInvoker invoker,
@@ -39,7 +39,8 @@ public class RequestDispatcher {
                              List<ResponseAdvice> responseAdvices,
                              List<Filter> filters,
                              List<Interceptor> interceptors,
-                             List<ExceptionResolver> exceptionResolvers
+                             List<ExceptionResolver> exceptionResolvers,
+                             List<DispatchHook> dispatchHooks
     ) {
         this.mapping = mapping;
         this.invoker = invoker;
@@ -48,14 +49,20 @@ public class RequestDispatcher {
         this.filters = filters;
         this.interceptors = interceptors;
         this.exceptionResolvers = exceptionResolvers;
+        this.dispatchHooks = dispatchHooks;
     }
 
     public void dispatch(HttpRequest<?> req, HttpResponse res) throws IOException {
-        SecurityContextHolder.createEmptyContext();
         try {
+            for (DispatchHook hook : dispatchHooks) {
+                hook.beforeDispatch(req, res);
+            }
+
             new FilterChain(filters, this::doDispatch).doFilter(req, res);
         } finally {
-            SecurityContextHolder.clearContext();
+            for (DispatchHook hook : dispatchHooks) {
+                hook.afterDispatch(req, res);
+            }
         }
 
     }

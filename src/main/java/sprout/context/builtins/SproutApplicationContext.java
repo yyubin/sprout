@@ -15,6 +15,7 @@ import sprout.beans.processor.BeanPostProcessor;
 import sprout.context.ApplicationContext;
 import sprout.context.BeanFactory;
 import sprout.context.CtorMeta;
+import sprout.context.PostInfrastructureInitializer;
 import sprout.mvc.advice.annotation.ControllerAdvice;
 import sprout.scan.ClassPathScanner;
 import sprout.server.websocket.annotation.WebSocketHandler;
@@ -93,27 +94,23 @@ public class SproutApplicationContext implements ApplicationContext {
         this.appDefs = appDefs;
     }
 
-    private void instantiateGroup(List<BeanDefinition> defs, boolean isApp, List<String> basePackages) {
+    private void instantiateGroup(List<BeanDefinition> defs, List<String> basePackages) {
         List<BeanDefinition> order = new BeanGraph(defs).topologicallySorted();
-
-        if (isApp) {
-            AspectPostProcessor registeredAspectPostProcessor = beanFactory.getBean(AspectPostProcessor.class);
-            if (registeredAspectPostProcessor != null) {
-                registeredAspectPostProcessor.initialize(basePackages);
-            }
-        }
-
         order.forEach(beanFactory::createBean);
         beanFactory.postProcessListInjections();
     }
 
     private void instantiateInfrastructureBeans() {
-        instantiateGroup(infraDefs, false, basePackages);
+        instantiateGroup(infraDefs, basePackages);
+        List<PostInfrastructureInitializer> initializers = beanFactory.getAllBeans(PostInfrastructureInitializer.class);
+        for (PostInfrastructureInitializer initializer : initializers) {
+            initializer.afterInfrastructureSetup(beanFactory, basePackages);
+        }
     }
 
     private void instantiateAllSingletons() {
         registerBeanPostProcessors();
-        instantiateGroup(appDefs, true, basePackages);
+        instantiateGroup(appDefs, basePackages);
     }
 
     private void registerBeanPostProcessors() {
