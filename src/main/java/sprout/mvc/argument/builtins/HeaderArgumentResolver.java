@@ -19,6 +19,9 @@ public class HeaderArgumentResolver implements ArgumentResolver {
     @Override
     public Object resolve(Parameter parameter, HttpRequest<?> request, Map<String, String> pathVariables) throws Exception {
         Header headerAnnotation = parameter.getAnnotation(Header.class);
+        if (headerAnnotation == null) {
+            return null;
+        }
         String headerName = headerAnnotation.value();
 
         if (headerName.isBlank()) {

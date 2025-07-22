@@ -8,12 +8,12 @@ import java.util.Objects;
 
 public class HttpRequest<T> {
 
-    private final HttpMethod method;
-    private final String path;
-    private final T body;
-    private final Map<String, String> queryParams;
-    private final Map<String, String> headers;
-    private final String sessionId;
+    private HttpMethod method;
+    private String path;
+    private T body;
+    private Map<String, String> queryParams;
+    private Map<String, String> headers;
+    private String sessionId;
 
     public HttpRequest(HttpMethod method, String path, T body, Map<String, String> queryParams, Map<String, String> headers) {
         this.method = method;

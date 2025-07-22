@@ -19,6 +19,9 @@ public class AllHeaderArgumentResolver implements ArgumentResolver {
     @Override
     public Object resolve(Parameter parameter, HttpRequest<?> request, Map<String, String> pathVariables) throws Exception {
         Header headerAnnotation = parameter.getAnnotation(Header.class);
+        if (headerAnnotation == null) {          // 어노테이션이 없으면 이 Resolver 가 처리 대상 아님
+            return null;
+        }
         String headerName = headerAnnotation.value();
         if (parameter.getType().equals(Map.class)) {
             if (headerName.isBlank()) { // @Header("") 또는 @Header(value="") 인 경우

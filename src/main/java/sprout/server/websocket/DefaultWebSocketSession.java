@@ -58,7 +58,7 @@ public class DefaultWebSocketSession implements WebSocketSession{
     public void close() throws IOException {
         if (open) {
             System.out.println("Closing WebSocket session: " + id);
-            byte[] encoded = frameEncoder.encodeText("Closing WebSocket session: " + id + ", Close code is: " + CloseCodes.getCloseCode(lastDataFrameOpcode).getCode() + ".");
+            byte[] encoded = frameEncoder.encodeText("Closing WebSocket session: " + id + ", Close code is: " + CloseCodes.NORMAL_CLOSURE.getCode() + ".");
             ByteBuffer buf = ByteBuffer.wrap(encoded);
             while (buf.hasRemaining()) {
                 channel.write(buf);

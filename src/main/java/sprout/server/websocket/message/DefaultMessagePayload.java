@@ -1,5 +1,7 @@
 package sprout.server.websocket.message;
 
+import java.nio.charset.StandardCharsets;
+
 public class DefaultMessagePayload implements MessagePayload{
     private final String stringPayload;
     private final byte[] binaryPayload;
@@ -11,18 +13,18 @@ public class DefaultMessagePayload implements MessagePayload{
 
     @Override
     public boolean isText() {
-        return !stringPayload.isEmpty();
+        return stringPayload != null && !stringPayload.isEmpty();
     }
 
     @Override
     public boolean isBinary() {
-        return binaryPayload.length > 0;
+        return binaryPayload != null && binaryPayload.length > 0;
     }
 
     @Override
     public String asText() {
         if (isBinary()) {
-            return new String(binaryPayload);
+            return new String(binaryPayload, StandardCharsets.UTF_8);
         }
         return stringPayload;
     }
@@ -30,7 +32,7 @@ public class DefaultMessagePayload implements MessagePayload{
     @Override
     public byte[] asBinary() {
         if (isText()) {
-            return asText().getBytes();
+            return stringPayload.getBytes(StandardCharsets.UTF_8);
         }
         return binaryPayload;
     }

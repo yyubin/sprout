@@ -1,199 +1,176 @@
-//package sprout.server.websocket;
-//
-//import org.junit.jupiter.api.BeforeEach;
-//import org.junit.jupiter.api.DisplayName;
-//import org.junit.jupiter.api.Nested;
-//import org.junit.jupiter.api.Test;
-//import org.junit.jupiter.api.extension.ExtendWith;
-//import org.mockito.InjectMocks;
-//import org.mockito.Mock;
-//import org.mockito.Spy;
-//import org.mockito.junit.jupiter.MockitoExtension;
-//import sprout.mvc.http.HttpRequest;
-//import sprout.server.argument.WebSocketArgumentResolver;
-//import sprout.server.websocket.DispatchResult;
-//import sprout.server.websocket.endpoint.WebSocketEndpointInfo;
-//import sprout.server.websocket.message.MessagePayload;
-//import sprout.server.websocket.message.WebSocketMessageDispatcher;
-//
-//import java.io.*;
-//import java.lang.reflect.Method;
-//import java.net.Socket;
-//import java.util.Collections;
-//import java.util.List;
-//import java.util.Map;
-//
-//import static org.junit.jupiter.api.Assertions.*;
-//import static org.mockito.ArgumentMatchers.any;
-//import static org.mockito.Mockito.*;
-//
-//@ExtendWith(MockitoExtension.class)
-//class DefaultWebSocketSessionTest {
-//
-//    // --- Mocks for Dependencies ---
-//    @Mock private Socket mockSocket;
-//    @Mock private HttpRequest<?> mockHandshakeRequest;
-//    @Mock private WebSocketEndpointInfo mockEndpointInfo;
-//    @Mock private WebSocketFrameParser mockFrameParser;
-//    @Mock private WebSocketFrameEncoder mockFrameEncoder;
-//    @Mock private List<WebSocketArgumentResolver> mockArgumentResolvers;
-//    @Mock private List<WebSocketMessageDispatcher> mockMessageDispatchers;
-//    @Mock private Map<String, String> mockPathParameters;
-//
-//    // --- Spies for I/O Streams ---
-//    // 실제 스트림 동작을 확인하기 위해 Spy를 사용
-//    @Spy private ByteArrayInputStream inputStream = new ByteArrayInputStream(new byte[0]);
-//    @Spy private ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-//
-//    // --- Class Under Test ---
-//    // @InjectMocks는 생성자 주입을 시도하지만, I/O 스트림은 수동으로 설정해야 함
-//    private DefaultWebSocketSession session;
-//
-//    @BeforeEach
-//    void setUp() throws IOException {
-//        // Socket이 Spy 스트림을 반환하도록 설정
-//        when(mockSocket.getInputStream()).thenReturn(inputStream);
-//        when(mockSocket.getOutputStream()).thenReturn(outputStream);
-//
-//        // 테스트 대상 클래스 수동 생성
-//        session = new DefaultWebSocketSession(
-//                "test-session-id",
-//                mockSocket,
-//                mockHandshakeRequest,
-//                mockEndpointInfo,
-//                mockFrameParser,
-//                mockFrameEncoder,
-//                mockPathParameters,
-//                mockArgumentResolvers,
-//                mockMessageDispatchers
-//        );
-//    }
-//
-//    @Nested
-//    @DisplayName("Send Methods Test")
-//    class SendMethodsTest {
-//        @Test
-//        @DisplayName("sendText는 frameEncoder를 호출하고 결과를 OutputStream에 써야 한다.")
-//        void sendText_shouldWriteEncodedFrameToOutput() throws IOException {
-//            // given
-//            String message = "Hello";
-//            byte[] encodedFrame = new byte[]{1, 2, 3};
-//            when(mockFrameEncoder.encodeText(message)).thenReturn(encodedFrame);
-//
-//            // when
-//            session.sendText(message);
-//
-//            // then
-//            verify(mockFrameEncoder).encodeText(message);
-//            assertArrayEquals(encodedFrame, outputStream.toByteArray());
-//        }
-//
-//        @Test
-//        @DisplayName("sendPing은 control frame을 인코딩하여 OutputStream에 써야 한다.")
-//        void sendPing_shouldWriteEncodedControlFrameToOutput() throws IOException {
-//            // given
-//            byte[] payload = new byte[]{4, 5};
-//            byte[] encodedFrame = new byte[]{6, 7, 8};
-//            when(mockFrameEncoder.encodeControlFrame(0x9, payload)).thenReturn(encodedFrame);
-//
-//            // when
-//            session.sendPing(payload);
-//
-//            // then
-//            verify(mockFrameEncoder).encodeControlFrame(0x9, payload);
-//            assertArrayEquals(encodedFrame, outputStream.toByteArray());
-//        }
-//    }
-//
-//    @Nested
-//    @DisplayName("Lifecycle Callback Test")
-//    class LifecycleCallbackTest {
-//        @Test
-//        @DisplayName("callOnOpenMethod는 EndpointInfo에서 메서드를 찾아 실행해야 한다.")
-//        void callOnOpenMethod_shouldInvokeCorrectMethod() throws Exception {
-//            // given
-//            // 실제 메서드를 모킹하기 위해 더미 핸들러 클래스 사용
-//            class DummyHandler { public void onOpen(WebSocketSession s) {} }
-//            Method onOpenMethod = DummyHandler.class.getMethod("onOpen", WebSocketSession.class);
-//            Object handlerBean = new DummyHandler();
-//
-//            when(mockEndpointInfo.getOnOpenMethod()).thenReturn(onOpenMethod);
-//            when(mockEndpointInfo.getHandlerBean()).thenReturn(handlerBean);
-//
-//            // ArgumentResolver 설정
-//            WebSocketArgumentResolver mockResolver = mock(WebSocketArgumentResolver.class);
-//            when(mockArgumentResolvers.iterator()).thenReturn(List.of(mockResolver).iterator());
-//            when(mockResolver.supports(any(), any())).thenReturn(true);
-//            when(mockResolver.resolve(any(), any())).thenReturn(session);
-//
-//            // when
-//            session.callOnOpenMethod();
-//
-//            // then
-//            // 실제 invoke가 일어나는지 검증하기는 복잡하므로,
-//            // resolveArgs가 올바르게 호출되는지 간접적으로 확인
-//            verify(mockResolver, times(1)).resolve(any(), any());
-//        }
-//    }
-//
-//    @Nested
-//    @DisplayName("Message Dispatch Test")
-//    class MessageDispatchTest {
-//        @Mock private WebSocketFrame mockFrame;
-//        @Mock private WebSocketMessageDispatcher mockDispatcher;
-//        @Mock private MessagePayload mockPayload;
-//
-//        @Test
-//        @DisplayName("단일 텍스트 프레임 수신 시 dispatcher를 호출해야 한다.")
-//        void dispatchMessage_shouldCallDispatcherForSingleTextFrame() throws Exception {
-//            // given
-//            String content = "Hello";
-//            InputStream payloadStream = new ByteArrayInputStream(content.getBytes());
-//            when(mockFrame.isFin()).thenReturn(true);
-//            when(mockFrame.getOpcode()).thenReturn(0x1); // TEXT
-//            when(mockFrame.getPayloadStream()).thenReturn(payloadStream);
-//
-//            when(mockMessageDispatchers.iterator()).thenReturn(List.of(mockDispatcher).iterator());
-//            when(mockDispatcher.supports(any(), any())).thenReturn(true);
-//            when(mockDispatcher.dispatch(any(), any())).thenReturn(new DispatchResult(true, true));
-//
-//            // when
-//            session.dispatchMessage(mockFrame);
-//
-//            // then
-//            verify(mockDispatcher).dispatch(eq(mockFrame), any(InvocationContext.class));
-//        }
-//
-//        @Test
-//        @DisplayName("분할된 텍스트 프레임 수신 시 버퍼링 후 마지막에 dispatcher를 호출해야 한다.")
-//        void dispatchMessage_shouldBufferAndDispatchFragmentedFrames() throws Exception {
-//            // --- Part 1: First fragment ---
-//            String part1 = "Hello ";
-//            InputStream stream1 = new ByteArrayInputStream(part1.getBytes());
-//            when(mockFrame.isFin()).thenReturn(false);
-//            when(mockFrame.getOpcode()).thenReturn(0x1); // TEXT
-//            when(mockFrame.getPayloadStream()).thenReturn(stream1);
-//
-//            session.dispatchMessage(mockFrame);
-//
-//            // 첫 프레임 후에는 dispatcher가 호출되면 안 됨
-//            verify(mockDispatcher, never()).dispatch(any(), any());
-//
-//            // --- Part 2: Final fragment ---
-//            String part2 = "World";
-//            InputStream stream2 = new ByteArrayInputStream(part2.getBytes());
-//            when(mockFrame.isFin()).thenReturn(true);
-//            when(mockFrame.getOpcode()).thenReturn(0x0); // CONTINUATION
-//            when(mockFrame.getPayloadStream()).thenReturn(stream2);
-//
-//            when(mockMessageDispatchers.iterator()).thenReturn(List.of(mockDispatcher).iterator());
-//            when(mockDispatcher.supports(any(), any())).thenReturn(true);
-//            when(mockDispatcher.dispatch(any(), any())).thenReturn(new DispatchResult(true, true));
-//
-//            session.dispatchMessage(mockFrame);
-//
-//            // 마지막 프레임 후에 dispatcher가 호출되어야 함
-//            verify(mockDispatcher, times(1)).dispatch(eq(mockFrame), any(InvocationContext.class));
-//        }
-//    }
-//}
+package sprout.server.websocket;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import sprout.mvc.http.HttpRequest;
+import sprout.server.argument.WebSocketArgumentResolver;
+import sprout.server.websocket.endpoint.WebSocketEndpointInfo;
+import sprout.server.websocket.exception.NotEnoughDataException;
+import sprout.server.websocket.message.WebSocketMessageDispatcher;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Method;
+import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.SocketChannel;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+@DisplayName("DefaultWebSocketSession 테스트")
+class DefaultWebSocketSessionTest {
+
+    @Mock private SocketChannel mockChannel;
+    @Mock private HttpRequest<?> mockHandshakeRequest;
+    @Mock private WebSocketEndpointInfo mockEndpointInfo;
+    @Mock private WebSocketFrameParser mockFrameParser;
+    @Mock private WebSocketFrameEncoder mockFrameEncoder;
+    @Mock private List<WebSocketArgumentResolver> mockArgumentResolvers;
+    @Mock private List<WebSocketMessageDispatcher> mockMessageDispatchers;
+    @Mock private CloseListener mockCloseListener;
+    @Mock private SelectionKey mockSelectionKey;
+
+    private DefaultWebSocketSession session;
+
+    @BeforeEach
+    void setUp() throws IOException {
+        session = new DefaultWebSocketSession(
+                "test-session-id", mockChannel, mockHandshakeRequest, mockEndpointInfo,
+                mockFrameParser, mockFrameEncoder, Collections.emptyMap(),
+                mockArgumentResolvers, mockMessageDispatchers, mockCloseListener
+        );
+        lenient().when(mockChannel.isOpen()).thenReturn(true);
+    }
+
+    @Test
+    @DisplayName("close 호출 시 Close 프레임을 보내고 채널을 닫고 리스너를 호출해야 한다")
+    void close_should_send_frame_and_close_channel_and_notify_listener() throws Exception {
+        // ① encodeText 는 최소 1바이트 이상 반환
+        byte[] closeMsg = "bye".getBytes(StandardCharsets.UTF_8);
+        when(mockFrameEncoder.encodeText(anyString())).thenReturn(closeMsg);
+
+        // ② write() 가 호출될 때마다 버퍼를 모두 소비했다고 가정
+        when(mockChannel.write(any(ByteBuffer.class))).thenAnswer(inv -> {
+            ByteBuffer buf = inv.getArgument(0);
+            int bytes = buf.remaining();   // 남은 바이트 수
+            buf.position(buf.limit());     // position 을 limit 로 이동 → hasRemaining() == false
+            return bytes;                  // 실제로 쓴 바이트 수 반환
+        });
+
+        // when
+        session.close();
+
+        // then
+        verify(mockChannel).write(any(ByteBuffer.class));
+        verify(mockChannel).close();
+        verify(mockCloseListener).onSessionClosed(session);
+        assertFalse(session.isOpen());
+    }
+
+
+    @Nested
+    @DisplayName("데이터 읽기 및 프레임 처리 (Read) 로직")
+    class ReadLogicTests {
+        @Test
+        @DisplayName("원격 연결 종료(-1) 시 onClose 메서드와 close를 호출해야 한다")
+        void read_should_close_on_remote_disconnect() throws Exception {
+            // given
+            when(mockChannel.read(any(ByteBuffer.class))).thenReturn(-1);
+            // FIX: onClose 메서드와 핸들러 빈이 null이 아니도록 설정
+            when(mockEndpointInfo.getOnCloseMethod()).thenReturn(Object.class.getMethod("toString"));
+            when(mockEndpointInfo.getHandlerBean()).thenReturn(new Object()); // 실제 빈 객체
+            // FIX: close() 내부에서 encodeText가 호출되므로 Mocking 필요
+            when(mockFrameEncoder.encodeText(anyString())).thenReturn(new byte[0]);
+
+            // when
+            session.read(mockSelectionKey);
+
+            // then
+            verify(mockEndpointInfo).getOnCloseMethod();
+            verify(mockChannel).close();
+        }
+
+        @Test
+        @DisplayName("Ping 프레임 수신 시 Pong 프레임을 전송해야 한다")
+        void read_should_send_pong_on_ping() throws Exception {
+            // given
+            byte[] pingPayload = {'p','i','n','g'};
+            WebSocketFrame pingFrame = new WebSocketFrame(true, 0x9,
+                    new ByteArrayInputStream(pingPayload));
+            byte[] raw = { (byte)0x89, 0x04,'p','i','n','g'};
+
+            when(mockChannel.read(any(ByteBuffer.class))).thenAnswer(inv -> {
+                ByteBuffer buf = inv.getArgument(0);
+                buf.put(raw);
+                return raw.length;
+            });
+
+            when(mockFrameParser.parse(any()))
+                    .thenReturn(pingFrame)
+                    .thenThrow(new NotEnoughDataException());
+
+            byte[] pong = {0x00};
+            when(mockFrameEncoder.encodeControlFrame(eq(0xA), any()))
+                    .thenReturn(pong);
+
+            // FIX: write가 호출되면 버퍼를 소비하는 동작을 시뮬레이션
+            when(mockChannel.write(any(ByteBuffer.class))).thenAnswer(invocation -> {
+                ByteBuffer buffer = invocation.getArgument(0);
+                int bytesToWrite = buffer.remaining();
+                buffer.position(buffer.limit()); // 버퍼를 모두 소비한 것처럼 position을 끝으로 이동
+                return bytesToWrite; // 쓴 바이트 수 반환
+            });
+
+            // when
+            session.read(mockSelectionKey);
+
+            // then
+            verify(mockFrameEncoder).encodeControlFrame(0xA, pingPayload);
+            verify(mockChannel).write(any(ByteBuffer.class));
+        }
+
+        @Test
+        @DisplayName("단일 텍스트 프레임 수신 시 메시지를 디스패치해야 한다")
+        void read_should_dispatch_single_text_frame() throws Exception {
+            // given
+            String message = "A single frame";
+            byte[] rawTextFrameBytes = message.getBytes(StandardCharsets.UTF_8);
+            WebSocketFrame textFrame = new WebSocketFrame(true, 0x1, new ByteArrayInputStream(rawTextFrameBytes));
+            WebSocketMessageDispatcher mockDispatcher = mock(WebSocketMessageDispatcher.class);
+
+            when(mockChannel.read(any(ByteBuffer.class))).thenAnswer(invocation -> {
+                ByteBuffer buffer = invocation.getArgument(0);
+                buffer.put(rawTextFrameBytes);
+                return rawTextFrameBytes.length;
+            });
+            when(mockFrameParser.parse(any()))
+                    .thenReturn(textFrame)
+                    .thenThrow(new NotEnoughDataException());
+            when(mockMessageDispatchers.iterator())
+                    .thenAnswer(inv -> List.of(mockDispatcher).iterator());
+            when(mockDispatcher.supports(any(), any())).thenReturn(true);
+            DispatchResult result = new DispatchResult(true, false);
+            when(mockDispatcher.dispatch(any(), any())).thenReturn(result);
+
+            // when
+            session.read(mockSelectionKey);
+
+            // then
+            ArgumentCaptor<InvocationContext> captor = ArgumentCaptor.forClass(InvocationContext.class);
+            verify(mockDispatcher).dispatch(any(), captor.capture());
+            assertEquals(message, captor.getValue().getMessagePayload().asText());
+        }
+    }
+}

@@ -20,14 +20,12 @@ import java.util.Set;
 public class NioHybridServerStrategy implements ServerStrategy {
 
     private final ConnectionManager connectionManager;
-    private final List<ServerRunHook> serverRunHooks;
     private volatile boolean running = true;
 
     private Selector selector;
     private ServerSocketChannel serverChannel;
 
-    public NioHybridServerStrategy(ConnectionManager connectionManager, List<ServerRunHook> serverRunHooks) {
-        this.serverRunHooks = serverRunHooks;
+    public NioHybridServerStrategy(ConnectionManager connectionManager) {
         this.connectionManager = connectionManager;
     }
 
@@ -53,9 +51,6 @@ public class NioHybridServerStrategy implements ServerStrategy {
                         connectionManager.acceptConnection(key, selector);
                     }
                     if (key.isReadable()) {
-                        for (ServerRunHook hook : serverRunHooks) {
-                            hook.beforeServerRun(key);
-                        }
                         ReadableHandler handler = (ReadableHandler) key.attachment();
                         if (handler != null) {
                             handler.read(key);
@@ -68,10 +63,6 @@ public class NioHybridServerStrategy implements ServerStrategy {
                     System.err.println("Error handling key " + key + ": " + e.getMessage());
                     e.printStackTrace();
                     cleanupConnection(key);
-                } finally {
-                    for (ServerRunHook hook : serverRunHooks) {
-                        hook.afterServerRun(key);
-                    }
                 }
             }
         }

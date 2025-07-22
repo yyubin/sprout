@@ -1,67 +1,68 @@
-//package sprout.server.builtins;
-//
-//import org.junit.jupiter.api.BeforeEach;
-//import org.junit.jupiter.api.DisplayName;
-//import org.junit.jupiter.api.Test;
-//import org.junit.jupiter.params.ParameterizedTest;
-//import org.junit.jupiter.params.provider.ValueSource;
-//
-//import java.io.ByteArrayInputStream;
-//import java.io.InputStream;
-//import java.nio.charset.StandardCharsets;
-//
-//import static org.junit.jupiter.api.Assertions.assertEquals;
-//class HttpProtocolDetectorTest {
-//    private HttpProtocolDetector detector;
-//
-//    @BeforeEach
-//    void setUp() {
-//        detector = new HttpProtocolDetector();
-//    }
-//
-//    @ParameterizedTest
-//    @ValueSource(strings = {"GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS", "PATCH", "TRACE"})
-//    @DisplayName("다양한 HTTP 메서드를 정확히 HTTP/1.1로 감지해야 한다.")
-//    void detect_shouldIdentifyAllHttpMethods(String method) throws Exception {
-//        // given
-//        String requestLine = String.format("%s /test HTTP/1.1\r\nHost: localhost\r\n\r\n", method);
-//        InputStream inputStream = new ByteArrayInputStream(requestLine.getBytes(StandardCharsets.UTF_8));
-//
-//        // when
-//        String protocol = detector.detect(inputStream);
-//
-//        // then
-//        assertEquals("HTTP/1.1", protocol);
-//    }
-//
-//    @Test
-//    @DisplayName("HTTP 요청이 아닌 경우 UNKNOWN을 반환해야 한다.")
-//    void detect_shouldReturnUnknown_forNonHttpRequest() throws Exception {
-//        // given
-//        String someData = "This is not an HTTP request.";
-//        InputStream inputStream = new ByteArrayInputStream(someData.getBytes(StandardCharsets.UTF_8));
-//
-//        // when
-//        String protocol = detector.detect(inputStream);
-//
-//        // then
-//        assertEquals("UNKNOWN", protocol);
-//    }
-//
-//    @Test
-//    @DisplayName("프로토콜 감지 후 스트림은 초기 상태로 리셋되어야 한다.")
-//    void detect_shouldResetStream_afterDetection() throws Exception {
-//        // given
-//        String originalRequest = "POST /api/users HTTP/1.1\r\nContent-Length: 0\r\n\r\n";
-//        byte[] originalBytes = originalRequest.getBytes(StandardCharsets.UTF_8);
-//        InputStream inputStream = new ByteArrayInputStream(originalBytes);
-//
-//        // when
-//        detector.detect(inputStream); // 감지 실행
-//
-//        // then
-//        // 감지 후에도 스트림을 다시 읽었을 때 원본 데이터가 그대로인지 확인
-//        byte[] bytesAfterDetection = inputStream.readAllBytes();
-//        assertEquals(originalRequest, new String(bytesAfterDetection, StandardCharsets.UTF_8));
-//    }
-//}
+package sprout.server.builtins;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+class HttpProtocolDetectorTest {
+
+    private final HttpProtocolDetector detector = new HttpProtocolDetector();
+
+    @DisplayName("버퍼가 HTTP 메서드로 시작하면 'HTTP/1.1'을 반환한다")
+    @ParameterizedTest
+    @ValueSource(strings = {"GET ", "POST ", "PUT ", "DELETE ", "HEAD ", "OPTIONS ", "PATCH ", "TRACE "})
+    void should_return_http_when_buffer_starts_with_http_method(String httpMethod) throws Exception {
+        // given
+        String httpRequest = httpMethod + "/index.html HTTP/1.1\r\nHost: example.com\r\n\r\n";
+        ByteBuffer buffer = ByteBuffer.wrap(httpRequest.getBytes(StandardCharsets.UTF_8));
+
+        // 버퍼의 초기 위치를 기록
+        int initialPosition = buffer.position();
+
+        // when
+        String detectedProtocol = detector.detect(buffer);
+
+        // then
+        assertEquals("HTTP/1.1", detectedProtocol);
+        // detect 메서드 실행 후 버퍼의 위치가 원래대로 돌아왔는지 확인
+        assertEquals(initialPosition, buffer.position());
+    }
+
+    @Test
+    @DisplayName("버퍼가 HTTP 메서드로 시작하지 않으면 'UNKNOWN'을 반환한다")
+    void should_return_unknown_when_buffer_does_not_start_with_http_method() throws Exception {
+        // given
+        String nonHttpRequest = "This is not an HTTP request.";
+        ByteBuffer buffer = ByteBuffer.wrap(nonHttpRequest.getBytes(StandardCharsets.UTF_8));
+
+        int initialPosition = buffer.position();
+
+        // when
+        String detectedProtocol = detector.detect(buffer);
+
+        // then
+        assertEquals("UNKNOWN", detectedProtocol);
+        assertEquals(initialPosition, buffer.position());
+    }
+
+    @Test
+    @DisplayName("빈 버퍼가 주어지면 'UNKNOWN'을 반환한다")
+    void should_return_unknown_for_empty_buffer() throws Exception {
+        // given
+        ByteBuffer buffer = ByteBuffer.allocate(0);
+        int initialPosition = buffer.position();
+
+        // when
+        String detectedProtocol = detector.detect(buffer);
+
+        // then
+        assertEquals("UNKNOWN", detectedProtocol);
+        assertEquals(initialPosition, buffer.position());
+    }
+}
