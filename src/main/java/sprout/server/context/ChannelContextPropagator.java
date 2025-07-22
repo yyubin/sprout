@@ -9,17 +9,16 @@ import java.nio.channels.SelectableChannel;
 
 @Component
 @Order(30)
-public class ChannelContextPropagator implements ContextPropagator {
-    private SelectableChannel channel;
+public class ChannelContextPropagator implements ContextPropagator<SelectableChannel> {
 
     @Override
-    public void capture() {
-        channel = ChannelHolder.getChannel();
+    public void restore(SelectableChannel channel) {
+        ChannelHolder.setChannel(channel);
     }
 
     @Override
-    public void restore() {
-        ChannelHolder.setChannel(channel);
+    public SelectableChannel capture() {
+        return ChannelHolder.getChannel();
     }
 
     @Override

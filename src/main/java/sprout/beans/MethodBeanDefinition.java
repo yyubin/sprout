@@ -12,6 +12,7 @@ public class MethodBeanDefinition implements BeanDefinition {
     private final String factoryBeanName; // @Configuration 클래스의 빈 이름
     private final Class<?>[] factoryMethodArgumentTypes;
     private boolean isProxyTarget = false;
+    private boolean primary = false;
 
     public MethodBeanDefinition(String name, Class<?> type, Method factoryMethod, String factoryBeanName, Class<?>[] factoryMethodArgumentTypes) {
         this.name = name;
@@ -46,4 +47,13 @@ public class MethodBeanDefinition implements BeanDefinition {
     public void setProxyTarget(boolean proxyTarget) { isProxyTarget = proxyTarget; }
 
     @Override public boolean isConfigurationClassProxyNeeded() { return false; } // @Bean 메서드는 자체로 Configuration 프록시 대상이 아님
+
+    @Override
+    public boolean isPrimary() {
+        return primary;
+    }
+
+    public void setPrimary(boolean primary) {
+        this.primary = primary;
+    }
 }

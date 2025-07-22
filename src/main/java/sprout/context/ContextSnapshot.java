@@ -1,52 +1,50 @@
 package sprout.context;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 
-public class ContextSnapshot{
+public final class ContextSnapshot{
 
-    private final List<ContextPropagator> propagators;
 
-    // 현재 스레드의 ThreadLocal에서 모든 컨텍스트 정보를 캡처하여 스냅샷을 생성
-    public ContextSnapshot(List<ContextPropagator> propagators) {
+    private final List<? extends ContextPropagator<?>> propagators;
+    private final List<Object> captured;
+
+    public ContextSnapshot(List<? extends ContextPropagator<?>> propagators) {
         this.propagators = propagators;
-        for (ContextPropagator p : propagators) {
-            p.capture();
+        this.captured = new ArrayList<>(propagators.size());
+        for (ContextPropagator<?> p : propagators) {
+            captured.add(p.capture());
         }
     }
 
     public Runnable wrap(Runnable runnable) {
-        Objects.requireNonNull(runnable, "runnable cannot be null");
+        if (propagators.isEmpty()) return runnable;
         return () -> {
-            // 작업 실행 전, 캡처한 컨텍스트를 현재 스레드의 ThreadLocal에 설정
-            try {
-                for (ContextPropagator p : propagators) {
-                    p.restore();
-                }
-                // 원본 작업 실행
-                runnable.run();
-            } finally {
-                // 작업 완료 후, ThreadLocal을 반드시 정리하여 다른 작업에 영향을 주지 않도록 함
-                for (ContextPropagator p : propagators) {
-                    p.clear();
-                }
-            }
+            restoreAll();
+            try { runnable.run(); }
+            finally { clearAll(); }
         };
     }
 
     public <T> Callable<T> wrap(Callable<T> callable) {
+        if (propagators.isEmpty()) return callable;
         return () -> {
-            for (ContextPropagator p : propagators) {
-                p.restore();
-            }
-            try {
-                return callable.call();
-            } finally {
-                for (ContextPropagator p : propagators) {
-                    p.clear();
-                }
-            }
+            restoreAll();
+            try { return callable.call(); }
+            finally { clearAll(); }
         };
+    }
+
+    @SuppressWarnings("unchecked")
+    private void restoreAll() {
+        for (int i = 0; i < propagators.size(); i++) {
+            ((ContextPropagator<Object>) propagators.get(i)).restore(captured.get(i));
+        }
+    }
+
+    private void clearAll() {
+        for (ContextPropagator<?> p : propagators) p.clear();
     }
 }

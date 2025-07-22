@@ -4,22 +4,25 @@ import java.lang.reflect.Method;
 import java.util.regex.Pattern;
 
 public class RegexPointcut implements Pointcut {
-    private final Pattern classPattern;
-    private final Pattern methodPattern;
+    private final Pointcut delegate;
 
-    public RegexPointcut(String classRegex, String methodRegex) {
-        this.classPattern  = Pattern.compile(adapt(classRegex));
-        this.methodPattern = Pattern.compile(adapt(methodRegex));
-    }
+    public RegexPointcut(String classExpr, String methodExpr) {
+        // classExpr 또는 methodExpr 가 비어있을 수 있으니 기본값 처리
+        String cls = (classExpr == null || classExpr.isBlank()) ? "..*" : classExpr.trim();
+        String mtd = (methodExpr == null || methodExpr.isBlank()) ? "*"   : methodExpr.trim();
 
-    private static String adapt(String expr) {
-        String regex = AspectJRegexConverter.toRegex(expr.trim());
-        return regex.isEmpty() ? ".*" : regex;
+        // AspectJ execution 표현식으로 변환
+        String aspectj = "execution(* " + cls + "." + mtd + "(..))";
+        this.delegate = new AspectJPointcutAdapter(aspectj);
     }
 
     @Override
     public boolean matches(Class<?> targetClass, Method method) {
-        return classPattern.matcher(targetClass.getName()).find() &&
-                methodPattern.matcher(method.getName()).find();
+        return delegate.matches(targetClass, method);
+    }
+
+    @Override
+    public String toString() {
+        return delegate.toString();
     }
 }

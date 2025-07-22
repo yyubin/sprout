@@ -1,10 +1,10 @@
 package sprout.mvc.argument.builtins;
 
-import app.exception.BadRequestException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import sprout.beans.annotation.Component;
 import sprout.mvc.annotation.RequestBody;
 import sprout.mvc.argument.ArgumentResolver;
+import sprout.mvc.exception.BadRequestException;
 import sprout.mvc.http.HttpRequest;
 import sprout.mvc.http.ResponseCode;
 

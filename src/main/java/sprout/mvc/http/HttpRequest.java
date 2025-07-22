@@ -1,6 +1,5 @@
 package sprout.mvc.http;
 
-import app.util.Session;
 
 import java.util.Collections;
 import java.util.Map;
@@ -21,7 +20,7 @@ public class HttpRequest<T> {
         this.body = body;
         this.queryParams = Collections.unmodifiableMap(Objects.requireNonNull(queryParams, "Query parameters cannot be null"));;
         this.headers = Collections.unmodifiableMap(Objects.requireNonNull(headers, "Headers cannot be null"));;
-        this.sessionId = Session.getSessionId();
+        this.sessionId = "";
     }
 
     public Map<String, String> getHeaders() {

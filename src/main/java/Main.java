@@ -2,7 +2,7 @@
 import sprout.beans.annotation.ComponentScan;
 import sprout.boot.SproutApplication;
 
-@ComponentScan(basePackages = {"sprout", "test"})
+@ComponentScan(basePackages = {"sprout", "app"})
 public class Main {
 
     public static void main(String[] args) throws Exception {

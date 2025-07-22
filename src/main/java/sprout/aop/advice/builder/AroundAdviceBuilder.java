@@ -22,12 +22,10 @@ public class AroundAdviceBuilder implements AdviceBuilder {
 
         Around around = method.getAnnotation(Around.class);
 
-        if (method.getParameterCount() > 1 ||
-                (method.getParameterCount() == 1 &&
-                        !ProceedingJoinPoint.class.isAssignableFrom(method.getParameterTypes()[0]))) {
-            throw new IllegalStateException("@Before method must have 0 or 1 JoinPoint param");
+        if (method.getParameterCount() != 1 ||
+                !ProceedingJoinPoint.class.isAssignableFrom(method.getParameterTypes()[0])) {
+            throw new IllegalStateException("Around advice method must have exactly one parameter of type ProceedingJoinPoint");
         }
-
 
         Pointcut pc = pf.createPointcut(around.annotation(), around.pointcut());
 

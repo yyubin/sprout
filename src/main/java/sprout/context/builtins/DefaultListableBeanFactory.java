@@ -80,21 +80,91 @@ public class DefaultListableBeanFactory implements BeanFactory, BeanDefinitionRe
 
     @Override
     public <T> T getBean(Class<T> requiredType) {
-        String primaryName = primaryTypeToNameMap.get(requiredType);
-        if (primaryName != null) {
-            return requiredType.cast(singletons.get(primaryName));
-        }
+        // 1) 이미 만들어져 있으면 바로 반환
+        T bean = getIfPresent(requiredType);
+        if (bean != null) return bean;
 
-        Set<String> candidateNames = typeToNamesMap.get(requiredType);
-        if (candidateNames == null || candidateNames.isEmpty()) {
+        // 2) 후보 BeanDefinition/Singleton 이름 수집
+        Set<String> candidates = candidateNamesForType(requiredType);
+        if (candidates.isEmpty()) {
             throw new RuntimeException("No bean of type " + requiredType.getName() + " found in the container.");
         }
 
-        if (candidateNames.size() == 1) {
-            return requiredType.cast(singletons.get(candidateNames.iterator().next()));
-        } else {
-            throw new RuntimeException("No unique bean of type " + requiredType.getName() + " found. Found " + candidateNames.size() + " candidates: " + candidateNames);
+        // 3) primary 우선
+        String primary = choosePrimary(requiredType, candidates);
+        if (primary == null) {
+            if (candidates.size() == 1) primary = candidates.iterator().next();
+            else throw new RuntimeException("No unique bean of type " + requiredType.getName() +
+                    " found. Candidates: " + candidates);
         }
+
+        // 4) 필요시 생성 후 반환
+        @SuppressWarnings("unchecked")
+        T created = (T) createIfNecessary(primary);
+        return created;
+    }
+
+    private <T> T getIfPresent(Class<T> type) {
+        String name = primaryTypeToNameMap.get(type);
+        if (name != null) {
+            Object singleton = singletons.get(name);
+            if (singleton != null && type.isInstance(singleton)) {
+                return type.cast(singleton);
+            }
+        }
+
+        Set<String> names = typeToNamesMap.get(type);
+        if (names != null) {
+            for (String n : names) {
+                Object obj = singletons.get(n); // n은 절대 null 아님
+                if (obj != null && type.isInstance(obj)) return type.cast(obj);
+            }
+        }
+        return null;
+    }
+
+    private Set<String> candidateNamesForType(Class<?> type) {
+        Set<String> names = new HashSet<>();
+        // 1) 이미 등록된 싱글턴
+        for (Map.Entry<String, Object> e : singletons.entrySet()) {
+            if (type.isAssignableFrom(e.getValue().getClass())) names.add(e.getKey());
+        }
+        // 2) 아직 안만든 정의
+        for (Map.Entry<String, BeanDefinition> e : beanDefinitions.entrySet()) {
+            if (type.isAssignableFrom(e.getValue().getType())) names.add(e.getKey());
+        }
+        return names;
+    }
+
+    private String choosePrimary(Class<?> requiredType, Set<String> candidates) {
+        // BeanDefinition 중 primary=true 인 애만 필터
+        List<String> primaries = candidates.stream()
+                .filter(name -> {
+                    BeanDefinition d = beanDefinitions.get(name);
+                    return d != null && d.isPrimary();
+                })
+                .toList();
+
+        if (primaries.size() == 1) return primaries.get(0);
+        if (primaries.size() > 1)
+            throw new RuntimeException("@Primary beans conflict for type " + requiredType.getName() + ": " + primaries);
+
+        // 기존 primaryTypeToNameMap fallback
+        String mapped = primaryTypeToNameMap.get(requiredType);
+        if (mapped != null && candidates.contains(mapped)) return mapped;
+
+        return null;
+    }
+
+    private Object createIfNecessary(String name) {
+        Object singleton = singletons.get(name);
+        if (singleton != null) return singleton;
+
+        BeanDefinition def = beanDefinitions.get(name);
+        if (def == null) {
+            throw new RuntimeException("No bean named '" + name + "' is defined.");
+        }
+        return createBean(def);
     }
 
     @Override
@@ -179,17 +249,14 @@ public class DefaultListableBeanFactory implements BeanFactory, BeanDefinitionRe
 
             ctorCache.put(beanInstance, new CtorMeta(def.getConstructorArgumentTypes(), deps));
 
-            Object processedBean = beanInstance; // 처리될 빈 인스턴스 (초기에는 원본)
-
-            // postProcessBeforeInitialization 적용
+            Object processedBean = beanInstance;
             for (BeanPostProcessor processor : beanPostProcessors) {
-                processedBean = processor.postProcessBeforeInitialization(def.getName(), processedBean);
+                Object result = processor.postProcessBeforeInitialization(def.getName(), processedBean);
+                if (result != null) processedBean = result;
             }
-
-            // postProcessAfterInitialization 적용 (AOP 프록시 생성 로직 포함)
-            // AspectPostProcessor의 postProcessAfterInitialization에서 프록시가 생성되어 반환될 수 있음
             for (BeanPostProcessor processor : beanPostProcessors) {
-                processedBean = processor.postProcessAfterInitialization(def.getName(), processedBean);
+                Object result = processor.postProcessAfterInitialization(def.getName(), processedBean);
+                if (result != null) processedBean = result;
             }
 
             registerInternal(def.getName(), processedBean);

@@ -1,12 +1,15 @@
 package sprout.scan;
 
 import app.test.*;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.reflections.scanners.Scanners;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
+import sprout.aop.annotation.Aspect;
 import sprout.beans.BeanCreationMethod;
 import sprout.beans.BeanDefinition;
+import sprout.beans.annotation.*;
 
 import java.util.Collection;
 import java.util.List;
@@ -24,52 +27,59 @@ class ClassPathScannerTest {
                         ClasspathHelper.staticClassLoader());
     }
 
+    private Collection<BeanDefinition> scan(String basePackage) {
+        ClassPathScanner scanner = new ClassPathScanner();
+        return scanner.scan(
+                createConfigBuilder(basePackage),
+                Component.class,
+                Service.class,
+                Repository.class,
+                Controller.class,
+                Configuration.class,
+                Aspect.class
+        );
+    }
+
     @Test
+    @DisplayName("@Component 직접 부착 클래스가 스캔되어야 한다")
     void scan_shouldDetectDirectComponentClasses() {
-        ClassPathScanner scanner = new ClassPathScanner();
-        Collection<BeanDefinition> defs =
-                scanner.scan(createConfigBuilder("app.test"));
+        Collection<BeanDefinition> defs = scan("app.test");
 
         List<Class<?>> componentTypes = defs.stream()
                 .map(BeanDefinition::getType)
                 .collect(Collectors.toList());
 
-        assertTrue(componentTypes.contains(SomeComponent.class),
-                "SomeComponent가 스캔되어야 합니다.");
+        assertTrue(componentTypes.contains(SomeComponent.class), "SomeComponent가 스캔되어야 합니다.");
     }
 
     @Test
+    @DisplayName("메타 애노테이션(@Service 등)도 스캔되어야 한다")
     void scan_shouldDetectMetaAnnotatedComponentClasses() {
-        ClassPathScanner scanner = new ClassPathScanner();
-        Collection<BeanDefinition> defs =
-                scanner.scan(createConfigBuilder("app.test"));
+        Collection<BeanDefinition> defs = scan("app.test");
 
         List<Class<?>> componentTypes = defs.stream()
                 .map(BeanDefinition::getType)
                 .collect(Collectors.toList());
 
-        assertTrue(componentTypes.contains(SomeServiceImpl.class),
-                "SomeServiceImpl이 스캔되어야 합니다.");
+        assertTrue(componentTypes.contains(SomeServiceImpl.class), "SomeServiceImpl이 스캔되어야 합니다.");
     }
 
     @Test
+    @DisplayName("생성자 기반 BeanDefinition 정보가 올바르게 생성되어야 한다")
     void scan_shouldGenerateCorrectBeanDefinitions() {
-        ClassPathScanner scanner = new ClassPathScanner();
-        Collection<BeanDefinition> defs =
-                scanner.scan(createConfigBuilder("app.test"));
+        Collection<BeanDefinition> defs = scan("app.test");
 
-        // 기본 생성자만 있는 빈
+        // 기본 생성자 빈
         BeanDefinition serviceImplDef = defs.stream()
                 .filter(d -> d.getType().equals(SomeServiceImpl.class))
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("SomeServiceImpl BeanDefinition not found"));
 
         assertEquals(BeanCreationMethod.CONSTRUCTOR, serviceImplDef.getCreationMethod());
-        assertEquals(0, serviceImplDef.getConstructorArgumentTypes().length,
-                "의존성이 없어야 합니다.");
+        assertEquals(0, serviceImplDef.getConstructorArgumentTypes().length, "의존성이 없어야 합니다.");
         assertFalse(serviceImplDef.isProxyTarget());
 
-        // 의존성이 하나 있는 빈
+        // 의존성 1개 있는 빈
         BeanDefinition serviceWithDepDef = defs.stream()
                 .filter(d -> d.getType().equals(ServiceWithDependency.class))
                 .findFirst()
@@ -81,18 +91,15 @@ class ClassPathScannerTest {
     }
 
     @Test
+    @DisplayName("인터페이스/애노테이션/추상 클래스는 제외되어야 한다")
     void scan_shouldFilterOutNonConcreteClasses() {
-        ClassPathScanner scanner = new ClassPathScanner();
-        Collection<BeanDefinition> defs =
-                scanner.scan(createConfigBuilder("app.test"));
+        Collection<BeanDefinition> defs = scan("app.test");
 
         List<Class<?>> componentTypes = defs.stream()
                 .map(BeanDefinition::getType)
                 .collect(Collectors.toList());
 
-        assertFalse(componentTypes.contains(SomeService.class),             // 인터페이스
-                "인터페이스는 빈으로 등록되면 안 됩니다.");
-        assertFalse(componentTypes.contains(sprout.beans.annotation.Service.class), // 애너테이션 타입
-                "애너테이션 자체는 빈으로 등록되면 안 됩니다.");
+        assertFalse(componentTypes.contains(SomeService.class), "인터페이스는 빈으로 등록되면 안 됩니다.");
+        assertFalse(componentTypes.contains(sprout.beans.annotation.Service.class), "애노테이션 타입은 빈으로 등록되면 안 됩니다.");
     }
 }

@@ -67,6 +67,9 @@ public class ClassPathScanner {
                 if (clazz.isAnnotationPresent(Configuration.class)) {
                     def.setConfigurationClassProxyNeeded(clazz.getAnnotation(Configuration.class).proxyBeanMethods());
                 }
+                if (clazz.isAnnotationPresent(Primary.class)) {
+                    def.setPrimary(true);
+                }
 
                 definitions.add(def);
             } catch (NoSuchMethodException e) {
@@ -87,6 +90,11 @@ public class ClassPathScanner {
                             generateBeanName(configClass),
                             method.getParameterTypes()
                     );
+
+                    if (method.isAnnotationPresent(Primary.class)) {
+                        def.setPrimary(true);
+                    }
+
                     definitions.add(def);
                 }
             }

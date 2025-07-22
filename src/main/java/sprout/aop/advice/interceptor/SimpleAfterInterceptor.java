@@ -36,7 +36,10 @@ public class SimpleAfterInterceptor implements Advice {
             result = null;          // 필요 시 after-throwing 처리용
         }
 
-        Object aspect = aspectProvider.get();
+        Object aspect = java.lang.reflect.Modifier.isStatic(adviceMethod.getModifiers())
+                ? null
+                : aspectProvider.get();
+
         try {
             if (adviceMethod.getParameterCount() == 0) {
                 adviceMethod.invoke(aspect);

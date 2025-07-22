@@ -2,7 +2,6 @@ package sprout.mvc.advice;
 
 import sprout.beans.annotation.Component;
 import sprout.context.BeanFactory;
-import sprout.context.Container;
 import sprout.mvc.advice.annotation.ControllerAdvice;
 import sprout.mvc.advice.annotation.ExceptionHandler;
 

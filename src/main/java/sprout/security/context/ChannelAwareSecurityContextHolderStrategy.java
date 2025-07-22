@@ -15,9 +15,7 @@ public class ChannelAwareSecurityContextHolderStrategy implements SecurityContex
     @Override
     public void clearContext() {
         SelectableChannel channel = ChannelHolder.getChannel();
-        if (channel != null) {
-            contextMap.remove(channel);
-        }
+        removeContextFor(channel);
     }
 
     @Override
@@ -51,5 +49,9 @@ public class ChannelAwareSecurityContextHolderStrategy implements SecurityContex
     @Override
     public SecurityContext createEmptyContext() {
         return new SecurityContextImpl(null);
+    }
+
+    private void removeContextFor(SelectableChannel ch) {
+        if (ch != null) contextMap.remove(ch);
     }
 }

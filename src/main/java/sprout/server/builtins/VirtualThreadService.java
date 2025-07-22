@@ -17,9 +17,9 @@ import java.util.concurrent.TimeUnit;
 public class VirtualThreadService implements ThreadService {
 
     private final ExecutorService pool = Executors.newVirtualThreadPerTaskExecutor();
-    private final List<ContextPropagator> propagators;
+    private final List<? extends ContextPropagator<?>> propagators;
 
-    public VirtualThreadService(List<ContextPropagator> propagators) {
+    public VirtualThreadService(List<? extends ContextPropagator<?>> propagators) {
         this.propagators = propagators;
     }
 

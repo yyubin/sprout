@@ -24,7 +24,10 @@ public class SimpleAroundInterceptor implements Advice {
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
         ProceedingJoinPoint pjp = new PjpAdapter(invocation);
-        Object aspect = aspectProvider.get();
+        Object aspect = java.lang.reflect.Modifier.isStatic(adviceMethod.getModifiers())
+                ? null
+                : aspectProvider.get();
+
         try {
             adviceMethod.setAccessible(true);
             return adviceMethod.invoke(aspect, pjp);

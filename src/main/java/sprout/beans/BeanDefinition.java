@@ -22,4 +22,6 @@ public interface BeanDefinition {
 
     // Configuration 클래스 프록시 여부
     boolean isConfigurationClassProxyNeeded();
+
+    public boolean isPrimary();
 }

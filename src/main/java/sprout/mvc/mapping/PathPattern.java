@@ -4,115 +4,142 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class PathPattern implements Comparable<PathPattern>{
+public class PathPattern implements Comparable<PathPattern> {
+
     private final String originalPattern;
-    private final Pattern regexPattern;
-    private final List<String> variableNames;
-    private final int staticPartLength;
-    private final int wildcardCount;
+    private final Pattern regex;
+    private final List<String> varNames;
+    private final List<Integer> varGroups;
+    private final int staticLen;
+    private final int singleStarCount;
+    private final int doubleStarCount;
 
-    public PathPattern(String originalPattern) {
-        this.originalPattern = originalPattern;
-        this.variableNames = new ArrayList<>();
-        this.wildcardCount = countOccurrences(originalPattern, '*');
-        this.regexPattern = compilePattern(originalPattern);
-        this.staticPartLength = originalPattern.replaceAll("\\{[^/]+}", "").replaceAll("\\*", "").length();
-    }
+    private static final Pattern VAR_TOKEN = Pattern.compile("\\{([^/:}]+)(?::([^}]+))?}");
 
-    private Pattern compilePattern(String pattern) {
-        StringBuilder regex = new StringBuilder("^");
-        String[] parts = pattern.split("(?<=\\})|(?=\\{)|(?<=\\*)|(?=\\*)");
+    public PathPattern(String pattern) {
+        this.originalPattern = Objects.requireNonNull(pattern, "Pattern must not be null");
 
-        for (String part : parts) {
-            if (part.startsWith("{") && part.endsWith("}")) {
-                regex.append("([^/]+)");
-                variableNames.add(part.substring(1, part.length() - 1));
-            } else if (part.equals("*")) {
-                regex.append("([^/]+)");
-            } else {
-                regex.append(Pattern.quote(part));
+        var re = new StringBuilder("^");
+        var names = new ArrayList<String>();
+        var groups = new ArrayList<Integer>();
+
+        // Local counters for parsing
+        int staticCharCount = 0;
+        int singleStars = 0;
+        int doubleStars = 0;
+        int groupIndex = 0;
+
+        final Matcher varMatcher = VAR_TOKEN.matcher(pattern);
+        int i = 0;
+        while (i < pattern.length()) {
+            char ch = pattern.charAt(i);
+            switch (ch) {
+                case '*':
+                    if (i + 1 < pattern.length() && pattern.charAt(i + 1) == '*') {
+                        re.append("(.+?)"); // Non-greedy match for '**'
+                        doubleStars++;
+                        i += 2;
+                    } else {
+                        re.append("([^/]+)"); // Match for '*'
+                        singleStars++;
+                        i++;
+                    }
+                    groupIndex++;
+                    break;
+                case '?':
+                    re.append("[^/]"); // Match any character except '/'
+                    i++;
+                    break;
+                case '{':
+                    if (!varMatcher.region(i, pattern.length()).lookingAt()) {
+                        throw new IllegalArgumentException("Invalid variable syntax at index " + i + " in pattern: " + pattern);
+                    }
+                    String varName = varMatcher.group(1);
+                    String customRegex = varMatcher.group(2);
+                    String expression = (customRegex != null) ? customRegex : "[^/]+";
+                    re.append("(").append(expression).append(")");
+
+                    names.add(varName);
+                    groupIndex++;
+                    groups.add(groupIndex);
+                    i = varMatcher.end();
+                    break;
+                default:
+                    // Any other character is treated as a static part of the path.
+                    re.append(Pattern.quote(String.valueOf(ch)));
+                    staticCharCount++;
+                    i++;
+                    break;
             }
         }
-        regex.append("$");
-        return Pattern.compile(regex.toString());
+        re.append("$");
+
+        // Assign to final fields to ensure immutability
+        this.regex = Pattern.compile(re.toString());
+        this.varNames = Collections.unmodifiableList(names);
+        this.varGroups = Collections.unmodifiableList(groups);
+        this.staticLen = staticCharCount;
+        this.singleStarCount = singleStars;
+        this.doubleStarCount = doubleStars;
     }
 
     public boolean matches(String path) {
-        return regexPattern.matcher(path).matches();
+        return this.regex.matcher(path).matches();
     }
 
     public Map<String, String> extractPathVariables(String path) {
-        Matcher matcher = regexPattern.matcher(path);
-        Map<String, String> result = new HashMap<>();
-
-        if (matcher.matches()) {
-            for (int i = 0; i < variableNames.size(); i++) {
-                result.put(variableNames.get(i), matcher.group(i + 1));
-            }
+        Matcher m = this.regex.matcher(path);
+        if (!m.matches()) {
+            return Map.of();
         }
-
-        return result;
+        Map<String, String> vars = new HashMap<>();
+        for (int idx = 0; idx < this.varNames.size(); idx++) {
+            vars.put(this.varNames.get(idx), m.group(this.varGroups.get(idx)));
+        }
+        return vars;
     }
 
     @Override
     public int compareTo(PathPattern other) {
-        // 1. 와일드카드 개수가 적은 것이 우선
-        int wildcardCompare = Integer.compare(this.wildcardCount, other.wildcardCount);
-        if (wildcardCompare != 0) {
-            return wildcardCompare;
-        }
+        int c = Integer.compare(this.doubleStarCount, other.doubleStarCount);
+        if (c != 0) return c;
 
-        // 2. 경로 변수 개수가 적은 것이 우선
-        int variableCompare = Integer.compare(this.getVariableCount(), other.getVariableCount());
-        if (variableCompare != 0) {
-            return variableCompare;
-        }
+        c = Integer.compare(this.singleStarCount, other.singleStarCount);
+        if (c != 0) return c;
 
-        // 3. 고정 경로(static part) 길이가 긴 것이 우선 (더 구체적)
-        int staticPartCompare = Integer.compare(other.staticPartLength, this.staticPartLength);
-        if (staticPartCompare != 0) {
-            return staticPartCompare;
-        }
+        c = Integer.compare(this.varNames.size(), other.varNames.size());
+        if (c != 0) return c;
 
-        // FIX: 모든 조건이 동일할 경우, 전체 패턴 길이가 짧은 것을 우선으로 (덜 구체적)
-        // 이는 Spring의 AntPathMatcher의 기본 정렬 순서와 유사하게 동작합니다.
-        // 예를 들어 /a* 와 /a/* 가 있을 때 /a*를 우선시합니다.
-        // 여기서는 큰 영향이 없지만, 안정성을 위해 추가합니다.
-        return Integer.compare(this.originalPattern.length(), other.originalPattern.length());
+        c = Integer.compare(other.staticLen, this.staticLen); // Longer static part is more specific
+        if (c != 0) return c;
+
+        // Final tie-breaker for stable sorting
+        return this.originalPattern.compareTo(other.originalPattern);
     }
 
     public int getVariableCount() {
-        return variableNames.size();
+        return this.varNames.size();
     }
 
     public String getOriginalPattern() {
-        return originalPattern;
+        return this.originalPattern;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof PathPattern other)) return false;
-        return Objects.equals(this.originalPattern, other.originalPattern);
+        if (o == null || getClass() != o.getClass()) return false;
+        PathPattern that = (PathPattern) o;
+        return this.originalPattern.equals(that.originalPattern);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(originalPattern);
+        return Objects.hash(this.originalPattern);
     }
 
     @Override
     public String toString() {
-        return originalPattern;
-    }
-
-    private int countOccurrences(String str, char ch) {
-        int count = 0;
-        for (int i = 0; i < str.length(); i++) {
-            if (str.charAt(i) == ch) {
-                count++;
-            }
-        }
-        return count;
+        return this.originalPattern;
     }
 }

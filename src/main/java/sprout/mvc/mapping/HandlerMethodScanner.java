@@ -2,9 +2,7 @@ package sprout.mvc.mapping;
 
 import sprout.beans.annotation.Component;
 import sprout.beans.annotation.Controller;
-import sprout.context.ApplicationContext;
 import sprout.context.BeanFactory;
-import sprout.context.Container;
 import sprout.mvc.annotation.*;
 import sprout.mvc.http.HttpMethod;
 

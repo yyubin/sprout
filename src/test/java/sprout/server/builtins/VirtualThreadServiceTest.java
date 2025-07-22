@@ -18,13 +18,14 @@ import java.util.concurrent.Executors;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class VirtualThreadServiceTest {
 
     @Mock
-    private List<ContextPropagator> mockPropagators;
+    private List<? extends ContextPropagator<?>> mockPropagators;
 
     @Mock
     private ExecutorService mockExecutorService;
@@ -40,7 +41,9 @@ class VirtualThreadServiceTest {
             mockedExecutors.when(Executors::newVirtualThreadPerTaskExecutor).thenReturn(mockExecutorService);
 
             // given: 테스트 대상 객체 생성
-            virtualThreadService = new VirtualThreadService(Collections.emptyList());
+            ContextPropagator<?> dummy = mock(ContextPropagator.class);
+            virtualThreadService = new VirtualThreadService(List.of(dummy));
+
             Runnable originalTask = () -> System.out.println("Original Task");
 
             // when: execute 메서드 호출

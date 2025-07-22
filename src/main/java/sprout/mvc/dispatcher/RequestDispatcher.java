@@ -14,7 +14,6 @@ import sprout.mvc.http.*;
 import sprout.mvc.invoke.HandlerMethod;
 import sprout.mvc.invoke.HandlerMethodInvoker;
 import sprout.mvc.mapping.HandlerMapping;
-import app.exception.BadRequestException;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;

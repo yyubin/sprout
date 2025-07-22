@@ -3,12 +3,10 @@ package sprout.mvc.mapping;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor; // ArgumentCaptor import 추가
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import sprout.beans.annotation.Controller;
 import sprout.context.BeanFactory;
-import sprout.context.Container;
 import sprout.mvc.annotation.GetMapping;
 import sprout.mvc.annotation.PostMapping;
 import sprout.mvc.annotation.RequestMapping;
@@ -18,7 +16,6 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List; // List import 추가
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -99,22 +96,11 @@ class HandlerMethodScannerTest {
         // Container가 반환할 빈 목록 설정
         Set<Object> beans = new HashSet<>(Arrays.asList(myController, apiController, normalClass));
         when(beanFactory.getAllBeans())
-                .thenReturn(Set.of(myController, apiController, normalClass));
+                .thenReturn(beans);
 
         // PathPatternResolver가 PathPattern 객체를 반환하도록 설정
-        when(mockPathPatternResolver.resolve(anyString())).thenAnswer(invocation -> {
-            String path = invocation.getArgument(0);
-            return new PathPattern(path) { // 익명 클래스로 PathPattern Mocking (equals/hashCode만 사용될 것임)
-                @Override public String getOriginalPattern() { return path; }
-                @Override public boolean equals(Object o) {
-                    if (this == o) return true;
-                    if (o == null || getClass() != o.getClass()) return false;
-                    PathPattern that = (PathPattern) o;
-                    return path.equals(that.getOriginalPattern());
-                }
-                @Override public int hashCode() { return path.hashCode(); }
-            };
-        });
+        when(mockPathPatternResolver.resolve(anyString()))
+                .thenAnswer(inv -> new PathPattern(inv.getArgument(0)));
 
         // when
         scanner.scanControllers(beanFactory);

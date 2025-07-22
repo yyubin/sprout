@@ -6,9 +6,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import sprout.mvc.exception.BadRequestException;
 import sprout.mvc.http.HttpMethod;
-import app.exception.BadRequestException;
-import app.message.ExceptionMessage;
 import sprout.mvc.http.ResponseCode;
 
 

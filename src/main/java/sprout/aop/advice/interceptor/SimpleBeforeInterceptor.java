@@ -24,7 +24,9 @@ public class SimpleBeforeInterceptor implements Advice {
 
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
-        Object aspect = aspectProvider.get();
+        Object aspect = java.lang.reflect.Modifier.isStatic(adviceMethod.getModifiers())
+                ? null
+                : aspectProvider.get();
         try {
             if (adviceMethod.getParameterCount() == 0) {
                 adviceMethod.invoke(aspect);

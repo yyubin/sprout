@@ -1,6 +1,5 @@
 package sprout.mvc.argument.builtins;
 
-import app.exception.BadRequestException;
 import com.fasterxml.jackson.databind.ObjectMapper; // ObjectMapper import
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -8,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import sprout.mvc.annotation.RequestBody;
+import sprout.mvc.exception.BadRequestException;
 import sprout.mvc.http.HttpRequest;
 import sprout.mvc.http.ResponseCode;
 

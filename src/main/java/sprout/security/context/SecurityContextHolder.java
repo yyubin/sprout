@@ -1,10 +1,8 @@
 package sprout.security.context;
 
 import sprout.config.AppConfig;
-import sprout.security.UserPrincipal;
 import sprout.security.core.SecurityContext;
 
-import java.lang.reflect.Constructor;
 import java.util.function.Supplier;
 
 public final class SecurityContextHolder {
@@ -13,8 +11,9 @@ public final class SecurityContextHolder {
     private static final String DEFAULT_STRATEGY = "bio";
 
 
-    public static void initialize(AppConfig appConfig) {
-        String strategyName = appConfig.getStringProperty("server.strategy", DEFAULT_STRATEGY);
+    public static synchronized void initialize(AppConfig appConfig) {
+        if (strategy != null) return;
+        String strategyName = appConfig.getStringProperty("sprout.security.strategy", DEFAULT_STRATEGY);
         if ("nio".equals(strategyName)) {
             strategy = new ChannelAwareSecurityContextHolderStrategy();
             System.out.println("SecurityContextHolder initialized with ChannelAware strategy.");
@@ -52,4 +51,7 @@ public final class SecurityContextHolder {
     public static SecurityContextHolderStrategy getContextHolderStrategy() {
         return strategy;
     }
+
+
+
 }

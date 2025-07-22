@@ -11,6 +11,7 @@ public class ConstructorBeanDefinition implements BeanDefinition {
     private final Object[] constructorArguments;
     private boolean isProxyTarget = false; // AOP
     private boolean isConfigurationClassProxyNeeded = false; // @Configuration
+    private boolean primary = false;
 
     public ConstructorBeanDefinition(String name, Class<?> type, Constructor<?> constructor, Class<?>[] constructorArgumentTypes) {
         this.name = name;
@@ -46,4 +47,14 @@ public class ConstructorBeanDefinition implements BeanDefinition {
 
     @Override public boolean isConfigurationClassProxyNeeded() { return isConfigurationClassProxyNeeded; }
     public void setConfigurationClassProxyNeeded(boolean configProxyNeeded) { isConfigurationClassProxyNeeded = configProxyNeeded; }
+
+    @Override
+    public boolean isPrimary() {
+        return primary;
+    }
+
+    public void setPrimary(boolean primary) {
+        this.primary = primary;
+    }
+
 }

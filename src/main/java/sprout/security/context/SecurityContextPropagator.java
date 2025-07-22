@@ -7,19 +7,16 @@ import sprout.security.core.SecurityContext;
 
 @Component
 @Order(20)
-public class SecurityContextPropagator implements ContextPropagator {
-    private SecurityContext context;
-
+public class SecurityContextPropagator implements ContextPropagator<SecurityContext> {
     @Override
-    public void capture() {
-        context = SecurityContextHolder.getContext();
+    public SecurityContext capture() {
+        return SecurityContextHolder.getContext();
     }
 
     @Override
-    public void restore() {
-        SecurityContextHolder.setContext(context);
+    public void restore(SecurityContext ctx) {
+        SecurityContextHolder.setContext(ctx);
     }
-
     @Override
     public void clear() {
         SecurityContextHolder.clearContext();

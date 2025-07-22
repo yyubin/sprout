@@ -1,6 +1,5 @@
 package sprout.mvc.exception;
 
-import app.exception.BadRequestException;
 import sprout.beans.annotation.Component;
 import sprout.beans.annotation.Order;
 import sprout.mvc.http.HttpRequest;

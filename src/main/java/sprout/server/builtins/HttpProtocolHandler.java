@@ -32,6 +32,7 @@ public class HttpProtocolHandler implements AcceptableProtocolHandler {
 
     @Override
     public void accept(SocketChannel channel, Selector selector,  ByteBuffer initialBuffer) throws Exception {
+        detachFromSelector(channel, selector);
         channel.configureBlocking(true);
         Socket socket = channel.socket();
 
@@ -63,26 +64,89 @@ public class HttpProtocolHandler implements AcceptableProtocolHandler {
         return "HTTP/1.1".equals(protocol);
     }
 
-    private String readRawRequest(ByteBuffer initialBuffer, InputStream in) throws IOException {
-        // 1. 이미 읽은 초기 데이터를 먼저 가져옴
-        byte[] initialBytes = new byte[initialBuffer.remaining()];
-        initialBuffer.get(initialBytes);
-        String initialData = new String(initialBytes, StandardCharsets.UTF_8);
+    private String readRawRequest(ByteBuffer initial, InputStream in) throws IOException {
+        StringBuilder sb = new StringBuilder();
 
-        // 2. 나머지 데이터를 스트림에서 읽어옴
-        // BufferedReader를 여기서 생성하여 나머지 스트림을 안전하게 읽음
-        BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-        StringBuilder remainingData = new StringBuilder();
-
-        // HTTP 요청은 보통 한 번에 다 읽히므로, non-blocking 상태에서 read-ready가 되면
-        // 데이터가 있을 확률이 높다. 간단하게 처리.
-        // 더 견고하게 만들려면 헤더 끝(빈 줄)을 만날 때까지 읽는 로직이 필요.
-        while (reader.ready()) { // 데이터가 있을 때만 읽도록 시도
-            remainingData.append((char)reader.read());
+        // 1) initial buffer
+        if (initial != null && initial.hasRemaining()) {
+            byte[] arr = new byte[initial.remaining()];
+            initial.get(arr);
+            sb.append(new String(arr, StandardCharsets.UTF_8));
         }
 
-        return initialData + remainingData.toString();
+        // 2) 헤더 끝까지 읽기
+        BufferedInputStream bin = new BufferedInputStream(in);
+        while (!sb.toString().contains("\r\n\r\n")) {
+            int ch = bin.read();
+            if (ch == -1) break; // 연결 끊김
+            sb.append((char) ch);
+        }
+
+        // 파싱해서 Content-Length or chunked 확인
+        String headerPart = sb.toString();
+        int headerEnd = headerPart.indexOf("\r\n\r\n");
+        if (headerEnd < 0) return headerPart; // 잘못된 요청
+
+        String headers = headerPart.substring(0, headerEnd);
+        String bodyStart = headerPart.substring(headerEnd + 4);
+
+        int contentLength = parseContentLength(headers); // 없으면 -1
+        boolean chunked = isChunked(headers);
+
+        if (chunked) {
+            // TODO: chunked 디코딩
+            bodyStart += readChunkedBody(bin);
+        } else if (contentLength > -1) {
+            int alreadyRead = bodyStart.getBytes(StandardCharsets.UTF_8).length;
+            int remaining = contentLength - alreadyRead;
+            if (remaining > 0) {
+                byte[] bodyBytes = bin.readNBytes(remaining);
+                bodyStart += new String(bodyBytes, StandardCharsets.UTF_8);
+            }
+        }
+
+        return headers + "\r\n\r\n" + bodyStart;
     }
+
+    private int parseContentLength(String headers) {
+        for (String line : headers.split("\r\n")) {
+            if (line.toLowerCase().startsWith("content-length:")) {
+                return Integer.parseInt(line.split(":")[1].trim());
+            }
+        }
+        return -1;
+    }
+
+    private boolean isChunked(String headers) {
+        for (String line : headers.split("\r\n")) {
+            if (line.toLowerCase().startsWith("transfer-encoding:")
+                    && line.toLowerCase().contains("chunked")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private String readChunkedBody(InputStream in) throws IOException {
+        BufferedReader r = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
+        StringBuilder body = new StringBuilder();
+        while (true) {
+            String lenLine = r.readLine();
+            if (lenLine == null) break;
+            int len = Integer.parseInt(lenLine.trim(), 16);
+            if (len == 0) {
+                // trailing headers consume up to empty line
+                while (!"".equals(r.readLine())) {}
+                break;
+            }
+            char[] buf = new char[len];
+            int read = r.read(buf);
+            body.append(buf, 0, read);
+            r.readLine(); // consume CRLF
+        }
+        return body.toString();
+    }
+
 
     private void writeResponse(BufferedWriter out, ResponseEntity<?> res) throws IOException {
         if (res == null) return;
@@ -107,4 +171,13 @@ public class HttpProtocolHandler implements AcceptableProtocolHandler {
         out.write(body);
         out.flush();
     }
+
+    static void detachFromSelector(SocketChannel ch, Selector sel) {
+        SelectionKey k = ch.keyFor(sel);
+        if (k != null) {
+            k.cancel();
+            k.attach(null);
+        }
+    }
+
 }

@@ -8,6 +8,8 @@ import sprout.context.ContextPropagator;
 import sprout.server.builtins.ThreadPoolService;
 import sprout.server.builtins.VirtualThreadService;
 
+import java.util.List;
+
 @Configuration(proxyBeanMethods = true)
 public class ServerConfiguration {
 
@@ -21,7 +23,10 @@ public class ServerConfiguration {
             return new ThreadPoolService(poolSize);
         }
         System.out.println("Initializing with Virtual Threads.");
-        return new VirtualThreadService(applicationContext.getAllBeans(ContextPropagator.class));
+        List<? extends ContextPropagator<?>> props =
+                (List<? extends ContextPropagator<?>>) (List<?>) applicationContext.getAllBeans(ContextPropagator.class);
+
+        return new VirtualThreadService(props);
     }
 
 }

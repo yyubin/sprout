@@ -3,14 +3,8 @@ package sprout.boot;
 import sprout.beans.annotation.ComponentScan;
 import sprout.config.AppConfig;
 import sprout.context.ApplicationContext;
-import sprout.context.Container;
-import sprout.context.ContextInitializer;
-import sprout.context.builtins.DefaultListableBeanFactory;
 import sprout.context.builtins.SproutApplicationContext;
-import sprout.mvc.advice.ControllerAdviceRegistry;
-import sprout.mvc.mapping.HandlerMethodScanner;
 import sprout.server.HttpServer;
-import sprout.server.websocket.endpoint.WebSocketHandlerScanner;
 
 import java.util.ArrayList;
 import java.util.Arrays;
