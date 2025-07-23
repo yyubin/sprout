@@ -105,7 +105,7 @@ public class WebSocketProtocolHandler implements AcceptableProtocolHandler {
         Map<String, String> pathVars = endpointInfo.getPathPattern().extractPathVariables(request.getPath());
 
         // DefaultWebSocketSession 생성 시 argumentResolvers와 messageParser 전달
-        WebSocketSession wsSession = new DefaultWebSocketSession(sessionId, channel, request, endpointInfo, frameParser, frameEncoder, pathVars, webSocketArgumentResolvers, messageDispatchers, closeListener);
+        WebSocketSession wsSession = new DefaultWebSocketSession(sessionId, channel, selector, request, endpointInfo, frameParser, frameEncoder, pathVars, webSocketArgumentResolvers, messageDispatchers, closeListener);
         webSocketContainer.addSession(endpointInfo.getPathPattern().getOriginalPattern(), wsSession);
 
         SelectionKey key = channel.register(selector, SelectionKey.OP_READ);

@@ -1,22 +1,16 @@
 package sprout.server.builtins;
 
-import sprout.beans.annotation.Component;
-import sprout.mvc.dispatcher.RequestDispatcher;
-import sprout.server.ConnectionHandler;
-import sprout.server.ThreadService;
+import sprout.server.RequestExecutorService;
 
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class ThreadPoolService implements ThreadService {
+public class RequestExecutorPoolService implements RequestExecutorService {
 
     private final ExecutorService pool;
 
-    public ThreadPoolService(int threadPoolSize) {
+    public RequestExecutorPoolService(int threadPoolSize) {
         this.pool = Executors.newFixedThreadPool(threadPoolSize);
     }
 

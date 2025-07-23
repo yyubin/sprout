@@ -1,6 +1,7 @@
 package sprout.server.websocket;
 
 import sprout.mvc.http.HttpRequest;
+import sprout.server.WritableHandler;
 import sprout.server.argument.WebSocketArgumentResolver;
 import sprout.server.websocket.exception.NotEnoughDataException;
 import sprout.server.websocket.exception.WebSocketException;
@@ -15,17 +16,19 @@ import java.lang.reflect.Parameter;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
-public class DefaultWebSocketSession implements WebSocketSession{
+import static java.nio.channels.SelectionKey.OP_WRITE;
+
+public class DefaultWebSocketSession implements WebSocketSession, WritableHandler {
     private final String id;
     private final SocketChannel channel;
+    private final Selector selector;
     private final HttpRequest<?> handshakeRequest;
     private final Map<String, String> pathParameters;
     private final WebSocketEndpointInfo endpointInfo;
@@ -35,15 +38,18 @@ public class DefaultWebSocketSession implements WebSocketSession{
     private final List<WebSocketMessageDispatcher> messageDispatchers;
     private final CloseListener closeListener;
     private volatile boolean open = true;
+    private volatile boolean isClosePending = false;
     private final Map<String, Object> userProperties = new ConcurrentHashMap<>();
     private StringBuilder fragmentedTextMessageBuffer = new StringBuilder();
     private ByteArrayOutputStream fragmentedBinaryMessageBuffer = new ByteArrayOutputStream();
     private final ByteBuffer readBuffer = ByteBuffer.allocate(65536);
+    private final Queue<ByteBuffer> pendingWrites = new ConcurrentLinkedQueue<>();
     private int lastDataFrameOpcode = -1;
 
-    public DefaultWebSocketSession(String id, SocketChannel channel, HttpRequest<?> handshakeRequest, WebSocketEndpointInfo endpointInfo, WebSocketFrameParser frameParser, WebSocketFrameEncoder frameEncoder, Map<String, String> pathParameters, List<WebSocketArgumentResolver> webSocketArgumentResolvers, List<WebSocketMessageDispatcher> messageDispatchers, CloseListener closeListener) throws IOException {
+    public DefaultWebSocketSession(String id, SocketChannel channel, Selector selector, HttpRequest<?> handshakeRequest, WebSocketEndpointInfo endpointInfo, WebSocketFrameParser frameParser, WebSocketFrameEncoder frameEncoder, Map<String, String> pathParameters, List<WebSocketArgumentResolver> webSocketArgumentResolvers, List<WebSocketMessageDispatcher> messageDispatchers, CloseListener closeListener) throws IOException {
         this.id = id;
         this.channel = channel;
+        this.selector = selector;
         this.handshakeRequest = handshakeRequest;
         this.endpointInfo = endpointInfo;
         this.frameParser = frameParser;
@@ -56,19 +62,14 @@ public class DefaultWebSocketSession implements WebSocketSession{
 
     @Override
     public void close() throws IOException {
-        if (open) {
-            System.out.println("Closing WebSocket session: " + id);
-            byte[] encoded = frameEncoder.encodeText("Closing WebSocket session: " + id + ", Close code is: " + CloseCodes.NORMAL_CLOSURE.getCode() + ".");
-            ByteBuffer buf = ByteBuffer.wrap(encoded);
-            while (buf.hasRemaining()) {
-                channel.write(buf);
-            }
-            open = false;
-            channel.close();
-
-            if (closeListener != null) {
-                closeListener.onSessionClosed(this);
-            }
+        if (open && !isClosePending) {
+            System.out.println("Scheduling close for WebSocket session: " + id);
+            isClosePending = true; // 종료 요청 표시
+            // 종료 프레임 생성 (opcode 0x8, 정상 종료 코드 1000)
+            String closeReason = "Closing WebSocket session: " + id + ", Close code is: " + CloseCodes.NORMAL_CLOSURE.getCode() + ".";
+            byte[] closePayload = closeReason.getBytes(StandardCharsets.UTF_8);
+            byte[] encoded = frameEncoder.encodeControlFrame(0x8, closePayload);
+            scheduleWrite(ByteBuffer.wrap(encoded));
         }
     }
 
@@ -79,38 +80,45 @@ public class DefaultWebSocketSession implements WebSocketSession{
 
     @Override
     public void sendText(String message) throws IOException {
-        byte[] encoded = frameEncoder.encodeText(message);
-        ByteBuffer buf = ByteBuffer.wrap(encoded);
-        while (buf.hasRemaining()) {
-            channel.write(buf); // non-blocking write
+        scheduleWrite(ByteBuffer.wrap(frameEncoder.encodeText(message)));
+    }
+
+    @Override
+    public void write(SelectionKey key) throws Exception {
+        ByteBuffer buf;
+        while ((buf = pendingWrites.peek()) != null) {
+            channel.write(buf);
+            if (buf.hasRemaining()) return;
+            pendingWrites.poll();
+        }
+
+        if (pendingWrites.isEmpty()) {
+            key.interestOps(key.interestOps() & ~OP_WRITE);
+            // 큐가 비었고 종료 요청이 있었다면 채널 닫기
+            if (isClosePending && open) {
+                System.out.println("All pending writes completed, closing channel for session: " + id);
+                open = false;
+                channel.close();
+                if (closeListener != null) {
+                    closeListener.onSessionClosed(this);
+                }
+            }
         }
     }
 
     @Override
     public void sendBinary(byte[] data) throws IOException {
-        byte[] encoded = frameEncoder.encodeControlFrame(0x2, data);
-        ByteBuffer buf = ByteBuffer.wrap(encoded);
-        while (buf.hasRemaining()) {
-            channel.write(buf);
-        }
+        scheduleWrite(ByteBuffer.wrap(frameEncoder.encodeBinary(data)));
     }
 
     @Override
     public void sendPing(byte[] data) throws IOException {
-        byte[] encoded = frameEncoder.encodeControlFrame(0x9, data);
-        ByteBuffer buf = ByteBuffer.wrap(encoded);
-        while (buf.hasRemaining()) {
-            channel.write(buf);
-        }
+        scheduleWrite(ByteBuffer.wrap(frameEncoder.encodeControlFrame(0x9, data)));
     }
 
     @Override
     public void sendPong(byte[] data) throws IOException {
-        byte[] encoded = frameEncoder.encodeControlFrame(0xA, data);
-        ByteBuffer buf = ByteBuffer.wrap(encoded);
-        while (buf.hasRemaining()) {
-            channel.write(buf);
-        }
+        scheduleWrite(ByteBuffer.wrap(frameEncoder.encodeControlFrame(0xA, data)));
     }
 
     @Override
@@ -157,6 +165,16 @@ public class DefaultWebSocketSession implements WebSocketSession{
             }
         }
         readBuffer.compact();
+    }
+
+    private void scheduleWrite(ByteBuffer buf) {
+        pendingWrites.add(buf);
+        SelectionKey key = channel.keyFor(selector);
+        if (key != null && key.isValid() && (key.interestOps() & OP_WRITE) == 0) {
+            // | 연산자로 OP_WRITE 플래그를 추가
+            key.interestOps(key.interestOps() | OP_WRITE);
+            selector.wakeup(); // Selector가 select()에서 대기 중일 수 있으므로 깨워주기
+        }
     }
 
     private void processFrame(WebSocketFrame frame) throws Exception {
@@ -409,4 +427,7 @@ public class DefaultWebSocketSession implements WebSocketSession{
         return this.pathParameters;
     }
 
+    public boolean isClosePending() {
+        return isClosePending;
+    }
 }

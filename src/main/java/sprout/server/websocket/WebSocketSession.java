@@ -2,14 +2,12 @@ package sprout.server.websocket;
 
 
 import sprout.mvc.http.HttpRequest;
-import sprout.server.ReadableProtocolHandler;
+import sprout.server.ReadableHandler;
 import sprout.server.websocket.endpoint.WebSocketEndpointInfo;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public interface WebSocketSession extends ReadableHandler {
     String getId();

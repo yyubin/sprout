@@ -1,4 +1,4 @@
-package sprout.server.websocket;
+package sprout.server;
 
 public interface MessageHandler {
 

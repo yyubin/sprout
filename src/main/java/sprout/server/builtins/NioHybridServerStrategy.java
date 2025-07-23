@@ -2,9 +2,7 @@ package sprout.server.builtins;
 
 import sprout.beans.annotation.Component;
 import sprout.server.*;
-import sprout.server.context.ServerRunHook;
-import sprout.server.websocket.ReadableHandler;
-import sprout.server.websocket.WebSocketContainer;
+import sprout.server.ReadableHandler;
 import sprout.server.websocket.WebSocketSession;
 
 import java.io.IOException;
@@ -13,7 +11,6 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
 @Component
@@ -51,9 +48,15 @@ public class NioHybridServerStrategy implements ServerStrategy {
                         connectionManager.acceptConnection(key, selector);
                     }
                     if (key.isReadable()) {
-                        ReadableHandler handler = (ReadableHandler) key.attachment();
-                        if (handler != null) {
-                            handler.read(key);
+                        Object attachment = key.attachment();
+                        if (attachment instanceof ReadableHandler) {
+                            ((ReadableHandler) attachment).read(key);
+                        }
+                    }
+                    if (key.isWritable()) {
+                        Object attachment = key.attachment();
+                        if (attachment instanceof WritableHandler) {
+                            ((WritableHandler) attachment).write(key);
                         }
                     }
                 } catch (IOException e) { // 클라이언트 연결 끊김 등 I/O 예외 처리

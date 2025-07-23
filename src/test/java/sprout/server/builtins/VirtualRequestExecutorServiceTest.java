@@ -1,6 +1,5 @@
 package sprout.server.builtins;
 
-import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,7 +10,6 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import sprout.context.ContextPropagator;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -22,15 +20,15 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
-class VirtualThreadServiceTest {
+class VirtualRequestExecutorServiceTest {
 
     @Mock
-    private List<? extends ContextPropagator<?>> mockPropagators;
+    private List<ContextPropagator> mockPropagators;
 
     @Mock
     private ExecutorService mockExecutorService;
 
-    private VirtualThreadService virtualThreadService;
+    private VirtualRequestExecutorService virtualThreadService;
 
     @Test
     @DisplayName("execute는 ContextSnapshot으로 작업을 감싸서 ExecutorService에 제출해야 한다")
@@ -42,7 +40,7 @@ class VirtualThreadServiceTest {
 
             // given: 테스트 대상 객체 생성
             ContextPropagator<?> dummy = mock(ContextPropagator.class);
-            virtualThreadService = new VirtualThreadService(List.of(dummy));
+            virtualThreadService = new VirtualRequestExecutorService(List.of(dummy));
 
             Runnable originalTask = () -> System.out.println("Original Task");
 
@@ -68,7 +66,7 @@ class VirtualThreadServiceTest {
         // given: 위와 동일하게 정적 메서드 Mocking 설정
         try (MockedStatic<Executors> mockedExecutors = Mockito.mockStatic(Executors.class)) {
             mockedExecutors.when(Executors::newVirtualThreadPerTaskExecutor).thenReturn(mockExecutorService);
-            virtualThreadService = new VirtualThreadService(mockPropagators);
+            virtualThreadService = new VirtualRequestExecutorService(mockPropagators);
 
             // when: shutdown 메서드 호출
             virtualThreadService.shutdown();

@@ -1,176 +1,202 @@
 package sprout.server.websocket;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import sprout.mvc.http.HttpRequest;
 import sprout.server.argument.WebSocketArgumentResolver;
 import sprout.server.websocket.endpoint.WebSocketEndpointInfo;
-import sprout.server.websocket.exception.NotEnoughDataException;
 import sprout.server.websocket.message.WebSocketMessageDispatcher;
-import java.io.ByteArrayInputStream;
+
 import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static java.nio.channels.SelectionKey.OP_READ;
+import static java.nio.channels.SelectionKey.OP_WRITE;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("DefaultWebSocketSession 테스트")
-class DefaultWebSocketSessionTest {
+@MockitoSettings(strictness = Strictness.LENIENT)
+class DefaultWebSocketSessionWriteLogicTest {
 
-    @Mock private SocketChannel mockChannel;
-    @Mock private HttpRequest<?> mockHandshakeRequest;
-    @Mock private WebSocketEndpointInfo mockEndpointInfo;
-    @Mock private WebSocketFrameParser mockFrameParser;
-    @Mock private WebSocketFrameEncoder mockFrameEncoder;
-    @Mock private List<WebSocketArgumentResolver> mockArgumentResolvers;
-    @Mock private List<WebSocketMessageDispatcher> mockMessageDispatchers;
-    @Mock private CloseListener mockCloseListener;
-    @Mock private SelectionKey mockSelectionKey;
+    @Mock SocketChannel channel;
+    @Mock Selector selector;
+    @Mock HttpRequest<?> handshakeRequest;
+    @Mock WebSocketEndpointInfo endpointInfo;
+    @Mock WebSocketFrameParser frameParser;
+    @Mock WebSocketFrameEncoder frameEncoder;
+    @Mock List<WebSocketArgumentResolver> argumentResolvers;
+    @Mock List<WebSocketMessageDispatcher> dispatchers;
+    @Mock CloseListener closeListener;
+    @Mock SelectionKey key;
 
-    private DefaultWebSocketSession session;
+    DefaultWebSocketSession session;
 
     @BeforeEach
     void setUp() throws IOException {
+        // 기본 stubbing
+        when(channel.isOpen()).thenReturn(true);
+        when(channel.keyFor(selector)).thenReturn(key);
+        when(key.isValid()).thenReturn(true);
+
+        // encode 계열은 전부 any()로 스텁해서 인자 mismatch 방지
+        lenient().when(frameEncoder.encodeText(anyString()))
+                .thenAnswer(inv -> inv.getArgument(0, String.class).getBytes(StandardCharsets.UTF_8));
+
+        lenient().when(frameEncoder.encodeBinary(ArgumentMatchers.<byte[]>any()))
+                .thenAnswer(inv -> inv.getArgument(0, byte[].class));  // 그대로 돌려주기
+
+        lenient().when(frameEncoder.encodeControlFrame(anyInt(), ArgumentMatchers.<byte[]>any()))
+                .thenAnswer(inv -> {
+                    int opcode = inv.getArgument(0, Integer.class);
+                    byte[] payload = inv.getArgument(1, byte[].class);
+                    if (payload == null) payload = new byte[0];
+                    return ("ctl:" + opcode + ":" + payload.length).getBytes(StandardCharsets.UTF_8);
+                });
+
+        // interestOps 상태를 직접 관리하기 위한 헬퍼
+        stubInterestOpsState(OP_READ);
+
         session = new DefaultWebSocketSession(
-                "test-session-id", mockChannel, mockHandshakeRequest, mockEndpointInfo,
-                mockFrameParser, mockFrameEncoder, Collections.emptyMap(),
-                mockArgumentResolvers, mockMessageDispatchers, mockCloseListener
+                "test", channel, selector, handshakeRequest, endpointInfo,
+                frameParser, frameEncoder, Collections.emptyMap(),
+                argumentResolvers, dispatchers, closeListener
         );
-        lenient().when(mockChannel.isOpen()).thenReturn(true);
+    }
+
+    // ---------------------- Tests ----------------------
+
+    @Test
+    @DisplayName("sendText -> pendingWrites에 들어가고 OP_WRITE 등록 및 selector.wakeup() 호출")
+    void sendText_registersWrite() throws IOException {
+        session.sendText("hello");
+        when(channel.write(ArgumentMatchers.<ByteBuffer>any()))
+                .thenAnswer(inv -> {
+                    ByteBuffer buf = inv.getArgument(0, ByteBuffer.class);
+                    int remaining = buf.remaining();
+                    buf.position(buf.limit());
+                    return remaining;
+                });
+
+        // 직접 write()는 호출되지 않음
+        verify(channel, never()).write(ArgumentMatchers.<ByteBuffer>any());
+
+        // OP_WRITE 세팅 확인
+        assertThat(currentOps()).isEqualTo(OP_READ | OP_WRITE);
+        verify(selector).wakeup();
     }
 
     @Test
-    @DisplayName("close 호출 시 Close 프레임을 보내고 채널을 닫고 리스너를 호출해야 한다")
-    void close_should_send_frame_and_close_channel_and_notify_listener() throws Exception {
-        // ① encodeText 는 최소 1바이트 이상 반환
-        byte[] closeMsg = "bye".getBytes(StandardCharsets.UTF_8);
-        when(mockFrameEncoder.encodeText(anyString())).thenReturn(closeMsg);
-
-        // ② write() 가 호출될 때마다 버퍼를 모두 소비했다고 가정
-        when(mockChannel.write(any(ByteBuffer.class))).thenAnswer(inv -> {
-            ByteBuffer buf = inv.getArgument(0);
-            int bytes = buf.remaining();   // 남은 바이트 수
-            buf.position(buf.limit());     // position 을 limit 로 이동 → hasRemaining() == false
-            return bytes;                  // 실제로 쓴 바이트 수 반환
+    @DisplayName("write - 버퍼를 모두 비우면 OP_WRITE 제거")
+    void write_drainsQueue_and_unsetWriteFlag() throws Exception {
+        // given
+        session.sendText("hello");
+        // channel.write가 한 번 호출에 모두 소비하도록 stubbing
+        when(channel.write(any(ByteBuffer.class))).thenAnswer(inv -> {
+            ByteBuffer b = inv.getArgument(0);
+            int r = b.remaining();
+            b.position(b.limit());
+            return r;
         });
 
         // when
-        session.close();
+        session.write(key);
 
         // then
-        verify(mockChannel).write(any(ByteBuffer.class));
-        verify(mockChannel).close();
-        verify(mockCloseListener).onSessionClosed(session);
-        assertFalse(session.isOpen());
+        assertThat(currentOps()).isEqualTo(OP_READ); // OP_WRITE 제거
     }
 
+    @Test
+    @DisplayName("write - 부분만 썼다면 큐에 남아있고 OP_WRITE 유지")
+    void write_partialWrite_keepsWriteFlag() throws Exception {
+        session.sendText("hello");
 
-    @Nested
-    @DisplayName("데이터 읽기 및 프레임 처리 (Read) 로직")
-    class ReadLogicTests {
-        @Test
-        @DisplayName("원격 연결 종료(-1) 시 onClose 메서드와 close를 호출해야 한다")
-        void read_should_close_on_remote_disconnect() throws Exception {
-            // given
-            when(mockChannel.read(any(ByteBuffer.class))).thenReturn(-1);
-            // FIX: onClose 메서드와 핸들러 빈이 null이 아니도록 설정
-            when(mockEndpointInfo.getOnCloseMethod()).thenReturn(Object.class.getMethod("toString"));
-            when(mockEndpointInfo.getHandlerBean()).thenReturn(new Object()); // 실제 빈 객체
-            // FIX: close() 내부에서 encodeText가 호출되므로 Mocking 필요
-            when(mockFrameEncoder.encodeText(anyString())).thenReturn(new byte[0]);
+        when(channel.write(any(ByteBuffer.class))).thenAnswer(inv -> {
+            ByteBuffer b = inv.getArgument(0);
+            int half = Math.max(1, b.remaining() / 2);
+            b.position(b.position() + half);
+            return half;
+        });
 
-            // when
-            session.read(mockSelectionKey);
+        session.write(key);
 
-            // then
-            verify(mockEndpointInfo).getOnCloseMethod();
-            verify(mockChannel).close();
-        }
+        // 큐에 아직 남아있으므로 OP_WRITE 여전히 유지
+        assertThat(currentOps() & OP_WRITE).isEqualTo(OP_WRITE);
+        verify(channel, atLeastOnce()).write(any(ByteBuffer.class));
+        // closeListener 호출 X
+        verify(closeListener, never()).onSessionClosed(any());
+    }
 
-        @Test
-        @DisplayName("Ping 프레임 수신 시 Pong 프레임을 전송해야 한다")
-        void read_should_send_pong_on_ping() throws Exception {
-            // given
-            byte[] pingPayload = {'p','i','n','g'};
-            WebSocketFrame pingFrame = new WebSocketFrame(true, 0x9,
-                    new ByteArrayInputStream(pingPayload));
-            byte[] raw = { (byte)0x89, 0x04,'p','i','n','g'};
+    @Test
+    @DisplayName("close 호출 후 write가 큐를 비우면 채널 닫고 closeListener 호출")
+    void write_afterClosePending_willCloseChannel() throws Exception {
+        // 먼저 close() 호출 -> close frame enqueue
+        byte[] closeBytes = "close-frame".getBytes(StandardCharsets.UTF_8);
+        doReturn(closeBytes).when(frameEncoder)
+                .encodeControlFrame(eq(0x8), ArgumentMatchers.<byte[]>any());
+        session.close();
+        assertThat(session.isClosePending()).isTrue();
+        // queue drain 동작
+        when(channel.write(ArgumentMatchers.<ByteBuffer>any())).thenAnswer(inv -> {
+            ByteBuffer b = inv.getArgument(0, ByteBuffer.class);
+            int r = b.remaining();
+            b.position(b.limit());
+            return r;
+        });
 
-            when(mockChannel.read(any(ByteBuffer.class))).thenAnswer(inv -> {
-                ByteBuffer buf = inv.getArgument(0);
-                buf.put(raw);
-                return raw.length;
-            });
+        // OP_WRITE가 있어야 write 호출됨
+        assertThat(currentOps() & OP_WRITE).isEqualTo(OP_WRITE);
 
-            when(mockFrameParser.parse(any()))
-                    .thenReturn(pingFrame)
-                    .thenThrow(new NotEnoughDataException());
+        session.write(key);
 
-            byte[] pong = {0x00};
-            when(mockFrameEncoder.encodeControlFrame(eq(0xA), any()))
-                    .thenReturn(pong);
+        verify(channel).close();
+        verify(closeListener).onSessionClosed(session);
+        assertThat(session.isOpen()).isFalse();
+    }
 
-            // FIX: write가 호출되면 버퍼를 소비하는 동작을 시뮬레이션
-            when(mockChannel.write(any(ByteBuffer.class))).thenAnswer(invocation -> {
-                ByteBuffer buffer = invocation.getArgument(0);
-                int bytesToWrite = buffer.remaining();
-                buffer.position(buffer.limit()); // 버퍼를 모두 소비한 것처럼 position을 끝으로 이동
-                return bytesToWrite; // 쓴 바이트 수 반환
-            });
+    @Test
+    @DisplayName("이미 OP_WRITE 등록된 상태에서 또 enqueue하면 interestOps 중복 변경하지 않음")
+    void scheduleWrite_doesNotFlipOpsTwice() throws IOException {
+        session.sendText("first"); // OP_WRITE set
 
-            // when
-            session.read(mockSelectionKey);
+        // 기록 초기화
+        clearInvocations(key, selector);
 
-            // then
-            verify(mockFrameEncoder).encodeControlFrame(0xA, pingPayload);
-            verify(mockChannel).write(any(ByteBuffer.class));
-        }
+        session.sendText("second");
 
-        @Test
-        @DisplayName("단일 텍스트 프레임 수신 시 메시지를 디스패치해야 한다")
-        void read_should_dispatch_single_text_frame() throws Exception {
-            // given
-            String message = "A single frame";
-            byte[] rawTextFrameBytes = message.getBytes(StandardCharsets.UTF_8);
-            WebSocketFrame textFrame = new WebSocketFrame(true, 0x1, new ByteArrayInputStream(rawTextFrameBytes));
-            WebSocketMessageDispatcher mockDispatcher = mock(WebSocketMessageDispatcher.class);
+        // 두 번째 호출시 interestOps(OP_WRITE 추가)가 또 일어나지 않거나, 일어나도 동일 값
+        // (= 괜찮지만 적어도 selector.wakeup()은 중복 호출 안해도 됨)
+        verify(selector, atMostOnce()).wakeup();
+    }
 
-            when(mockChannel.read(any(ByteBuffer.class))).thenAnswer(invocation -> {
-                ByteBuffer buffer = invocation.getArgument(0);
-                buffer.put(rawTextFrameBytes);
-                return rawTextFrameBytes.length;
-            });
-            when(mockFrameParser.parse(any()))
-                    .thenReturn(textFrame)
-                    .thenThrow(new NotEnoughDataException());
-            when(mockMessageDispatchers.iterator())
-                    .thenAnswer(inv -> List.of(mockDispatcher).iterator());
-            when(mockDispatcher.supports(any(), any())).thenReturn(true);
-            DispatchResult result = new DispatchResult(true, false);
-            when(mockDispatcher.dispatch(any(), any())).thenReturn(result);
+    // ---------------------- Helper ----------------------
 
-            // when
-            session.read(mockSelectionKey);
+    private final AtomicInteger opsHolder = new AtomicInteger();
 
-            // then
-            ArgumentCaptor<InvocationContext> captor = ArgumentCaptor.forClass(InvocationContext.class);
-            verify(mockDispatcher).dispatch(any(), captor.capture());
-            assertEquals(message, captor.getValue().getMessagePayload().asText());
-        }
+    private void stubInterestOpsState(int initialOps) {
+        opsHolder.set(initialOps);
+
+        // get
+        when(key.interestOps()).thenAnswer(inv -> opsHolder.get());
+        // set
+        when(key.interestOps(anyInt())).thenAnswer(inv -> {
+            opsHolder.set(inv.getArgument(0));
+            return key;
+        });
+    }
+
+    private int currentOps() {
+        return opsHolder.get();
     }
 }

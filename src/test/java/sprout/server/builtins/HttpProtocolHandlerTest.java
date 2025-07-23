@@ -14,7 +14,7 @@ import sprout.mvc.http.HttpRequest;
 import sprout.mvc.http.HttpResponse;
 import sprout.mvc.http.ResponseEntity;
 import sprout.mvc.http.parser.HttpRequestParser;
-import sprout.server.ThreadService;
+import sprout.server.RequestExecutorService;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -25,7 +25,6 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -33,7 +32,7 @@ import static org.mockito.Mockito.*;
 class HttpProtocolHandlerTest {
 
     @Mock
-    private ThreadService mockThreadService;
+    private RequestExecutorService mockRequestExecutorService;
     @Mock
     private RequestDispatcher mockDispatcher;
     @Mock
@@ -44,7 +43,7 @@ class HttpProtocolHandlerTest {
     private Socket mockSocket;
 
     @InjectMocks
-    private HttpProtocolHandler httpProtocolHandler;
+    private BioHttpProtocolHandler httpProtocolHandler;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -56,7 +55,7 @@ class HttpProtocolHandlerTest {
             Runnable task = invocation.getArgument(0);
             task.run();
             return null;
-        }).when(mockThreadService).execute(any(Runnable.class));
+        }).when(mockRequestExecutorService).execute(any(Runnable.class));
     }
 
     @Test

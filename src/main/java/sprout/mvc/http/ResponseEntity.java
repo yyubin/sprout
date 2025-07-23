@@ -22,6 +22,13 @@ public class ResponseEntity<T>{
         this.headers = Collections.emptyMap();
     }
 
+    public ResponseEntity(T body, Map<String, String> headers, ResponseCode statusCode, String contentType) {
+        this.body = body;
+        this.headers = headers;
+        this.statusCode = statusCode;
+        this.contentType = contentType;
+    }
+
     public String getContentType() {
         return contentType;
     }

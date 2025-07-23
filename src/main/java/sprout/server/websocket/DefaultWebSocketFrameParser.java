@@ -2,6 +2,7 @@ package sprout.server.websocket;
 
 import sprout.beans.annotation.Component;
 
+import java.io.IOException;
 import java.io.InputStream;
 
 @Component
@@ -38,7 +39,7 @@ public class DefaultWebSocketFrameParser implements WebSocketFrameParser {
         byte[] maskingKey = new byte[4];
         if (masked) {
             if (in.read(maskingKey) != 4) {
-                throw new RuntimeException("Could not read full masking key.");
+                throw new IOException("Failed to read full 4-byte masking key from client stream.");
             }
         }
 
