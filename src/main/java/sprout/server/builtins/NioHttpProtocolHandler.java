@@ -15,6 +15,7 @@ public class NioHttpProtocolHandler implements AcceptableProtocolHandler {
     private final HttpRequestParser parser;
     private final RequestExecutorService requestExecutorService;
 
+
     public NioHttpProtocolHandler(RequestDispatcher dispatcher, HttpRequestParser parser, RequestExecutorService requestExecutorService) {
         this.dispatcher = dispatcher;
         this.parser = parser;
@@ -23,8 +24,10 @@ public class NioHttpProtocolHandler implements AcceptableProtocolHandler {
 
     @Override
     public void accept(SocketChannel channel, Selector selector, ByteBuffer byteBuffer) throws Exception {
-        HttpConnectionHandler handler = new HttpConnectionHandler(channel, selector, dispatcher, parser, requestExecutorService);
+        System.out.println( "Accepted connection from " + channel.socket());
+        HttpConnectionHandler handler = new HttpConnectionHandler(channel, selector, dispatcher, parser, requestExecutorService, byteBuffer);
         channel.register(selector, SelectionKey.OP_READ, handler);
+        handler.read(channel.keyFor(selector));
     }
 
     @Override

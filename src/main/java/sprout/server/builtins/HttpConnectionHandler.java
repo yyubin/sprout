@@ -25,34 +25,49 @@ public class HttpConnectionHandler implements ReadableHandler, WritableHandler {
     private volatile ByteBuffer writeBuffer;
     private HttpConnectionStatus currentState = HttpConnectionStatus.READING;
 
-    public HttpConnectionHandler(SocketChannel channel, Selector selector, RequestDispatcher dispatcher, HttpRequestParser parser, RequestExecutorService requestExecutorService) {
+    public HttpConnectionHandler(SocketChannel channel, Selector selector, RequestDispatcher dispatcher, HttpRequestParser parser, RequestExecutorService requestExecutorService, ByteBuffer initialBuffer) {
         this.channel = channel;
         this.selector = selector;
         this.dispatcher = dispatcher;
         this.parser = parser;
         this.requestExecutorService = requestExecutorService;
+
+        if (initialBuffer != null && initialBuffer.hasRemaining()) {
+            this.readBuffer.put(initialBuffer);
+        }
+
+        System.out.println("connection established from " + channel.socket() + " with initial buffer size: " + readBuffer.remaining() + " bytes");
     }
 
     @Override
     public void read(SelectionKey key) throws Exception {
-        if (currentState == HttpConnectionStatus.READING) return;
-
+        System.out.println("Try to read from " + channel.socket() + " with current state: " + currentState + " and buffer size: " + readBuffer.remaining() + " bytes");
+        if (currentState != HttpConnectionStatus.READING) return;
+        System.out.println("Read from " + channel.socket() + " with current state: " + currentState + " and buffer size: " + readBuffer.remaining() + " bytes");
         int bytesRead = channel.read(readBuffer);
         if (bytesRead == -1) {
+            System.out.println("Bytes read is -1. Closing connection...");
             closeConnection(key);
             return;
         }
 
+        // FIX : '읽기 모드'로 전환
+        readBuffer.flip();
+
         if (HttpUtils.isRequestComplete(readBuffer)) {
+            System.out.println("Request is Completed!");
             // 3. 완전한 요청이 왔다면, 처리 상태로 변경
             this.currentState = HttpConnectionStatus.PROCESSING;
             key.interestOps(0); // 이벤트 감지 일단 중지
 
             // readBuffer에서 요청 전문(raw request)을 추출
-            readBuffer.flip();
             byte[] requestBytes = new byte[readBuffer.remaining()];
             readBuffer.get(requestBytes);
             String rawRequest = new String(requestBytes, StandardCharsets.UTF_8);
+
+            System.out.println("--- Parsing Request ---");
+            System.out.println(rawRequest);
+            System.out.println("--- End of Request ---");
 
             // 4. 비즈니스 로직은 스레드 풀에 위임 (기존과 동일)
             requestExecutorService.execute(() -> {
