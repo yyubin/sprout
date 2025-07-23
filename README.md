@@ -1,24 +1,27 @@
 # 🌱 **Sprout**
 
-A lightweight Java web framework built from scratch to demystify **how Spring works under the hood**. While it proudly *reinvents the wheel (twice)*, **clarity · hackability · extensibility** remain its guiding values.
+*A lightweight Java web framework built from scratch to demystify how Spring works under the hood.*
+Now with **fully working NIO & hybrid servers** and an **async WebSocket stack**. Still opinionated about **clarity · hackability · extensibility**.
 
 ---
 
-## ✨ Core Features
-| Area | Status & Highlights                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| --- |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **IoC / DI Container** | • Scans `@Component`, `@Service`, `@Controller`, `@Repository`, `@Configuration`, `@Aspect`. <br/>• Constructor‑based injection. <br/>• Automatic `List<T>` population with `@Order` support. <br/>• Cyclic‑dependency detection (topological sort). <br/>• **Auto-configuration support via `BeanDefinitionRegistrar` for default beans.**                                                                                                                                                                                                                                              |
-| **Bean Definitions** | • `ConstructorBeanDefinition` & `MethodBeanDefinition`. <br/>• Factory‑method or constructor strategy. <br/>• **Ctor‑Meta cache** – enables safe proxying of beans with required‑args constructors.                                                                                                                                                                                                                                                                                                                                                                                      |
-| **AOP (NEW in 0.2)** | • Annotation‑driven (`@Before`, `@After`, `@Around`). <br/>• AspectJ‑style pointcuts (`*`, `..`, `?`).  <br/>• Advisor/Advice/Pointcut hierarchy inspired by Spring.  <br/>• CGLIB subclassing + Objenesis fallback → works even when beans lack a no‑arg constructor.  <br/>• Supports proxy‑per‑target & orderable advisor chain.                                                                                                                                                                                                                                                      |
-| **Configuration Proxy** | CGLIB proxy for `@Configuration(proxyBeanMethods = true)` → caches repeated `@Bean` calls.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| **Web Layer** | • Declarative routing with `@GetMapping`, `@PostMapping`, … (pattern `{var}` support). <br/>• ArgumentResolvers for `@PathVariable`, `@RequestParam`, `@RequestBody`, …. <br/>• `RequestDispatcher` binds → invokes → resolves (`ResponseEntity`, DTO, `void`).                                                                                                                                                                                                                                                                                                                          |
-| **Server** | **Config‑driven threading** → swap between virtual threads (Java 21) and platform‑thread pools via `application.yml`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| **Filters & Interceptors** | • Servlet-style `Filter` chain support. <br/>• Global filters (`AuthenticationFilter`, `AuthorizationFilter`, custom CORS, logging, etc.). <br/>• Middleware-style request interception (`Interceptor` chain). <br/>• **Automatic injection of `List<Filter>` and `List<Interceptor>` into `RequestDispatcher`.**                                                                                                                                                                                                                                                                        |
-| **Security (NEW)** | • **Modular authentication system** with `AuthenticationManager`, `AuthenticationProvider`, `UserDetailsService`. <br/>• **Username/password login** via `AuthenticationFilter`. <br/>• **Authorization via `@PreAuthorize`** (AOP based, method-level security). <br/>• **URL-based authorization** via `AuthorizationFilter`. <br/>• `SecurityContextHolder` & `ThreadLocal` strategy for per-request security context. <br/>• **Auto-configuration for default security beans** (`@EnableSproutSecurity`).                                                                            |
-| **Configuration** | YAML support with relaxed‑binding injection (`AppConfig`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| **Exception Handling** | Built‑in HTTP exceptions (`BadRequest`, `MethodNotAllowed`, …). <br/>• **Global exception handling via `@ControllerAdvice` and `@ExceptionHandler`.**                                                                                                                                                                                                                                                                                                                                                         <br/>• **Extensible `ExceptionResolver` chain** for custom error handling. |
-| **Bootstrap** | One‑liner `SproutApplication.run()` sets up container *and* starts server.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| **Data Access (NEW)** | • **Lightweight `JdbcTemplate` abstraction** for SQL execution (query/update).  <br/>• **HikariCP connection pool integration**.  <br/>• **AOP-driven `@Transactional` advice** for declarative transaction management.  <br/>• `TransactionManager` abstraction with auto‑commit & rollback.  <br/>• Future-ready for lightweight ORM support.                                                                                                                                                                                                                                          |
+## ✨ Core Features (0.5.x)
+
+| Area                                                                | Status & Highlights                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ------------------------------------------------------------------- |--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **IoC / DI Container**                                              | • Scans `@Component`, `@Service`, `@Controller`, `@Repository`, `@Configuration`, `@Aspect`.<br/>  • Constructor‑based injection.<br/>• Automatic `List<T>` population with `@Order` support.<br/>• Cyclic‑dependency detection (topological sort).<br/>• **Auto‑configuration via `BeanDefinitionRegistrar`** for sensible defaults.                                                                                                                                                      |
+| **Bean Definitions**                                                | • `ConstructorBeanDefinition` & `MethodBeanDefinition`.<br/>• Factory‑method or ctor strategy.<br/>• **Ctor‑meta cache** → safe proxying for required‑args constructors.                                                                                                                                                                                                                                                                                                                   |
+| **AOP**                                                             | • Annotation‑driven (`@Before`, `@After`, `@Around`).<br/>• AspectJ‑style pointcuts (`*`, `..`, `?`).<br/>• Advisor/Advice/Pointcut hierarchy inspired by Spring.<br/>• CGLIB subclassing + Objenesis fallback (no no‑arg ctor required).<br/>• Ordered advisor chain, proxy‑per‑target.                                                                                                                                                                                                   |
+| **Configuration Proxy**                                             | CGLIB proxy for `@Configuration(proxyBeanMethods = true)` → caches repeated `@Bean` calls.                                                                                                                                                                                                                                                                                                                                                                                                 |
+| **Web Layer (HTTP)**                                                | • Declarative routing (`@GetMapping`, `@PostMapping`, … + `{var}` patterns).<br/>• ArgumentResolvers for `@PathVariable`, `@RequestParam`, `@RequestBody`, …<br/>• `RequestDispatcher` binds → invokes → resolves (`ResponseEntity`, DTO, `void`).                                                                                                                                                                                                                                         |
+| **Server**                                                          | **NEW:** **NIO server** built on `java.nio.channels`.<br/>• **Hybrid mode**: HTTP over virtual threads or classic pool, WS over NIO; you choose per config.<br/>• BIO fallback remains for learning / simplicity.                                                                                                                                                                                                                                                                          |
+| **Filters & Interceptors**                                          | • Servlet‑style `Filter` chain.<br/>• Global filters (auth, CORS, logging…).<br/>• Middleware‑like `Interceptor` chain.<br/>• Auto‑inject `List<Filter>` / `List<Interceptor>` into `RequestDispatcher`.                                                                                                                                                                                                                                                                                   |
+| **Security**                                                        | • Modular auth (`AuthenticationManager`, `AuthenticationProvider`, `UserDetailsService`).<br/>• Username/password login via `AuthenticationFilter`.<br/>• Method security with `@PreAuthorize` (AOP based).<br/>• URL authorization via `AuthorizationFilter`.<br/>• `SecurityContextHolder` with `ThreadLocal` per request.<br/>• Auto‑config (`@EnableSproutSecurity`).                                                                                                                  |
+| **Exception Handling**                                              | • HTTP exceptions (`BadRequest`, `MethodNotAllowed`, …).<br/>• `@ControllerAdvice` + `@ExceptionHandler`.                                                                                                                                                                                                                                    <br/> • Extensible `ExceptionResolver` chain.                                                                                                 |                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| **Data Access**                                                     | • Lightweight `JdbcTemplate` abstraction.<br/>• HikariCP integration.<br/>• AOP‑driven `@Transactional` support.<br/>• `TransactionManager` abstraction (auto‑commit/rollback).                                                                                                                                                                                                                                                                                                            |
+| **WebSocket (async/NIO)**                                           | • RFC6455 handshake + frame parser/encoder (masking, ping/pong, close).<br/>• **Non‑blocking write queue**, OP\_WRITE toggling, graceful close after drain.<br/>• Fragmentation handling (text/binary continuation frames).<br/>• `WebSocketSession` abstraction + lifecycle hooks (`@OnOpen`, `@OnMessage`, `@OnClose`, `@OnError`).<br/>• Pluggable `WebSocketMessageDispatcher` & `WebSocketArgumentResolver`.<br/>• Runs on same selector loop as HTTP NIO or separately—configurable. |                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| **Bootstrap**                                                       | One‑liner: `SproutApplication.run()` boots the container *and* starts the server.                                                                                                                                                                                                                                                                                                                                                                                                          |
+
 ---
 
 ## 🏃‍♂️ Quick Start
@@ -30,7 +33,9 @@ $ git clone https://github.com/yyubin/sprout.git
 $ cd sprout && ./gradlew build
 ```
 
-2. **Run the sample app**  *(Java 21+, CGLIB module‑opens flags required)*
+2. **Run**
+
+> Java 21 + CGLIB proxies require `--add-opens` flags (until we drop deep reflection):
 
 ```bash
 $ java \
@@ -41,10 +46,11 @@ $ java \
   -jar build/libs/sprout.jar
 ```
 
-3. **Minimal example**
+*Server mode / thread model are now read from `application.yml`, not CLI args.*
+
+3. **Minimal example** (unchanged)
 
 ```java
-// DemoApplication.java
 @ComponentScan("app")
 public class DemoApplication {
     public static void main(String[] args) throws Exception {
@@ -54,7 +60,6 @@ public class DemoApplication {
 ```
 
 ```java
-// app/LoggingAspect.java
 @Aspect
 public class LoggingAspect {
     @Around(pointcut = "app..*Service.*")
@@ -71,7 +76,6 @@ public class LoggingAspect {
 ```
 
 ```java
-// app/TestController.java
 @Controller
 @RequestMapping("/api")
 public class TestController {
@@ -86,28 +90,38 @@ public class TestController {
 ```
 
 ---
-### 🔌 WebSocket Support (Experimental)
 
-Sprout now includes **low-level WebSocket server support**, implemented entirely over raw `Socket` I/O — no Tomcat, no Undertow, just **pure BIO** madness.
+## ⚙️ Configuration (`application.yml`)
 
-| Feature | Highlights |
-| --- | --- |
-| **HTTP Upgrade → WS handshake** | Parses HTTP handshake requests manually, responds with RFC 6455-compliant upgrade headers. |
-| **`WebSocketSession` abstraction** | Track session state, send/receive messages, path/query parameter access. |
-| **Frame-level protocol** | Encodes/decodes WebSocket frames manually: opcode routing, masking, fragmentation handling planned. |
-| **Custom routing** | Messages are dispatched to `@MessageMapping` methods via `destination` field in incoming JSON. |
-| **Argument resolution** | JSON payloads auto-bound via pluggable `WebSocketArgumentResolver`s. |
-| **Session lifecycle hooks** | Supports `@OnOpen`, `@OnMessage`, `@OnClose`, `@OnError` via reflection-based `WebSocketEndpointInfo`. |
-| **Pluggable frame codecs** | Swap `WebSocketFrameParser` / `WebSocketFrameEncoder` implementations for binary/custom handling. |
-| **Thread model** | Session message loops respect configured thread model (`platform` or `virtual`). |
+Sprout loads `application.yml` at startup via `AppConfig`. Nested keys are resolved with dot notation (e.g. `server.execution-mode`).
 
-> Note: This implementation is BIO-based and suitable for educational purposes or light workloads.
->
->
-> **NIO support** is planned for [v0.5](https://www.notion.so/WebSocket-23297bb367288011a487caf25d2b7543?pvs=21).
->
+```yaml
+author: you
+server:
+  execution-mode: hybrid   # nio | hybrid (default: hybrid)
+  thread-type: virtual     # virtual | platform (only for hybrid/BIO HTTP workers)
+  thread-pool-size: 150    # used when thread-type = platform
 
-**Example:**
+sprout:
+  database:
+    url: jdbc:mysql://localhost:3306/sprout
+    username: root
+    password: tygh8868!
+```
+
+### How it’s wired
+
+* `AppConfig` reads the YAML once and exposes helpers: `getStringProperty`, `getIntProperty`.
+* `ServerAutoConfigurationRegistrar` inspects `server.*` keys and registers:
+
+    * **HTTP handler**: `NioHttpProtocolHandler` or `BioHttpProtocolHandler` (for hybrid/BIO)
+    * **RequestExecutorService**: `VirtualRequestExecutorService` (virtual threads) or `RequestExecutorPoolService` (fixed pool)
+
+> Prefer **virtual threads** unless you have a specific need for a bounded pool.
+
+---
+
+## 🔌 WebSocket Example (NIO)
 
 ```java
 @WebSocketEndpoint("/ws/chat")
@@ -128,38 +142,62 @@ public class ChatSocket {
         System.out.println("WebSocket closed: " + session.getId());
     }
 }
-
 ```
 
 ---
 
-## 🗺️ Roadmap
-| Release | Planned / Done | Notes |
-| --- | --- | --- |
-| **v0.2** | ✅ **AOP core delivered** (`@Before`/`@After`/`@Around`, AspectJ pointcuts). | ✔️ Done |
-| **v0.3** | ✅ **Middleware & Global Interceptors** | ✔️ Done |
-| **v0.4 (latest)** | ✅ **Data Access Layer & Security Core** | Includes `JdbcTemplate`, `@Transactional`, Authentication/Authorization. |
-| **v0.5** | **NIO Server** | Evaluate `java.nio.channels` + Loom structured concurrency. |
-| **v0.6** | **Lightweight ORM** | Basic Entity mapping and Query methods. |
-| **v1.0** | **Production‑ready** | Stability hardening, docs & samples complete. |
+## 🧪 Testing
 
-*Roadmap is aspirational & may evolve as the learning journey continues.*
+**429 tests, 0 failures (100% pass, Gradle 8.10.1 · 2025‑07‑24)**
+
+Coverage highlights:
+
+* **Core container**: scanning, bean graph/topological sort, constructor injection, `@Order` list injection
+* **AOP**: advice builders/interceptors, advisor registry, pointcut parsing
+* **MVC layer**: request parsing (line/header/query), handler mapping & invocation, argument resolvers, exception advice
+* **Security**: authentication providers, password encoding, context propagation, filters & authorization aspect
+* **Server stack**: HTTP BIO/NIO/Hybrid strategies, executor services (virtual vs pool), protocol detectors/handlers
+* **WebSocket**: handshake, frame encoder/parser, ping/pong, fragmentation, async write & graceful close, dispatchers/resolvers
+* **Utilities**: `HttpUtils` (Content-Length & chunked), response buffer creation, misc helpers
+
+Tooling & style:
+
+* JUnit 5 + Mockito (inline/lenient for JDK-final classes)
+* Fake implementations where deterministic behavior beats heavy mocking (e.g., frame encoder/parser)
+* Selector/`interestOps` state fakes to validate NIO behavior without real sockets
+* Build report: `build/reports/tests/test/index.html`
+
+> Want to help? Add black-box integration tests that spin up the NIO server and hit it with a real HTTP/WebSocket client.
+
+## 🗺️ Roadmap
+
+| Release  | Planned / Done                             | Notes                                           |
+| -------- | ------------------------------------------ | ----------------------------------------------- |
+| **v0.2** | ✅ AOP core delivered                       | `@Before`/`@After`/`@Around`, AspectJ pointcuts |
+| **v0.3** | ✅ Middleware & Global Interceptors         | Filters + Interceptors chain                    |
+| **v0.4** | ✅ Data Access & Security Core              | `JdbcTemplate`, `@Transactional`, AuthN/AuthZ   |
+| **v0.5** | ✅ **NIO & Hybrid Server**, Async WebSocket | Selector loop, OP\_WRITE mgmt, graceful close   |
+| **v0.6** | 🚧 **JPA-ish Layer / Lightweight ORM**     | Entity mapping, simple query DSL                |
+| **v0.7** | 🚧 Production polish                       | Metrics, better docs, samples, benchmarks       |
+| **v1.0** | 🎯 Stable API & docs                       | Hardening, fewer sharp edges                    |
+
+> The roadmap is aspirational.
 
 ---
 
 ## 🙏 Acknowledgements
 
-* **Spring Framework** — reference architecture & endless inspiration.
-* **Reflections**, **CGLIB**, **Objenesis**, **Jackson** — runtime metaprogramming & serialization backbone.
+* **Spring Framework** — the architectural north star.
+* **Reflections**, **CGLIB**, **Objenesis**, **Jackson** — runtime meta‑programming & serialization backbone.
 
 ---
 
 ## 🤝 Contributing
 
-Pull requests and issue reports are very welcome! Pick a roadmap item or suggest your own — let’s grow Sprout together.
+PRs & issues welcome. Pick a roadmap item or pitch a feature. Let’s grow Sprout together.
 
 ---
 
 ## 📜 License
 
-Sprout is released under the **MIT License**. See the [`LICENSE`](LICENSE) file for details.
+MIT License. See [`LICENSE`](LICENSE).
