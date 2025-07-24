@@ -91,15 +91,16 @@ public class SproutApplicationContext implements ApplicationContext {
         this.appDefs = appDefs;
     }
 
-    private void instantiateGroup(List<BeanDefinition> defs, List<String> basePackages) {
+    private void instantiateGroup(List<BeanDefinition> defs) {
         List<BeanDefinition> order = new BeanGraph(defs).topologicallySorted();
         order.forEach(beanFactory::createBean);
         beanFactory.postProcessListInjections();
     }
 
     private void instantiateInfrastructureBeans() {
-        instantiateGroup(infraDefs, basePackages);
+        instantiateGroup(infraDefs);
         List<PostInfrastructureInitializer> initializers = beanFactory.getAllBeans(PostInfrastructureInitializer.class);
+        System.out.println("initializers: " + initializers);
         for (PostInfrastructureInitializer initializer : initializers) {
             initializer.afterInfrastructureSetup(beanFactory, basePackages);
         }
@@ -107,7 +108,7 @@ public class SproutApplicationContext implements ApplicationContext {
 
     private void instantiateAllSingletons() {
         registerBeanPostProcessors();
-        instantiateGroup(appDefs, basePackages);
+        instantiateGroup(appDefs);
     }
 
     private void registerBeanPostProcessors() {

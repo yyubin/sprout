@@ -7,7 +7,6 @@ import java.util.concurrent.Callable;
 
 public final class ContextSnapshot{
 
-
     private final List<ContextPropagator> propagators;
     private final List<Object> captured;
 

@@ -28,6 +28,6 @@ public class DefaultPointcutFactory implements PointcutFactory, InfrastructureBe
         if (pcs.isEmpty()) {
             throw new IllegalArgumentException("At least one of annotation[] or pointcut() must be provided.");
         }
-        return pcs.size() == 1 ? pcs.get(0) : new CompositePointcut(pcs); // AND 조건
+        return pcs.size() == 1 ? pcs.get(0) : new CompositePointcut(pcs);
     }
 }

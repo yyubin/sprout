@@ -21,7 +21,10 @@ public final class AspectJPointcutAdapter implements Pointcut {
 
     @Override
     public boolean matches(Class<?> targetClass, Method method) {
-        // 클래스/메서드 둘 다 체크 (alwaysMatches / maybeMatches 구분)
+        if (!expression.couldMatchJoinPointsInType(targetClass)) {
+            return false;
+        }
+
         var sm = expression.matchesMethodExecution(method);
         return sm.alwaysMatches() || sm.maybeMatches();
     }

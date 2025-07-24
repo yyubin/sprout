@@ -28,14 +28,16 @@ public class AspectPostProcessor implements BeanPostProcessor {
     private final AdvisorRegistry advisorRegistry;
     private final ApplicationContext container;
     private final AdviceFactory adviceFactory;
+    private final ProxyFactory proxyFactory;
     private final AtomicBoolean initialized = new AtomicBoolean(false); // 초기화 여부 플래그
 
     private List<String> basePackages; // 스캔할 기본 패키지 목록
 
-    public AspectPostProcessor(AdvisorRegistry advisorRegistry, ApplicationContext container, AdviceFactory adviceFactory) {
+    public AspectPostProcessor(AdvisorRegistry advisorRegistry, ApplicationContext container, AdviceFactory adviceFactory, ProxyFactory proxyFactory) {
         this.advisorRegistry = advisorRegistry;
         this.container = container;
         this.adviceFactory = adviceFactory;
+        this.proxyFactory = proxyFactory;
     }
 
     public void initialize(List<String> basePackages) {
@@ -109,10 +111,7 @@ public class AspectPostProcessor implements BeanPostProcessor {
         if (needsProxy) {
             System.out.println("Applying AOP proxy to bean: " + beanName + " (" + targetClass.getName() + ")");
             CtorMeta meta = container.lookupCtorMeta(bean);
-            Enhancer enhancer = new Enhancer();
-            enhancer.setSuperclass(targetClass);
-            enhancer.setCallback(new BeanMethodInterceptor(bean, advisorRegistry));
-            return enhancer.create(meta.paramTypes(), meta.args());
+            return proxyFactory.createProxy(targetClass, bean, advisorRegistry, meta);
         }
         return bean;
     }

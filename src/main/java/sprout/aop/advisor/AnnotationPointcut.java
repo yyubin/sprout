@@ -1,6 +1,7 @@
 package sprout.aop.advisor;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
 
 public class AnnotationPointcut implements Pointcut {
@@ -12,7 +13,21 @@ public class AnnotationPointcut implements Pointcut {
 
     @Override
     public boolean matches(Class<?> targetClass, Method method) {
-        // 클래스 레벨 어노테이션은 현재 고려하지 않고, 메서드에만 적용
-        return method.isAnnotationPresent(annotationType);
+        // 1) method에 직접
+        if (has(method)) return true;
+
+        // 2) declaring class, 실제 targetClass, 인터페이스까지
+        if (has(method.getDeclaringClass()) || has(targetClass)) return true;
+
+        // 3) (옵션) 파라미터 애노테이션
+        // for (Annotation[] anns : method.getParameterAnnotations())
+        //   for (Annotation a : anns)
+        //     if (annotationType == a.annotationType()) return true;
+
+        return false;
+    }
+
+    private boolean has(AnnotatedElement el) {
+        return el.isAnnotationPresent(annotationType);
     }
 }

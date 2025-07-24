@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'jacoco'
 }
 
 java {
@@ -16,12 +17,14 @@ repositories {
 }
 
 dependencies {
+    // Test dependencies
     testImplementation 'org.mockito:mockito-core:5.4.0'
     testImplementation 'org.mockito:mockito-junit-jupiter:5.4.0'
     testImplementation platform('org.junit:junit-bom:5.10.0')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
-    testImplementation("org.assertj:assertj-core:3.22.0")
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+    testImplementation 'org.assertj:assertj-core:3.22.0'
+
 
     implementation 'net.bytebuddy:byte-buddy:1.14.5'
     implementation("cglib:cglib:3.3.0")
@@ -64,4 +67,37 @@ tasks.withType(JavaCompile).configureEach {
 
 test {
     useJUnitPlatform()
+    jvmArgs '--add-opens=java.base/java.lang=ALL-UNNAMED'
+            '--add-opens=java.base/java.lang.reflect=ALL-UNNAMED'
+            '--add-opens=java.base/java.security=ALL-UNNAMED'
+            '--add-opens=java.base/jdk.internal.loader=ALL-UNNAMED'
+            '--add-opens=java.base/java.lang.invoke=ALL-UNNAMED'
+    testLogging {
+        events 'passed', 'skipped', 'failed' // Show test execution details
+        showStandardStreams = true // Show test output
+    }
+    finalizedBy jacocoTestReport
+}
+
+jacoco {
+    toolVersion = '0.8.12'
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = true
+        html.required = true
+        html.outputLocation = layout.buildDirectory.dir('reports/jacoco/html')
+        xml.outputLocation = layout.buildDirectory.file('reports/jacoco/jacoco.xml')
+    }
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                    '**/*Exception.class',
+                    '**/exception/**',
+                    '**/app/**'
+            ])
+        }))
+    }
 }

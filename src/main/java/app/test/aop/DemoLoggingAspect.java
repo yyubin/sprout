@@ -9,12 +9,8 @@ import sprout.aop.annotation.Before;
 
 @Aspect
 public class DemoLoggingAspect {
-    @Before(pointcut = "test..*Service.*")
-    public void beforeAnyServiceMethod(JoinPoint jp) {
-        System.out.println("[BEFORE-SERVICE] " + jp.getSignature().toLongName());
-    }
 
-    @Around(pointcut = "test..*Service.save*")
+    @Around(pointcut = "execution(* app.test.TestService.*(..))")
     public Object aroundSave(ProceedingJoinPoint pjp) throws Throwable {
         long t0 = System.nanoTime();
         try {
@@ -26,7 +22,7 @@ public class DemoLoggingAspect {
         }
     }
 
-    @After(pointcut = "test..repository.*Repository.find*")
+    @After(pointcut = "execution(* app.test.TestService.*(..))")
     public void afterFind(JoinPoint jp) {
         System.out.println("[AFTER-FIND] " + jp.getSignature().toLongName());
     }

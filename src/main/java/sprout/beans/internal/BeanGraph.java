@@ -1,7 +1,7 @@
 package sprout.beans.internal;
 
-import sprout.beans.BeanCreationMethod; // 추가: BeanCreationMethod enum (CONSTRUCTOR, FACTORY_METHOD 등)
-import sprout.beans.BeanDefinition; // BeanDefinition이 인터페이스로 확장되었음을 가정
+import sprout.beans.BeanCreationMethod;
+import sprout.beans.BeanDefinition;
 
 import java.lang.reflect.Modifier;
 import java.util.*;

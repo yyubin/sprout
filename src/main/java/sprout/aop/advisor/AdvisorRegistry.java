@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class AdvisorRegistry implements InfrastructureBean {
     private final List<Advisor> advisors = new ArrayList<>();
-    private final Map<Class<?>, List<Advisor>> cachedAdvisors = new ConcurrentHashMap<>();
+    private final Map<Method, List<Advisor>> cachedAdvisors = new ConcurrentHashMap<>();
 
     public AdvisorRegistry() {
     }
@@ -24,8 +24,12 @@ public class AdvisorRegistry implements InfrastructureBean {
     }
 
     public List<Advisor> getApplicableAdvisors(Class<?> targetClass, Method method) {
-        List<Advisor> cachedForClass = cachedAdvisors.get(targetClass);
-        if (cachedForClass != null) {};
+        List<Advisor> cached = cachedAdvisors.get(method);
+
+        // FIX : 캐싱해놓고 안쓰고 있었음; wtf
+        if (cached != null) {
+            return cached;
+        }
 
         List<Advisor> applicableAdvisors = new ArrayList<>();
         for (Advisor advisor : advisors) {
@@ -34,8 +38,7 @@ public class AdvisorRegistry implements InfrastructureBean {
             }
         }
 
-        applicableAdvisors.sort(Comparator.comparingInt(Advisor::getOrder));
-        cachedAdvisors.put(targetClass, applicableAdvisors);
+        cachedAdvisors.put(method, applicableAdvisors);
         return applicableAdvisors;
     }
 

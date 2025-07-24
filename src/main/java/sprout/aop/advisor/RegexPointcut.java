@@ -3,6 +3,7 @@ package sprout.aop.advisor;
 import java.lang.reflect.Method;
 import java.util.regex.Pattern;
 
+@Deprecated(forRemoval = true)
 public class RegexPointcut implements Pointcut {
     private final Pointcut delegate;
 

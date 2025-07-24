@@ -7,9 +7,7 @@ import sprout.server.websocket.WebSocketSession;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.*;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -27,67 +25,84 @@ public class NioHybridServerStrategy implements ServerStrategy {
     }
 
     @Override
-    public void start(int port) throws Exception {
-        this.selector = Selector.open();
-        this.serverChannel = ServerSocketChannel.open();
+    public int start(int port) throws Exception {
+        selector = Selector.open();
+        serverChannel = ServerSocketChannel.open();
         serverChannel.bind(new InetSocketAddress(port));
         serverChannel.configureBlocking(false);
         serverChannel.register(selector, SelectionKey.OP_ACCEPT);
 
-        while (running) {
-            selector.select();
-            Set<SelectionKey> selectedKeys = selector.selectedKeys();
-            Iterator<SelectionKey> iter = selectedKeys.iterator();
+        running = true;
+        Thread t = new Thread(this::eventLoop, "sprout-nio-loop");
+        t.setDaemon(true);
+        t.start();
 
-            while (iter.hasNext()) {
-                SelectionKey key = iter.next();
-                iter.remove();
+        int actual = ((InetSocketAddress) serverChannel.getLocalAddress()).getPort();
+        return actual;
+    }
 
-                try { // FIX: 개별 키 처리 로직을 try-catch로 감쌈
-                    if (key.isAcceptable()) {
-                        connectionManager.acceptConnection(key, selector);
-                    }
-                    if (key.isReadable()) {
-                        Object attachment = key.attachment();
-                        if (attachment instanceof ReadableHandler) {
-                            ((ReadableHandler) attachment).read(key);
+    private void eventLoop() {
+        try {
+            while (running) {
+                selector.select(); // or select(timeout)
+                for (Iterator<SelectionKey> it = selector.selectedKeys().iterator(); it.hasNext();) {
+                    SelectionKey key = it.next();
+                    it.remove();
+
+                    if (!key.isValid()) { cleanupConnection(key); continue; }
+
+                    try {
+                        if (key.isAcceptable()) {
+                            connectionManager.acceptConnection(key, selector);
                         }
-                    }
-                    if (key.isWritable()) {
-                        Object attachment = key.attachment();
-                        if (attachment instanceof WritableHandler) {
-                            ((WritableHandler) attachment).write(key);
+                        Object att = key.attachment();
+                        if (key.isReadable() && att instanceof ReadableHandler rh) {
+                            rh.read(key);
                         }
+                        if (key.isWritable() && att instanceof WritableHandler wh) {
+                            wh.write(key);
+                        }
+                    } catch (IOException ioe) {
+                        System.err.println("I/O error: " + ioe.getMessage());
+                        cleanupConnection(key);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        cleanupConnection(key);
                     }
-                } catch (IOException e) { // 클라이언트 연결 끊김 등 I/O 예외 처리
-                    System.err.println("I/O error on connection: " + e.getMessage());
-                    cleanupConnection(key);
-                } catch (Exception e) { // 기타 예외 처리
-                    System.err.println("Error handling key " + key + ": " + e.getMessage());
-                    e.printStackTrace();
-                    cleanupConnection(key);
                 }
             }
+        } catch (ClosedSelectorException ignored) {
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try { selector.close(); } catch (Exception ignored) {}
+            try { serverChannel.close(); } catch (Exception ignored) {}
         }
-
-        selector.close();
-        serverChannel.close();
     }
 
     @Override
     public void stop() throws Exception {
         running = false;
-        if (selector != null && selector.isOpen()) {
-            selector.wakeup();
-        }
+        if (selector != null) selector.wakeup();
+    }
+
+    @Override
+    public boolean isRunning() {
+        return running && selector != null && selector.isOpen();
     }
 
     private void cleanupConnection(SelectionKey key) throws IOException {
-        if (key.attachment() instanceof WebSocketSession) {
-            WebSocketSession session = (WebSocketSession) key.attachment();
-            session.close();
+        try {
+            Object att = key.attachment();
+            if (att instanceof WebSocketSession ws) {
+                try { ws.close(); } catch (Exception ignore) {}
+            }
+        } finally {
+            key.cancel();
+            SelectableChannel ch = key.channel();
+            if (ch != null && ch.isOpen()) {
+                try { ch.close(); } catch (Exception ignore) {}
+            }
         }
-        key.cancel();
-        key.channel().close();
     }
 }

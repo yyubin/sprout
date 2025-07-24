@@ -1,0 +1,8 @@
+server:
+  port: 8080
+db:
+  url: jdbc:mysql://localhost:3306/sprout
+  pool:
+    size: 5
+misc:
+  notNumber: abc

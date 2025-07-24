@@ -1,5 +1,6 @@
 package sprout.aop;
 
+import sprout.beans.InfrastructureBean;
 import sprout.beans.annotation.Component;
 import sprout.context.BeanFactory;
 import sprout.context.PostInfrastructureInitializer;

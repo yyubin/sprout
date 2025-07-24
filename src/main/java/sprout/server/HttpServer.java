@@ -6,17 +6,52 @@ import sprout.mvc.http.parser.HttpRequestParser;
 
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Component
-public class HttpServer {
+public class HttpServer implements SproutServer{
 
     private final ServerStrategy serverStrategy;
+    private final AtomicBoolean running = new AtomicBoolean(false);
+    private volatile int port = -1;
 
     public HttpServer(ServerStrategy serverStrategy) {
         this.serverStrategy = serverStrategy;
     }
 
-    public void start(int port) throws Exception {
-        serverStrategy.start(port);
+    @Override
+    public int start(int port) throws Exception {
+        if (!running.compareAndSet(false, true)) {
+            throw new IllegalStateException("HttpServer already started");
+        }
+        try {
+            int bound = serverStrategy.start(port);   // 전략이 실제 바인딩 포트를 리턴하게 하세요
+            this.port = bound;
+            return bound;
+        } catch (Exception e) {
+            running.set(false);
+            throw e;
+        }
+    }
+
+    @Override
+    public void stop() throws Exception {
+        if (!running.compareAndSet(true, false)) return; // 이미 멈춘 상태면 무시
+        try {
+            serverStrategy.stop();
+        } finally {
+            port = -1;
+        }
+    }
+
+    @Override
+    public boolean isRunning() {
+        return running.get() && serverStrategy.isRunning();
+    }
+
+    @Override
+    public int getPort() {
+        if (!running.get()) throw new IllegalStateException("Server not running");
+        return port;
     }
 }
