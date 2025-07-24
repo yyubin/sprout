@@ -12,6 +12,7 @@ import java.sql.SQLException;
 public class JdbcTransactionManager implements TransactionManager {
 
     private final ThreadLocal<Connection> connectionHolder = new ThreadLocal<>();
+    private final ThreadLocal<Integer> transactionDepth = new ThreadLocal<>();
     private final DataSource dataSource;
 
     public JdbcTransactionManager(DataSource dataSource) {
@@ -50,50 +51,75 @@ public class JdbcTransactionManager implements TransactionManager {
     }
 
     @Override
-    public void startTransaction() {
-        if (connectionHolder.get() != null) {
-            throw new IllegalStateException("Transaction already active for this thread.");
-        }
-
-        try {
+    public void startTransaction() throws SQLException {
+        Integer depth = transactionDepth.get();
+        if (depth == null || depth == 0) { // 최상위 트랜잭션 시작
+            // 실제 트랜잭션 시작 로직
             Connection connection = dataSource.getConnection();
             connection.setAutoCommit(false);
             connectionHolder.set(connection);
-            System.out.println("Transaction started: " + connection);
-        } catch (SQLException e) {
-            throw new DataAccessException("Failed to start transaction", e);
+            transactionDepth.set(1);
+            System.out.println("Transaction started (depth 1): " + connection);
+        } else { // 중첩된 트랜잭션 진입
+            transactionDepth.set(depth + 1);
+            System.out.println("Joining existing transaction (depth " + (depth + 1) + ")");
         }
     }
 
     @Override
     public void commit() {
-        Connection connection = connectionHolder.get();
-        if (connection != null) {
-            try {
-                connection.commit();
-            } catch (SQLException e) {
-                throw new DataAccessException("Failed to commit transaction", e);
-            } finally {
-                closeConnection();
+        Integer depth = transactionDepth.get();
+        if (depth == null || depth == 0) {
+            System.err.println("Commit called without active transaction.");
+            return;
+        }
+
+        if (depth == 1) { // 최상위 트랜잭션 커밋
+            System.out.println("Committing transaction (depth 1)");
+            Connection connection = connectionHolder.get();
+            if (connection != null) {
+                try {
+                    connection.commit();
+                } catch (SQLException e) {
+                    throw new DataAccessException("Failed to commit transaction", e);
+                } finally {
+                    closeConnection();
+                }
+            } else {
+                System.err.println("Commit called without active transaction.");
             }
         } else {
-            System.err.println("Commit called without active transaction.");
+            transactionDepth.set(depth - 1);
+            System.out.println("Leaving nested transaction, commit deferred (depth " + (depth - 1) + ")");
         }
+
     }
 
     @Override
     public void rollback() {
-        Connection connection = connectionHolder.get();
-        if (connection != null) {
-            try {
-                connection.rollback();
-            } catch (SQLException e) {
-                throw new DataAccessException("Failed to rollback transaction", e);
-            } finally {
-                closeConnection();
+        Integer depth = transactionDepth.get();
+        if (depth == null || depth == 0) {
+            System.err.println("Rollback called without active transaction.");
+            return;
+        }
+
+        if (depth == 1) { // 최상위 트랜잭션 커밋
+            System.out.println("Rollback transaction (depth 1)");
+            Connection connection = connectionHolder.get();
+            if (connection != null) {
+                try {
+                    connection.rollback();
+                } catch (SQLException e) {
+                    throw new DataAccessException("Failed to rollback transaction", e);
+                } finally {
+                    closeConnection();
+                }
+            } else {
+                System.err.println("Rollback called without active transaction.");
             }
         } else {
-            System.err.println("Rollback called without active transaction.");
+            transactionDepth.set(depth - 1);
+            System.out.println("Leaving nested transaction, rollback deferred (depth " + (depth - 1) + ")");
         }
     }
 

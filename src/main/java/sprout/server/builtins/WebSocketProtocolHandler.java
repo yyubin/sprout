@@ -10,6 +10,7 @@ import sprout.server.argument.WebSocketArgumentResolver;
 import sprout.server.websocket.*;
 import sprout.server.websocket.endpoint.WebSocketEndpointInfo;
 import sprout.server.websocket.endpoint.WebSocketEndpointRegistry;
+import sprout.server.websocket.framehandler.FrameHandler;
 import sprout.server.websocket.handler.WebSocketHandshakeHandler;
 import sprout.server.websocket.message.WebSocketMessageDispatcher;
 import sprout.server.websocket.message.WebSocketMessageParser;
@@ -38,6 +39,7 @@ public class WebSocketProtocolHandler implements AcceptableProtocolHandler {
     private final List<WebSocketArgumentResolver> webSocketArgumentResolvers;
     private final List<WebSocketMessageDispatcher> messageDispatchers;
     private final CloseListener closeListener;
+    private final List<FrameHandler> frameHandlers;
 
     public WebSocketProtocolHandler(
             WebSocketHandshakeHandler handshakeHandler,
@@ -48,7 +50,8 @@ public class WebSocketProtocolHandler implements AcceptableProtocolHandler {
             WebSocketFrameEncoder frameEncoder,
             List<WebSocketArgumentResolver> webSocketArgumentResolvers,
             List<WebSocketMessageDispatcher> messageDispatchers,
-            CloseListener closeListener
+            CloseListener closeListener,
+            List<FrameHandler> frameHandlers
     ) {
         this.handshakeHandler = handshakeHandler;
         this.webSocketContainer = webSocketContainer;
@@ -59,6 +62,7 @@ public class WebSocketProtocolHandler implements AcceptableProtocolHandler {
         this.webSocketArgumentResolvers = webSocketArgumentResolvers;
         this.messageDispatchers = messageDispatchers;
         this.closeListener = closeListener;
+        this.frameHandlers = frameHandlers;
     }
 
     @Override
@@ -105,7 +109,7 @@ public class WebSocketProtocolHandler implements AcceptableProtocolHandler {
         Map<String, String> pathVars = endpointInfo.getPathPattern().extractPathVariables(request.getPath());
 
         // DefaultWebSocketSession 생성 시 argumentResolvers와 messageParser 전달
-        WebSocketSession wsSession = new DefaultWebSocketSession(sessionId, channel, selector, request, endpointInfo, frameParser, frameEncoder, pathVars, webSocketArgumentResolvers, messageDispatchers, closeListener);
+        WebSocketSession wsSession = new DefaultWebSocketSession(sessionId, channel, selector, request, endpointInfo, frameParser, frameEncoder, pathVars, webSocketArgumentResolvers, messageDispatchers, closeListener, frameHandlers);
         webSocketContainer.addSession(endpointInfo.getPathPattern().getOriginalPattern(), wsSession);
 
         SelectionKey key = channel.register(selector, SelectionKey.OP_READ);

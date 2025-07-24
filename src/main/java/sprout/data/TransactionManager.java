@@ -2,6 +2,7 @@ package sprout.data;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.SQLException;
 
 public interface TransactionManager {
 
@@ -9,7 +10,7 @@ public interface TransactionManager {
 
     void releaseConnection(Connection connection);
 
-    void startTransaction();
+    void startTransaction() throws SQLException;
 
     void commit();
 

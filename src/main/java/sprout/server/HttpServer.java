@@ -25,7 +25,7 @@ public class HttpServer implements SproutServer{
             throw new IllegalStateException("HttpServer already started");
         }
         try {
-            int bound = serverStrategy.start(port);   // 전략이 실제 바인딩 포트를 리턴하게 하세요
+            int bound = serverStrategy.start(port);
             this.port = bound;
             return bound;
         } catch (Exception e) {

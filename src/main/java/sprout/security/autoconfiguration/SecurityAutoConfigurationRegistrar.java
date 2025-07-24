@@ -24,7 +24,7 @@ import java.util.Collection;
 import java.util.List;
 
 @Component
-public class SecurityAutoConfigurationRegistrar implements InfrastructureBean, BeanDefinitionRegistrar {
+public class SecurityAutoConfigurationRegistrar implements BeanDefinitionRegistrar {
     @Override
     public Collection<BeanDefinition> registerAdditionalBeanDefinitions(Collection<BeanDefinition> existingDefs) throws NoSuchMethodException {
         List<BeanDefinition> additionalDefs = new ArrayList<>();

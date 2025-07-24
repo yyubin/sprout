@@ -34,7 +34,7 @@ public class NioHybridServerStrategy implements ServerStrategy {
 
         running = true;
         Thread t = new Thread(this::eventLoop, "sprout-nio-loop");
-        t.setDaemon(true);
+        t.setDaemon(false);
         t.start();
 
         int actual = ((InetSocketAddress) serverChannel.getLocalAddress()).getPort();
@@ -42,7 +42,9 @@ public class NioHybridServerStrategy implements ServerStrategy {
     }
 
     private void eventLoop() {
+        System.out.println("NioHybridServerStrategy event loop started");
         try {
+            System.out.println(running ? "NioHybridServerStrategy event loop running" : "NioHybridServerStrategy event loop stopped");
             while (running) {
                 selector.select(); // or select(timeout)
                 for (Iterator<SelectionKey> it = selector.selectedKeys().iterator(); it.hasNext();) {

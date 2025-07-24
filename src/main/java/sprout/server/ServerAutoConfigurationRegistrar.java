@@ -23,7 +23,7 @@ import java.util.List;
 // FIX : 사용 x, Registrar 순회 시점에 주입 불가
 // ServerConfiguration 에서 처리
 @Deprecated
-public class ServerAutoConfigurationRegistrar implements InfrastructureBean, BeanDefinitionRegistrar {
+public class ServerAutoConfigurationRegistrar implements BeanDefinitionRegistrar {
 
     private final AppConfig appConfig;
 
