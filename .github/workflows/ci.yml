@@ -21,5 +21,5 @@ jobs:
           name: test-reports-${{ github.sha }}
           path: |
             build/reports/tests/test/**
-            build/reports/jacoco/test/html/**
+            build/reports/jacoco/html/**
           retention-days: 7

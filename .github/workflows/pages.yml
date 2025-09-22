@@ -24,7 +24,7 @@ jobs:
         run: |
           mkdir -p site
           cp -r build/reports/tests/test site/tests
-          cp -r build/reports/jacoco/test/html site/coverage
+          cp -r build/reports/jacoco/html site/coverage
           cat > site/index.html << 'EOF'
           <!DOCTYPE html>
           <html>
