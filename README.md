@@ -167,8 +167,8 @@ public class ChatSocket {
 
 ## 🧪 Testing
 
-**Reports:** [Tests](https://<your-username>.github.io/sprout/tests/) ·
-[Coverage](https://<your-username>.github.io/sprout/coverage/)
+**Reports:** [Tests](https://yyubin.github.io/sprout/tests/) ·
+[Coverage](https://yyubin.github.io/sprout/coverage/)
 
 **575 tests, 0 failures (100% pass, Gradle 8.10.1 · 2025‑09‑23)**
 
