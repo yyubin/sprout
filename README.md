@@ -167,7 +167,8 @@ public class ChatSocket {
 
 ## 🧪 Testing
 
-[![Tests](https://img.shields.io/badge/tests-575_pass-brightgreen)](build/reports/tests/test/index.html) [![Line Coverage](https://img.shields.io/badge/line_coverage-85%25-brightgreen)](build/reports/jacoco/test/html/index.html) [![Branch Coverage](https://img.shields.io/badge/branch_coverage-75%25-orange)](build/reports/jacoco/test/html/index.html)
+**Reports:** [Tests](https://<your-username>.github.io/sprout/tests/) ·
+[Coverage](https://<your-username>.github.io/sprout/coverage/)
 
 **575 tests, 0 failures (100% pass, Gradle 8.10.1 · 2025‑09‑23)**
 
