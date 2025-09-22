@@ -3,9 +3,11 @@
 *A lightweight Java web framework built from scratch to demystify how Spring works under the hood.*
 Now with **fully working NIO & hybrid servers** and an **async WebSocket stack**. Still opinionated about **clarity · hackability · extensibility**.
 
+**Scope:** Focused on container/AOP/web/server internals. A full ORM is intentionally out of scope for v1.0 to keep the surface area small and the code easy to audit.
+
 ---
 
-## ✨ Core Features (0.5.x)
+## ✨ Core Features (v1.0.0)
 
 | Area                                                                | Status & Highlights                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | ------------------------------------------------------------------- |--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -14,7 +16,7 @@ Now with **fully working NIO & hybrid servers** and an **async WebSocket stack**
 | **AOP**                                                             | • Annotation‑driven (`@Before`, `@After`, `@Around`).<br/>• AspectJ‑style pointcuts (`*`, `..`, `?`).<br/>• Advisor/Advice/Pointcut hierarchy inspired by Spring.<br/>• CGLIB subclassing + Objenesis fallback (no no‑arg ctor required).<br/>• Ordered advisor chain, proxy‑per‑target.                                                                                                                                                                                                   |
 | **Configuration Proxy**                                             | CGLIB proxy for `@Configuration(proxyBeanMethods = true)` → caches repeated `@Bean` calls.                                                                                                                                                                                                                                                                                                                                                                                                 |
 | **Web Layer (HTTP)**                                                | • Declarative routing (`@GetMapping`, `@PostMapping`, … + `{var}` patterns).<br/>• ArgumentResolvers for `@PathVariable`, `@RequestParam`, `@RequestBody`, …<br/>• `RequestDispatcher` binds → invokes → resolves (`ResponseEntity`, DTO, `void`).                                                                                                                                                                                                                                         |
-| **Server**                                                          | **NEW:** **NIO server** built on `java.nio.channels`.<br/>• **Hybrid mode**: HTTP over virtual threads or classic pool, WS over NIO; you choose per config.<br/>• BIO fallback remains for learning / simplicity.                                                                                                                                                                                                                                                                          |
+| **Server**                                                          | **NEW:** **NIO server** built on `java.nio.channels`.<br/>• **Hybrid mode**: HTTP over virtual threads or classic pool, WS over NIO; you choose per config.<br/>• Blocking fallback remains for learning / simplicity.                                                                                                                                                                                                                                                                          |
 | **Filters & Interceptors**                                          | • Servlet‑style `Filter` chain.<br/>• Global filters (auth, CORS, logging…).<br/>• Middleware‑like `Interceptor` chain.<br/>• Auto‑inject `List<Filter>` / `List<Interceptor>` into `RequestDispatcher`.                                                                                                                                                                                                                                                                                   |
 | **Security**                                                        | • Modular auth (`AuthenticationManager`, `AuthenticationProvider`, `UserDetailsService`).<br/>• Username/password login via `AuthenticationFilter`.<br/>• Method security with `@PreAuthorize` (AOP based).<br/>• URL authorization via `AuthorizationFilter`.<br/>• `SecurityContextHolder` with `ThreadLocal` per request.<br/>• Auto‑config (`@EnableSproutSecurity`).                                                                                                                  |
 | **Exception Handling**                                              | • HTTP exceptions (`BadRequest`, `MethodNotAllowed`, …).<br/>• `@ControllerAdvice` + `@ExceptionHandler`.                                                                                                                                                                                                                                    <br/> • Extensible `ExceptionResolver` chain.                                                                                                 |                                                                                                                                                                                                                                                                                                                                                                                                                   |
@@ -99,25 +101,40 @@ Sprout loads `application.yml` at startup via `AppConfig`. Nested keys are resol
 author: you
 server:
   execution-mode: hybrid   # nio | hybrid (default: hybrid)
-  thread-type: virtual     # virtual | platform (only for hybrid/BIO HTTP workers)
+  thread-type: virtual     # virtual | platform (only for hybrid/blocking HTTP workers)
   thread-pool-size: 150    # used when thread-type = platform
 
 sprout:
   database:
     url: jdbc:mysql://localhost:3306/sprout
     username: root
-    password: tygh8868!
+    password: change-me
 ```
 
-### How it’s wired
+### Server Modes
+
+| Mode      | HTTP                    | WebSocket | Use Case                          |
+|-----------|-------------------------|-----------|-----------------------------------|
+| blocking  | platform threads       | n/a       | debugging/learning                |
+| nio       | NIO selector           | NIO       | high concurrency/low memory       |
+| hybrid    | virtual/pool (HTTP)    | NIO (WS)  | production learning experience    |
+
+### Thread Types
+
+| Type              | When to Use                                                    |
+|-------------------|----------------------------------------------------------------|
+| **virtual**       | Default choice for request handlers (recommended)             |
+| **platform pool** | Only when you must bound concurrency (JDBC drivers, blocking I/O) |
+
+### How it's wired
 
 * `AppConfig` reads the YAML once and exposes helpers: `getStringProperty`, `getIntProperty`.
 * `ServerAutoConfigurationRegistrar` inspects `server.*` keys and registers:
 
-    * **HTTP handler**: `NioHttpProtocolHandler` or `BioHttpProtocolHandler` (for hybrid/BIO)
+    * **HTTP handler**: `NioHttpProtocolHandler` or `BlockingHttpProtocolHandler` (for hybrid/blocking)
     * **RequestExecutorService**: `VirtualRequestExecutorService` (virtual threads) or `RequestExecutorPoolService` (fixed pool)
 
-> Prefer **virtual threads** unless you have a specific need for a bounded pool.
+**Tip:** Prefer virtual threads for request handlers; switch to a fixed pool only when you must bound concurrency (e.g., JDBC drivers or blocking I/O).
 
 ---
 
@@ -144,11 +161,19 @@ public class ChatSocket {
 }
 ```
 
+**Annotations such as `@WebSocketEndpoint` and `@MessageMapping` are provided by Sprout (not JSR-356).**
+
 ---
 
 ## 🧪 Testing
 
-**429 tests, 0 failures (100% pass, Gradle 8.10.1 · 2025‑07‑24)**
+[![Tests](https://img.shields.io/badge/tests-575_pass-brightgreen)](build/reports/tests/test/index.html) [![Line Coverage](https://img.shields.io/badge/line_coverage-85%25-brightgreen)](build/reports/jacoco/test/html/index.html) [![Branch Coverage](https://img.shields.io/badge/branch_coverage-75%25-orange)](build/reports/jacoco/test/html/index.html)
+
+**575 tests, 0 failures (100% pass, Gradle 8.10.1 · 2025‑09‑23)**
+
+**Test Coverage (Jacoco):**
+- **Line Coverage: 85%**
+- **Branch Coverage: 75%**
 
 Coverage highlights:
 
@@ -156,7 +181,7 @@ Coverage highlights:
 * **AOP**: advice builders/interceptors, advisor registry, pointcut parsing
 * **MVC layer**: request parsing (line/header/query), handler mapping & invocation, argument resolvers, exception advice
 * **Security**: authentication providers, password encoding, context propagation, filters & authorization aspect
-* **Server stack**: HTTP BIO/NIO/Hybrid strategies, executor services (virtual vs pool), protocol detectors/handlers
+* **Server stack**: HTTP Blocking/NIO/Hybrid strategies, executor services (virtual vs pool), protocol detectors/handlers
 * **WebSocket**: handshake, frame encoder/parser, ping/pong, fragmentation, async write & graceful close, dispatchers/resolvers
 * **Utilities**: `HttpUtils` (Content-Length & chunked), response buffer creation, misc helpers
 
@@ -177,9 +202,15 @@ Tooling & style:
 | **v0.3** | ✅ Middleware & Global Interceptors         | Filters + Interceptors chain                    |
 | **v0.4** | ✅ Data Access & Security Core              | `JdbcTemplate`, `@Transactional`, AuthN/AuthZ   |
 | **v0.5** | ✅ **NIO & Hybrid Server**, Async WebSocket | Selector loop, OP\_WRITE mgmt, graceful close   |
-| **v0.6** | 🚧 **JPA-ish Layer / Lightweight ORM**     | Entity mapping, simple query DSL                |
-| **v0.7** | 🚧 Production polish                       | Metrics, better docs, samples, benchmarks       |
-| **v1.0** | 🎯 Stable API & docs                       | Hardening, fewer sharp edges                    |
+| **v1.0** | 🎯 **Stable API & Framework Maturity**     | Ready for production use, comprehensive docs    |
+
+**Post v1.0 Roadmap:**  
+
+| Feature  | Status | Description |
+| -------- | ------ | ----------- |
+| **Lightweight ORM** | 🔄 Planned | Entity mapping, annotations-based ORM, simple query DSL |
+| **Production Tools** | 🔄 Planned | Metrics, monitoring, better performance profiling |
+| **Advanced Features** | 🔄 Planned | Enhanced security, caching layer, validation framework |
 
 > The roadmap is aspirational.
 
