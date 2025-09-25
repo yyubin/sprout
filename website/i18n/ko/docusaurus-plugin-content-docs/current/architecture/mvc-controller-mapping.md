@@ -1,4 +1,4 @@
-# 🎢 Sprout MVC 컨트롤러 매핑
+# 🎢 MVC Controller Mapping
 
 ## 개요
 
