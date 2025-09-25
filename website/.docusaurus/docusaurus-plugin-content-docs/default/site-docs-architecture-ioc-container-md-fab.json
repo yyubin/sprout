@@ -16,5 +16,9 @@
   "previous": {
     "title": "🗺️ Roadmap",
     "permalink": "/sprout/overview/roadmap"
+  },
+  "next": {
+    "title": "🎢 MVC Controller Mapping",
+    "permalink": "/sprout/architecture/mvc-controller-mapping"
   }
 }

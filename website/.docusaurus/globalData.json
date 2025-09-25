@@ -11,8 +11,28 @@
           "mainDocId": "index",
           "docs": [
             {
+              "id": "architecture/http-message-parsing",
+              "path": "/sprout/ko/architecture/http-message-parsing",
+              "sidebar": "tutorialSidebar"
+            },
+            {
               "id": "architecture/ioc-container",
               "path": "/sprout/ko/architecture/ioc-container",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "architecture/mvc-argument-resolution",
+              "path": "/sprout/ko/architecture/mvc-argument-resolution",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "architecture/mvc-controller-mapping",
+              "path": "/sprout/ko/architecture/mvc-controller-mapping",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "guides/mvc-controller-mapping-guide",
+              "path": "/sprout/ko/guides/mvc-controller-mapping-guide",
               "sidebar": "tutorialSidebar"
             },
             {

@@ -5,7 +5,7 @@
   "source": "@site/docs/overview/intro.md",
   "sourceDirName": "overview",
   "slug": "/overview/intro",
-  "permalink": "/sprout/ko/overview/intro",
+  "permalink": "/sprout/overview/intro",
   "draft": false,
   "unlisted": false,
   "editUrl": "https://github.com/yyubin/sprout/tree/main/website/docs/overview/intro.md",
@@ -14,7 +14,7 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "next": {
-    "title": "빠른 시작",
-    "permalink": "/sprout/ko/overview/quickstart"
+    "title": "🏃‍♂️ Quick Start",
+    "permalink": "/sprout/overview/quickstart"
   }
 }

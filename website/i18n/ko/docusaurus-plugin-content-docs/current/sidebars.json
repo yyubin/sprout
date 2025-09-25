@@ -1,0 +1,31 @@
+{
+  "tutorialSidebar": [
+    {
+      "type": "category",
+      "label": "개요",
+      "items": [
+        "overview/intro",
+        "overview/quickstart",
+        "overview/configuration",
+        "overview/roadmap"
+      ]
+    },
+    {
+      "type": "category",
+      "label": "아키텍처",
+      "items": [
+        "architecture/ioc-container",
+        "architecture/mvc-controller-mapping",
+        "architecture/mvc-argument-resolution",
+        "architecture/http-message-parsing"
+      ]
+    },
+    {
+      "type": "category",
+      "label": "가이드",
+      "items": [
+        "guides/mvc-controller-mapping-guide"
+      ]
+    }
+  ]
+}

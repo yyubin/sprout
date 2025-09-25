@@ -5,7 +5,7 @@
   "source": "@site/docs/overview/configuration.md",
   "sourceDirName": "overview",
   "slug": "/overview/configuration",
-  "permalink": "/sprout/ko/overview/configuration",
+  "permalink": "/sprout/overview/configuration",
   "draft": false,
   "unlisted": false,
   "editUrl": "https://github.com/yyubin/sprout/tree/main/website/docs/overview/configuration.md",
@@ -14,11 +14,11 @@
   "frontMatter": {},
   "sidebar": "tutorialSidebar",
   "previous": {
-    "title": "빠른 시작",
-    "permalink": "/sprout/ko/overview/quickstart"
+    "title": "🏃‍♂️ Quick Start",
+    "permalink": "/sprout/overview/quickstart"
   },
   "next": {
     "title": "🗺️ Roadmap",
-    "permalink": "/sprout/ko/overview/roadmap"
+    "permalink": "/sprout/overview/roadmap"
   }
 }
