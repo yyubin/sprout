@@ -1,0 +1,24 @@
+{
+  "id": "overview/configuration",
+  "title": "⚙️ Configuration",
+  "description": "Sprout uses a YAML-based configuration system that's loaded at startup. The AppConfig class handles parsing and provides convenient access to configuration properties.",
+  "source": "@site/docs/overview/configuration.md",
+  "sourceDirName": "overview",
+  "slug": "/overview/configuration",
+  "permalink": "/sprout/overview/configuration",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/yyubin/sprout/tree/main/website/docs/overview/configuration.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🏃‍♂️ Quick Start",
+    "permalink": "/sprout/overview/quickstart"
+  },
+  "next": {
+    "title": "🗺️ Roadmap",
+    "permalink": "/sprout/overview/roadmap"
+  }
+}

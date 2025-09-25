@@ -1,0 +1,24 @@
+{
+  "id": "overview/roadmap",
+  "title": "🗺️ Roadmap",
+  "description": "Sprout's development follows a clear roadmap focused on delivering core framework functionality with production-ready quality.",
+  "source": "@site/docs/overview/roadmap.md",
+  "sourceDirName": "overview",
+  "slug": "/overview/roadmap",
+  "permalink": "/sprout/overview/roadmap",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/yyubin/sprout/tree/main/website/docs/overview/roadmap.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "⚙️ Configuration",
+    "permalink": "/sprout/overview/configuration"
+  },
+  "next": {
+    "title": "🏗️ IoC Container",
+    "permalink": "/sprout/architecture/ioc-container"
+  }
+}

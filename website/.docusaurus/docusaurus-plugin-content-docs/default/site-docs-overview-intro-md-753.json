@@ -1,0 +1,20 @@
+{
+  "id": "overview/intro",
+  "title": "🌱 Sprout Framework",
+  "description": "A lightweight Java web framework built from scratch to demystify how Spring works under the hood.",
+  "source": "@site/docs/overview/intro.md",
+  "sourceDirName": "overview",
+  "slug": "/overview/intro",
+  "permalink": "/sprout/overview/intro",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/yyubin/sprout/tree/main/website/docs/overview/intro.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "tutorialSidebar",
+  "next": {
+    "title": "🏃‍♂️ Quick Start",
+    "permalink": "/sprout/overview/quickstart"
+  }
+}

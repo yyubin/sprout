@@ -1,0 +1,24 @@
+{
+  "id": "overview/quickstart",
+  "title": "🏃‍♂️ Quick Start",
+  "description": "Get up and running with Sprout in just a few minutes!",
+  "source": "@site/docs/overview/quickstart.md",
+  "sourceDirName": "overview",
+  "slug": "/overview/quickstart",
+  "permalink": "/sprout/overview/quickstart",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/yyubin/sprout/tree/main/website/docs/overview/quickstart.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🌱 Sprout Framework",
+    "permalink": "/sprout/overview/intro"
+  },
+  "next": {
+    "title": "⚙️ Configuration",
+    "permalink": "/sprout/overview/configuration"
+  }
+}

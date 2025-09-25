@@ -1,0 +1,20 @@
+{
+  "id": "architecture/ioc-container",
+  "title": "🏗️ IoC Container",
+  "description": "The Inversion of Control (IoC) container is the heart of Sprout Framework. It manages object creation, dependency injection, and lifecycle for all components in your application.",
+  "source": "@site/docs/architecture/ioc-container.md",
+  "sourceDirName": "architecture",
+  "slug": "/architecture/ioc-container",
+  "permalink": "/sprout/architecture/ioc-container",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/yyubin/sprout/tree/main/website/docs/architecture/ioc-container.md",
+  "tags": [],
+  "version": "current",
+  "frontMatter": {},
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🗺️ Roadmap",
+    "permalink": "/sprout/overview/roadmap"
+  }
+}
