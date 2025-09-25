@@ -4,15 +4,15 @@ import ComponentCreator from '@docusaurus/ComponentCreator';
 export default [
   {
     path: '/sprout/',
-    component: ComponentCreator('/sprout/', 'f4a'),
+    component: ComponentCreator('/sprout/', 'c2f'),
     routes: [
       {
         path: '/sprout/',
-        component: ComponentCreator('/sprout/', 'cc6'),
+        component: ComponentCreator('/sprout/', '0bc'),
         routes: [
           {
             path: '/sprout/',
-            component: ComponentCreator('/sprout/', 'ef5'),
+            component: ComponentCreator('/sprout/', '509'),
             routes: [
               {
                 path: '/sprout/architecture/ioc-container',
@@ -43,6 +43,11 @@ export default [
                 component: ComponentCreator('/sprout/overview/roadmap', '963'),
                 exact: true,
                 sidebar: "tutorialSidebar"
+              },
+              {
+                path: '/sprout/',
+                component: ComponentCreator('/sprout/', 'f9b'),
+                exact: true
               }
             ]
           }

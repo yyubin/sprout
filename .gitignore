@@ -45,3 +45,8 @@ bin/
 node_modules/
 npm-debug.log
 .idea
+
+# Docusaurus
+website/node_modules/
+website/build/
+website/.docusaurus/

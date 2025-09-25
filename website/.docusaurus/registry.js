@@ -8,5 +8,6 @@ export default {
   "a7bd4aaa": [() => import(/* webpackChunkName: "a7bd4aaa" */ "@theme/DocVersionRoot"), "@theme/DocVersionRoot", require.resolveWeak("@theme/DocVersionRoot")],
   "a94703ab": [() => import(/* webpackChunkName: "a94703ab" */ "@theme/DocRoot"), "@theme/DocRoot", require.resolveWeak("@theme/DocRoot")],
   "aba21aa0": [() => import(/* webpackChunkName: "aba21aa0" */ "@generated/docusaurus-plugin-content-docs/default/__plugin.json"), "@generated/docusaurus-plugin-content-docs/default/__plugin.json", require.resolveWeak("@generated/docusaurus-plugin-content-docs/default/__plugin.json")],
+  "c377a04b": [() => import(/* webpackChunkName: "c377a04b" */ "@site/docs/index.md"), "@site/docs/index.md", require.resolveWeak("@site/docs/index.md")],
   "d7d92410": [() => import(/* webpackChunkName: "d7d92410" */ "@site/docs/overview/roadmap.md"), "@site/docs/overview/roadmap.md", require.resolveWeak("@site/docs/overview/roadmap.md")],
   "fabddb38": [() => import(/* webpackChunkName: "fabddb38" */ "@site/docs/architecture/ioc-container.md"), "@site/docs/architecture/ioc-container.md", require.resolveWeak("@site/docs/architecture/ioc-container.md")],};

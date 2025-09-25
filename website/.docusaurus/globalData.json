@@ -8,12 +8,16 @@
           "label": "Next",
           "isLast": true,
           "path": "/sprout/",
-          "mainDocId": "overview/intro",
+          "mainDocId": "index",
           "docs": [
             {
               "id": "architecture/ioc-container",
               "path": "/sprout/architecture/ioc-container",
               "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "index",
+              "path": "/sprout/"
             },
             {
               "id": "overview/configuration",
