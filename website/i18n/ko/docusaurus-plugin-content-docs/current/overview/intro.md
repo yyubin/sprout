@@ -74,7 +74,7 @@ Sprout는 현대 Java 웹 개발의 핵심 개념들을 처음부터 구현한 �
 
 ## 품질 및 테스트
 
-<div className="coverage-badge">575개 테스트</div>
+<div className="coverage-badge">577개 테스트</div>
 <div className="coverage-badge">85% 라인 커버리지</div>
 <div className="coverage-badge">75% 브랜치 커버리지</div>
 <div className="coverage-badge">0개 실패</div>

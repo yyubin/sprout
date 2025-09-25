@@ -1,5 +1,7 @@
 # 🌱 **Sprout**
 
+**English** | [한국어](#korean) | [📖 Documentation](https://yyubin.github.io/sprout/)
+
 *A lightweight Java web framework built from scratch to demystify how Spring works under the hood.*
 Now with **fully working NIO & hybrid servers** and an **async WebSocket stack**. Still opinionated about **clarity · hackability · extensibility**.
 
@@ -170,7 +172,7 @@ public class ChatSocket {
 **Reports:** [Tests](https://yyubin.github.io/sprout/tests/) ·
 [Coverage](https://yyubin.github.io/sprout/coverage/)
 
-**575 tests, 0 failures (100% pass, Gradle 8.10.1 · 2025‑09‑23)**
+**577 tests, 0 failures (100% pass, Gradle 8.10.1 · 2025‑09‑26)**
 
 **Test Coverage (Jacoco):**
 - **Line Coverage: 85%**
