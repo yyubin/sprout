@@ -5,11 +5,45 @@ The Inversion of Control (IoC) container is the heart of Sprout Framework. It ma
 ## Overview
 
 Sprout's IoC container provides:
-- **Component Scanning**: Automatic detection of annotated classes
-- **Constructor Injection**: Type-safe dependency resolution
+- **Component Scanning**: Automatic detection of annotated classes using the Reflections library
+- **Constructor Injection**: Type-safe dependency resolution (field injection not supported)
 - **Lifecycle Management**: Bean creation, initialization, and destruction
-- **Cyclic Dependency Detection**: Early detection of circular references
-- **Order Support**: Controlling bean initialization and collection order
+- **Cyclic Dependency Detection**: Topological sorting and circular reference detection via BeanGraph
+- **Order Support**: Controlling bean initialization and collection order with @Order
+- **CGLIB Proxies**: Ensuring singleton behavior in @Configuration classes
+
+## Container Architecture
+
+### Core Components
+
+Sprout's IoC container consists of the following key classes:
+
+- `SproutApplicationContext`: Main application context
+- `DefaultListableBeanFactory`: Core bean factory implementation
+- `ClassPathScanner`: Classpath scanning and bean definition creation
+- `BeanGraph`: Dependency graph and topological sorting
+
+### Container Initialization Process
+
+```java
+public class SproutApplication {
+    public static void run(Class<?> primarySource) throws Exception {
+        // 1. Set up package scanning
+        List<String> packages = getPackagesToScan(primarySource);
+        
+        // 2. Create application context
+        ApplicationContext applicationContext = 
+            new SproutApplicationContext(packages.toArray(new String[0]));
+        
+        // 3. Initialize context (refresh)
+        applicationContext.refresh();
+        
+        // 4. Start server
+        HttpServer server = applicationContext.getBean(HttpServer.class);
+        server.start(port);
+    }
+}
+```
 
 ## Component Scanning
 
@@ -18,12 +52,45 @@ Sprout's IoC container provides:
 Sprout recognizes these component annotations:
 
 ```java
-@Component    // Generic component
-@Service      // Business logic layer
-@Repository   // Data access layer
-@Controller   // Web layer
-@Configuration // Configuration classes
-@Aspect       // AOP aspects
+@Component         // Generic component
+@Service          // Business logic layer
+@Repository       // Data access layer
+@Controller       // Web layer
+@Configuration    // Configuration classes
+@Aspect           // AOP aspects
+@ControllerAdvice // Global exception handling
+@WebSocketHandler // WebSocket handlers
+```
+
+### Scanning Process
+
+```java
+// ClassPathScanner's scanning logic
+public Collection<BeanDefinition> scan(ConfigurationBuilder configBuilder, 
+                                     Class<? extends Annotation>... componentAnnotations) {
+    // 1. Annotation-based class discovery using Reflections
+    Set<Class<?>> componentCandidates = new HashSet<>();
+    for (Class<? extends Annotation> anno : componentAnnotations) {
+        componentCandidates.addAll(r.getTypesAnnotatedWith(anno));
+    }
+    
+    // 2. Filter to concrete classes only (exclude interfaces, abstract classes)
+    Set<Class<?>> concreteComponentTypes = componentCandidates.stream()
+        .filter(clazz -> !clazz.isInterface() && 
+                        !clazz.isAnnotation() && 
+                        !Modifier.isAbstract(clazz.getModifiers()))
+        .collect(Collectors.toSet());
+    
+    // 3. @Bean method-based bean discovery
+    Set<Class<?>> configClasses = r.getTypesAnnotatedWith(Configuration.class);
+    for (Class<?> configClass : configClasses) {
+        for (Method method : configClass.getDeclaredMethods()) {
+            if (method.isAnnotationPresent(Bean.class)) {
+                beanMethodReturnTypes.add(method.getReturnType());
+            }
+        }
+    }
+}
 ```
 
 ### Enabling Component Scanning
@@ -34,7 +101,7 @@ Use `@ComponentScan` on your main application class:
 @ComponentScan("com.myapp")  // Scan specific package
 @ComponentScan({"com.myapp.web", "com.myapp.service"})  // Multiple packages
 public class Application {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         SproutApplication.run(Application.class);
     }
 }
@@ -42,9 +109,42 @@ public class Application {
 
 ## Dependency Injection
 
-### Constructor Injection
+### Constructor Injection Strategy
 
-Sprout uses constructor injection exclusively for better immutability and testability:
+Sprout supports **constructor injection only**. It selects the constructor with the most parameters that can be resolved:
+
+```java
+// Constructor resolution logic
+private Constructor<?> resolveUsableConstructor(Class<?> clazz, Set<Class<?>> allKnownBeanTypes) {
+    return Arrays.stream(clazz.getDeclaredConstructors())
+        .filter(constructor -> Arrays.stream(constructor.getParameterTypes())
+            .allMatch(param -> isResolvable(param, allKnownBeanTypes)))
+        .max(Comparator.comparingInt(Constructor::getParameterCount))
+        .orElseThrow(() -> new NoSuchMethodException("No usable constructor"));
+}
+```
+
+### Dependency Resolution Rules
+
+```java
+private boolean isResolvable(Class<?> paramType, Set<Class<?>> allKnownBeanTypes) {
+    // 1. List types are always resolvable
+    if (List.class.isAssignableFrom(paramType)) {
+        return true;
+    }
+    
+    // 2. Check infrastructure types (ApplicationContext, BeanFactory, etc.)
+    if (isKnownInfrastructureType(paramType)) {
+        return true;
+    }
+    
+    // 3. Find assignable types among known bean types
+    return allKnownBeanTypes.stream()
+        .anyMatch(knownType -> paramType.isAssignableFrom(knownType));
+}
+```
+
+### Example: Basic Dependency Injection
 
 ```java
 @Service
@@ -81,13 +181,13 @@ public interface EventHandler {
 @Component
 @Order(1)
 public class EmailEventHandler implements EventHandler {
-    public void handle(Event event) { /* ... */ }
+    public void handle(Event event) { /* Email processing */ }
 }
 
 @Component
 @Order(2)
 public class LogEventHandler implements EventHandler {
-    public void handle(Event event) { /* ... */ }
+    public void handle(Event event) { /* Log processing */ }
 }
 
 @Service
@@ -98,18 +198,51 @@ public class EventProcessor {
     public EventProcessor(List<EventHandler> handlers) {
         this.handlers = handlers;
     }
-
+    
     public void processEvent(Event event) {
         handlers.forEach(handler -> handler.handle(event));
     }
 }
 ```
 
-## Bean Definitions
+### Collection Injection Processing Logic
+
+```java
+// DefaultListableBeanFactory's collection injection post-processing
+protected void postProcessListInjections() {
+    for (PendingListInjection pending : pendingListInjections) {
+        Set<Object> uniqueBeansForList = new HashSet<>();
+        for (Object bean : singletons.values()) {
+            if (pending.getGenericType().isAssignableFrom(bean.getClass())) {
+                uniqueBeansForList.add(bean);
+            }
+        }
+
+        // Sort by @Order annotation
+        List<Object> sortedBeansForList = uniqueBeansForList.stream()
+            .sorted(Comparator.comparingInt(bean -> {
+                Class<?> clazz = bean.getClass();
+                Order order = clazz.getAnnotation(Order.class);
+                return (order != null) ? order.value() : Integer.MAX_VALUE;
+            }))
+            .toList();
+
+        pending.getListToPopulate().clear();
+        pending.getListToPopulate().addAll(sortedBeansForList);
+    }
+}
+```
+
+## Bean Definitions and Creation
+
+### Bean Definition Types
+
+Sprout supports two bean creation approaches:
+
+1. **Constructor-based beans** (`ConstructorBeanDefinition`)
+2. **Factory method beans** (`MethodBeanDefinition`)
 
 ### Constructor-Based Beans
-
-Most beans are created using their constructors:
 
 ```java
 @Component
@@ -126,8 +259,6 @@ public class NotificationService {
 
 ### Factory Method Beans
 
-Use `@Bean` methods in `@Configuration` classes:
-
 ```java
 @Configuration
 public class DataSourceConfig {
@@ -136,8 +267,6 @@ public class DataSourceConfig {
     public DataSource dataSource() {
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl("jdbc:mysql://localhost:3306/myapp");
-        config.setUsername("user");
-        config.setPassword("password");
         return new HikariDataSource(config);
     }
 
@@ -148,14 +277,13 @@ public class DataSourceConfig {
 }
 ```
 
-### Configuration Proxies
+### @Configuration Proxies
 
-`@Configuration` classes support method interception for singleton behavior:
+`@Configuration` classes use CGLIB to create proxies that ensure singleton behavior:
 
 ```java
-@Configuration(proxyBeanMethods = true)  // Default behavior
+@Configuration(proxyBeanMethods = true)  // Default value
 public class AppConfig {
-
     @Bean
     public ServiceA serviceA() {
         return new ServiceA(serviceB());  // Returns same serviceB instance
@@ -165,86 +293,100 @@ public class AppConfig {
     public ServiceB serviceB() {
         return new ServiceB();
     }
+}
+```
 
-    @Bean
-    public ServiceC serviceC() {
-        return new ServiceC(serviceB());  // Returns same serviceB instance
-    }
+```java
+// Proxy creation logic
+if (def.isConfigurationClassProxyNeeded()) {
+    Enhancer enhancer = new Enhancer();
+    enhancer.setSuperclass(def.getType());
+    enhancer.setCallback(new ConfigurationMethodInterceptor(this));
+    beanInstance = enhancer.create(def.getConstructorArgumentTypes(), deps);
 }
 ```
 
 ## Lifecycle Management
 
-### Bean Creation Order
-
-Sprout creates beans in topologically sorted order to respect dependencies:
+### Container Initialization Process
 
 ```java
-@Component
-@Order(1)
-public class DatabaseMigrator {
-    // Runs first due to @Order(1)
-    @PostConstruct
-    public void migrate() {
-        // Perform database migrations
-    }
-}
-
-@Component
-@Order(2)
-public class CacheWarmer {
-    private final UserService userService;
-
-    // UserService is available because it has no @Order (default: Integer.MAX_VALUE)
-    public CacheWarmer(UserService userService) {
-        this.userService = userService;
-    }
-
-    @PostConstruct
-    public void warmCache() {
-        // Pre-load frequently used data
+@Override
+public void refresh() throws Exception {
+    // 1. Scan bean definitions
+    scanBeanDefinitions();
+    
+    // 2. Create infrastructure beans first (BeanPostProcessor, etc.)
+    instantiateInfrastructureBeans();
+    
+    // 3. Create application beans
+    instantiateAllSingletons();
+    
+    // 4. Callbacks after context initialization complete
+    List<ContextInitializer> contextInitializers = getAllBeans(ContextInitializer.class);
+    for (ContextInitializer initializer : contextInitializers) {
+        initializer.initializeAfterRefresh(this);
     }
 }
 ```
 
-### Initialization Callbacks
+### Bean Creation Order
+
+Sprout uses `BeanGraph` to analyze the dependency graph and topologically sort beans for creation in the correct order:
 
 ```java
-@Component
-public class MyService implements InitializingBean, DisposableBean {
-
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        // Called after dependency injection
-        System.out.println("MyService initialized");
-    }
-
-    @Override
-    public void destroy() throws Exception {
-        // Called during shutdown
-        System.out.println("MyService destroyed");
-    }
+private void instantiateGroup(List<BeanDefinition> defs) {
+    // Determine dependency order via topological sorting
+    List<BeanDefinition> order = new BeanGraph(defs).topologicallySorted();
+    
+    // Create beans in order
+    order.forEach(beanFactory::createBean);
+    
+    // Post-process collection injections
+    beanFactory.postProcessListInjections();
 }
+```
 
-// Alternative: use annotations
-@Component
-public class AnotherService {
+### @Primary and Bean Selection
 
-    @PostConstruct
-    public void init() {
-        System.out.println("AnotherService initialized");
-    }
+When multiple beans of the same type exist, use `@Primary` to specify priority:
 
-    @PreDestroy
-    public void cleanup() {
-        System.out.println("AnotherService destroyed");
-    }
+```java
+private String choosePrimary(Class<?> requiredType, Set<String> candidates) {
+    // 1. Find beans with @Primary annotation
+    List<String> primaries = candidates.stream()
+        .filter(name -> {
+            BeanDefinition d = beanDefinitions.get(name);
+            return d != null && d.isPrimary();
+        })
+        .toList();
+
+    if (primaries.size() == 1) return primaries.get(0);
+    if (primaries.size() > 1)
+        throw new RuntimeException("@Primary beans conflict for type " + requiredType.getName());
+
+    return null;
+}
+```
+
+### Bean Post Processing
+
+```java
+// Apply BeanPostProcessor after bean creation
+Object processedBean = beanInstance;
+for (BeanPostProcessor processor : beanPostProcessors) {
+    Object result = processor.postProcessBeforeInitialization(def.getName(), processedBean);
+    if (result != null) processedBean = result;
+}
+for (BeanPostProcessor processor : beanPostProcessors) {
+    Object result = processor.postProcessAfterInitialization(def.getName(), processedBean);
+    if (result != null) processedBean = result;
 }
 ```
 
 ## Cyclic Dependency Detection
 
-Sprout detects circular dependencies at startup:
+Sprout detects circular dependencies at startup through `BeanGraph`. When circular references are found, it throws an exception to halt application startup:
 
 ```java
 @Component
@@ -262,93 +404,70 @@ public class ServiceC {
     public ServiceC(ServiceA serviceA) { /* ... */ }  // Circular dependency!
 }
 
-// Results in startup error with clear dependency chain:
-// Circular dependency detected: ServiceA -> ServiceB -> ServiceC -> ServiceA
+// Circular dependency detected during topological sorting, causing startup error
 ```
 
-## Auto-Configuration
+## Bean Registration and Lookup
 
-Sprout provides auto-configuration for common scenarios:
-
-### Built-in Auto-Configurations
+### Type-Based Bean Mapping
 
 ```java
-@EnableSproutSecurity  // Enables security auto-configuration
-@EnableTransactionManagement  // Enables @Transactional support
-@EnableAsync  // Enables @Async support
-public class Application {
-    // Auto-configured beans are available:
-    // - SecurityContext, AuthenticationManager
-    // - TransactionManager, PlatformTransactionManager
-    // - TaskExecutor, AsyncTaskExecutor
-}
-```
+// Map bean names by type (including interfaces and superclasses)
+private void registerInternal(String name, Object bean) {
+    singletons.put(name, bean);
 
-### Custom Auto-Configuration
+    Class<?> type = bean.getClass();
+    primaryTypeToNameMap.putIfAbsent(type, name);
+    typeToNamesMap.computeIfAbsent(type, k -> new HashSet<>()).add(name);
 
-Implement `BeanDefinitionRegistrar` for custom auto-configuration:
-
-```java
-public class MyFeatureAutoConfiguration implements BeanDefinitionRegistrar {
-
-    @Override
-    public void registerBeanDefinitions(BeanDefinitionRegistry registry) {
-        if (isMyFeatureEnabled()) {
-            registry.registerBeanDefinition("myFeatureService",
-                new ConstructorBeanDefinition(MyFeatureService.class));
-        }
+    // Register interfaces
+    for (Class<?> iface : type.getInterfaces()) {
+        primaryTypeToNameMap.putIfAbsent(iface, name);
+        typeToNamesMap.computeIfAbsent(iface, k -> new HashSet<>()).add(name);
     }
-
-    private boolean isMyFeatureEnabled() {
-        // Check configuration, classpath, etc.
-        return true;
+    
+    // Register superclasses
+    for (Class<?> p = type.getSuperclass(); 
+         p != null && p != Object.class; 
+         p = p.getSuperclass()) {
+        primaryTypeToNameMap.putIfAbsent(p, name);
+        typeToNamesMap.computeIfAbsent(p, k -> new HashSet<>()).add(name);
     }
 }
 ```
 
-## Container Internals
-
-### Bean Registry
-
-The container maintains several registries:
+### Bean Lookup
 
 ```java
-public class SproutApplicationContext {
-    private final Map<String, Object> singletonBeans;
-    private final Map<Class<?>, List<String>> beansByType;
-    private final Map<String, BeanDefinition> beanDefinitions;
-    private final List<BeanPostProcessor> beanPostProcessors;
-}
-```
+@Override
+public <T> T getBean(Class<T> requiredType) {
+    // 1. Check if bean already exists
+    T bean = getIfPresent(requiredType);
+    if (bean != null) return bean;
 
-### Bean Post-Processors
-
-Extend bean creation with custom logic:
-
-```java
-@Component
-public class TimingBeanPostProcessor implements BeanPostProcessor {
-
-    @Override
-    public Object postProcessAfterInitialization(Object bean, String beanName) {
-        if (bean.getClass().isAnnotationPresent(Timed.class)) {
-            return createTimingProxy(bean);
-        }
-        return bean;
+    // 2. Collect candidates
+    Set<String> candidates = candidateNamesForType(requiredType);
+    if (candidates.isEmpty()) {
+        throw new RuntimeException("No bean of type " + requiredType.getName() + " found");
     }
 
-    private Object createTimingProxy(Object target) {
-        // Create CGLIB proxy that times method calls
-        return proxyFactory.createProxy(target, new TimingInterceptor());
+    // 3. Select primary
+    String primary = choosePrimary(requiredType, candidates);
+    if (primary == null) {
+        if (candidates.size() == 1) primary = candidates.iterator().next();
+        else throw new RuntimeException("No unique bean of type " + requiredType.getName());
     }
+
+    // 4. Create if necessary and return
+    return (T) createIfNecessary(primary);
 }
 ```
 
 ## Best Practices
 
-### 1. Prefer Constructor Injection
+### 1. Use Constructor Injection
 ```java
-// Good: Constructor injection
+// Recommended: Constructor injection ensures immutability
 @Service
 public class UserService {
     private final UserRepository repository;
@@ -357,13 +476,11 @@ public class UserService {
         this.repository = repository;
     }
 }
-
-// Avoid: Field injection (not supported in Sprout anyway)
 ```
 
-### 2. Use Interfaces for Loose Coupling
+### 2. Interface-Based Design
 ```java
-// Good: Program against interfaces
+// Recommended: Program against interfaces
 @Service
 public class OrderService {
     private final PaymentProcessor paymentProcessor;
@@ -373,16 +490,15 @@ public class OrderService {
     }
 }
 
-// Implementation
 @Component
 public class StripePaymentProcessor implements PaymentProcessor {
-    // Implementation details
+    // Implementation
 }
 ```
 
 ### 3. Avoid Circular Dependencies
 ```java
-// Good: Break cycles with events or interfaces
+// Recommended: Break cycles with events
 @Service
 public class OrderService {
     private final EventPublisher eventPublisher;
@@ -402,7 +518,7 @@ public class InventoryService {
 }
 ```
 
-### 4. Use @Order for Collection Dependencies
+### 4. Use @Order for Sequence Control
 ```java
 @Component
 @Order(1)
@@ -417,4 +533,52 @@ public class AuthenticationFilter implements Filter {
 }
 ```
 
-The IoC container is designed to be predictable, debuggable, and efficient. Understanding these concepts will help you build well-structured Sprout applications.
+## Performance Optimization
+
+### Eager vs Lazy Loading
+
+Sprout creates all singleton beans at application startup by default. This provides several benefits:
+
+- Early detection of configuration errors at startup
+- Improved runtime performance
+- Predictable memory usage
+
+### Bean Scopes
+
+Currently, Sprout supports only singleton scope, where each bean has exactly one instance throughout the application lifecycle.
+
+## Extension Points
+
+### BeanDefinitionRegistrar
+
+Dynamically register custom bean definitions:
+
+```java
+public class MyFeatureAutoConfiguration implements BeanDefinitionRegistrar {
+    @Override
+    public Collection<BeanDefinition> registerAdditionalBeanDefinitions(
+            Collection<BeanDefinition> existingDefs) {
+        // Conditional bean registration logic
+        return additionalBeans;
+    }
+}
+```
+
+### BeanPostProcessor
+
+Intercept bean creation process for additional processing:
+
+```java
+@Component
+public class TimingBeanPostProcessor implements BeanPostProcessor {
+    @Override
+    public Object postProcessAfterInitialization(String beanName, Object bean) {
+        if (bean.getClass().isAnnotationPresent(Timed.class)) {
+            return createTimingProxy(bean);
+        }
+        return bean;
+    }
+}
+```
+
+Sprout's IoC container is designed to be similar to Spring but with a simpler and more predictable structure. It supports only constructor injection and provides a clear bean lifecycle, making it easy to debug and understand.

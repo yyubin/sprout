@@ -141,10 +141,6 @@ curl -X POST http://localhost:8080/api/users \
 ## What's Next?
 
 - 🏗️ [Learn the Architecture](../architecture/ioc-container) - Understand how Sprout works
-- 🌐 [Build a Web App](../guides/building-web-app) - Step-by-step guide to building real applications
-- 🔌 [WebSocket Chat](../guides/websocket-chat) - Real-time communication example
-- 🔒 [Security Setup](../guides/security-setup) - Add authentication and authorization
-- ⚙️ [Configuration Reference](../reference/configuration) - All configuration options
 
 ## Having Issues?
 

@@ -99,111 +99,21 @@ sprout:
     url: jdbc:mysql://localhost:3306/myapp
     username: myuser
     password: mypassword
-    driver-class-name: com.mysql.cj.jdbc.Driver  # Optional, auto-detected
-
-    # Connection pool settings (HikariCP)
-    hikari:
-      maximum-pool-size: 20
-      minimum-idle: 5
-      connection-timeout: 30000
-      idle-timeout: 600000
-      max-lifetime: 1800000
-```
-
-## Security Configuration
-
-### Basic Security
-```yaml
-sprout:
-  security:
-    enabled: true
-    default-role: USER
-    admin-role: ADMIN
-```
-
-### JWT Configuration
-```yaml
-sprout:
-  security:
-    jwt:
-      secret: your-very-long-secret-key-here
-      expiration: 86400  # 24 hours
-      header: Authorization
-      prefix: "Bearer "
 ```
 
 ### CORS Configuration
 ```yaml
-sprout:
-  security:
-    cors:
-      allowed-origins:
-        - "http://localhost:3000"
-        - "https://myapp.com"
-      allowed-methods:
-        - GET
-        - POST
-        - PUT
-        - DELETE
-      allowed-headers:
-        - Content-Type
-        - Authorization
-      allow-credentials: true
+cors:
+  allow-origin: "*"
+  allow-credentials: true
+  allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+  allow-headers: "Content-Type, Authorization"
+  expose-headers: ""
+  max-age: 3600
 ```
-
-## WebSocket Configuration
-
-```yaml
-sprout:
-  websocket:
-    enabled: true
-    path-prefix: "/ws"
-    max-frame-size: 65536  # 64KB
-    ping-interval: 30000   # 30 seconds
-```
-
-## Environment-Specific Configuration
-
-### Development
-```yaml
-# application-dev.yml
-server:
-  execution-mode: blocking  # Easier debugging
-
-logging:
-  level: DEBUG
-
-sprout:
-  database:
-    url: jdbc:h2:mem:testdb
-    username: sa
-    password:
-```
-
-### Production
-```yaml
-# application-prod.yml
-server:
-  execution-mode: nio
-  thread-type: virtual
-
-logging:
-  level: INFO
-
-sprout:
-  database:
-    url: ${DATABASE_URL}
-    username: ${DATABASE_USERNAME}
-    password: ${DATABASE_PASSWORD}
-
-  security:
-    jwt:
-      secret: ${JWT_SECRET}
-```
-
 ## Accessing Configuration in Code
 
-Use `AppConfig` to access configuration values:
+Use `AppConfig` to access configuration values.
 
 ```java
 @Component
@@ -232,34 +142,3 @@ server:
   execution-mode: invalid-mode  # Error: Unknown execution mode
   thread-pool-size: -1          # Error: Pool size must be positive
 ```
-
-## Environment Variables
-
-Override any configuration using environment variables:
-
-```bash
-# Override database URL
-export SPROUT_DATABASE_URL="jdbc:postgresql://localhost:5432/myapp"
-
-# Override server mode
-export SPROUT_SERVER_EXECUTION_MODE="nio"
-
-# Override JWT secret
-export SPROUT_SECURITY_JWT_SECRET="my-production-secret"
-```
-
-Environment variable naming follows the pattern: `SPROUT_` + uppercase path with underscores.
-
-## Configuration Profiles
-
-Load different configurations based on the active profile:
-
-```bash
-# Run with development profile
-java -Dsprout.profiles.active=dev -jar app.jar
-
-# Run with production profile
-java -Dsprout.profiles.active=prod -jar app.jar
-```
-
-This loads `application-{profile}.yml` in addition to the base `application.yml`.
