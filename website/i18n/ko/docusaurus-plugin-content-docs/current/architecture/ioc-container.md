@@ -1,4 +1,4 @@
-# 🏗️ IoC 컨테이너
+# 🏗️ IoC Container
 
 IoC(Inversion of Control) 컨테이너는 Sprout Framework의 핵심입니다. 애플리케이션의 모든 컴포넌트에 대한 객체 생성, 의존성 주입, 생명주기를 관리합니다.
 
