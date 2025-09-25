@@ -54,12 +54,12 @@ const config: Config = {
           label: 'Documentation',
         },
         {
-          href: '/tests/',
+          to: '/tests/',
           label: 'Tests',
           position: 'left',
         },
         {
-          href: '/coverage/',
+          to: '/coverage/',
           label: 'Coverage',
           position: 'left',
         },
@@ -95,11 +95,11 @@ const config: Config = {
           items: [
             {
               label: 'Test Reports',
-              href: '/tests/',
+              to: '/tests/',
             },
             {
               label: 'Coverage Reports',
-              href: '/coverage/',
+              to: '/coverage/',
             },
           ],
         },
