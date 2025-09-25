@@ -236,7 +236,7 @@ This enables efficient variable extraction without string parsing.
 **Memory Usage:**
 - Pattern storage: ~200-500 bytes per pattern (regex + metadata)
 - Registry overhead: ~100 bytes per mapping
-- Total: Typically <1MB for applications with <1000 endpoints
+- Total: Typically `<1MB` for applications with `<1000` endpoints
 
 ### Optimization Strategies
 
