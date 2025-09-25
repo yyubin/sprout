@@ -5,7 +5,7 @@
   "source": "@site/docs/overview/roadmap.md",
   "sourceDirName": "overview",
   "slug": "/overview/roadmap",
-  "permalink": "/sprout/overview/roadmap",
+  "permalink": "/sprout/ko/overview/roadmap",
   "draft": false,
   "unlisted": false,
   "editUrl": "https://github.com/yyubin/sprout/tree/main/website/docs/overview/roadmap.md",
@@ -15,10 +15,10 @@
   "sidebar": "tutorialSidebar",
   "previous": {
     "title": "⚙️ Configuration",
-    "permalink": "/sprout/overview/configuration"
+    "permalink": "/sprout/ko/overview/configuration"
   },
   "next": {
-    "title": "🏗️ IoC Container",
-    "permalink": "/sprout/architecture/ioc-container"
+    "title": "IoC 컨테이너",
+    "permalink": "/sprout/ko/architecture/ioc-container"
   }
 }

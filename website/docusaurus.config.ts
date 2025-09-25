@@ -18,7 +18,7 @@ const config: Config = {
 
   i18n: {
     defaultLocale: 'en',
-    locales: ['en'],
+    locales: ['en', 'ko'],
   },
 
   presets: [
@@ -66,6 +66,10 @@ const config: Config = {
         {
           href: 'https://github.com/yyubin/sprout',
           label: 'GitHub',
+          position: 'right',
+        },
+        {
+          type: 'localeDropdown',
           position: 'right',
         },
       ],

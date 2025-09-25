@@ -8,14 +8,15 @@ export default {
   "tagline": "A lightweight Java web framework built from scratch",
   "favicon": "img/favicon.ico",
   "url": "https://yyubin.github.io",
-  "baseUrl": "/sprout/",
+  "baseUrl": "/sprout/ko/",
   "organizationName": "yyubin",
   "projectName": "sprout",
   "onBrokenLinks": "warn",
   "i18n": {
     "defaultLocale": "en",
     "locales": [
-      "en"
+      "en",
+      "ko"
     ],
     "path": "i18n",
     "localeConfigs": {}
@@ -49,22 +50,28 @@ export default {
           "type": "docSidebar",
           "sidebarId": "tutorialSidebar",
           "position": "left",
-          "label": "Documentation"
+          "label": "문서"
         },
         {
           "to": "/tests/",
-          "label": "Tests",
+          "label": "테스트",
           "position": "left"
         },
         {
           "to": "/coverage/",
-          "label": "Coverage",
+          "label": "커버리지",
           "position": "left"
         },
         {
           "href": "https://github.com/yyubin/sprout",
           "label": "GitHub",
           "position": "right"
+        },
+        {
+          "type": "localeDropdown",
+          "position": "right",
+          "dropdownItemsBefore": [],
+          "dropdownItemsAfter": []
         }
       ],
       "hideOnScroll": false
@@ -73,44 +80,44 @@ export default {
       "style": "dark",
       "links": [
         {
-          "title": "Documentation",
+          "title": "문서",
           "items": [
             {
-              "label": "Getting Started",
+              "label": "시작하기",
               "to": "/overview/quickstart"
             },
             {
-              "label": "Architecture",
+              "label": "아키텍처",
               "to": "/architecture/ioc-container"
             },
             {
-              "label": "Guides",
+              "label": "가이드",
               "to": "/guides/getting-started"
             }
           ]
         },
         {
-          "title": "Quality",
+          "title": "품질",
           "items": [
             {
-              "label": "Test Reports",
+              "label": "테스트 리포트",
               "to": "/tests/"
             },
             {
-              "label": "Coverage Reports",
+              "label": "커버리지 리포트",
               "to": "/coverage/"
             }
           ]
         },
         {
-          "title": "More",
+          "title": "더보기",
           "items": [
             {
               "label": "GitHub",
               "href": "https://github.com/yyubin/sprout"
             },
             {
-              "label": "Issues",
+              "label": "이슈",
               "href": "https://github.com/yyubin/sprout/issues"
             }
           ]

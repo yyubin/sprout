@@ -1,42 +1,42 @@
 {
   "docusaurus-plugin-content-docs": {
     "default": {
-      "path": "/sprout/",
+      "path": "/sprout/ko/",
       "versions": [
         {
           "name": "current",
           "label": "Next",
           "isLast": true,
-          "path": "/sprout/",
+          "path": "/sprout/ko/",
           "mainDocId": "index",
           "docs": [
             {
               "id": "architecture/ioc-container",
-              "path": "/sprout/architecture/ioc-container",
+              "path": "/sprout/ko/architecture/ioc-container",
               "sidebar": "tutorialSidebar"
             },
             {
               "id": "index",
-              "path": "/sprout/"
+              "path": "/sprout/ko/"
             },
             {
               "id": "overview/configuration",
-              "path": "/sprout/overview/configuration",
+              "path": "/sprout/ko/overview/configuration",
               "sidebar": "tutorialSidebar"
             },
             {
               "id": "overview/intro",
-              "path": "/sprout/overview/intro",
+              "path": "/sprout/ko/overview/intro",
               "sidebar": "tutorialSidebar"
             },
             {
               "id": "overview/quickstart",
-              "path": "/sprout/overview/quickstart",
+              "path": "/sprout/ko/overview/quickstart",
               "sidebar": "tutorialSidebar"
             },
             {
               "id": "overview/roadmap",
-              "path": "/sprout/overview/roadmap",
+              "path": "/sprout/ko/overview/roadmap",
               "sidebar": "tutorialSidebar"
             }
           ],
@@ -44,7 +44,7 @@
           "sidebars": {
             "tutorialSidebar": {
               "link": {
-                "path": "/sprout/overview/intro",
+                "path": "/sprout/ko/overview/intro",
                 "label": "overview/intro"
               }
             }

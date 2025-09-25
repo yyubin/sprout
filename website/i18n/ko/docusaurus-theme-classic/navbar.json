@@ -1,0 +1,26 @@
+{
+  "title": {
+    "message": "Sprout",
+    "description": "The title in the navbar"
+  },
+  "logo.alt": {
+    "message": "Sprout Logo",
+    "description": "The alt text of navbar logo"
+  },
+  "item.label.Documentation": {
+    "message": "문서",
+    "description": "Navbar item with label Documentation"
+  },
+  "item.label.Tests": {
+    "message": "테스트",
+    "description": "Navbar item with label Tests"
+  },
+  "item.label.Coverage": {
+    "message": "커버리지",
+    "description": "Navbar item with label Coverage"
+  },
+  "item.label.GitHub": {
+    "message": "GitHub",
+    "description": "Navbar item with label GitHub"
+  }
+}

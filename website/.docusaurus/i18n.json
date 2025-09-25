@@ -1,10 +1,11 @@
 {
   "defaultLocale": "en",
   "locales": [
-    "en"
+    "en",
+    "ko"
   ],
   "path": "i18n",
-  "currentLocale": "en",
+  "currentLocale": "ko",
   "localeConfigs": {
     "en": {
       "label": "English",
@@ -15,6 +16,16 @@
       "translate": false,
       "url": "https://yyubin.github.io",
       "baseUrl": "/sprout/"
+    },
+    "ko": {
+      "label": "한국어",
+      "direction": "ltr",
+      "htmlLang": "ko",
+      "calendar": "gregory",
+      "path": "ko",
+      "translate": true,
+      "url": "https://yyubin.github.io",
+      "baseUrl": "/sprout/ko/"
     }
   }
 }
