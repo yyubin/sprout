@@ -39,17 +39,10 @@ jobs:
         run: |
           mkdir -p site
 
-          cp -r website/build/* site/
-          mkdir -p site/sprout/tests site/sprout/coverage
-          cp -r build/reports/tests/test/* site/sprout/tests/
-          cp -r build/reports/jacoco/html/* site/sprout/coverage/
-
-          # Root redirect to /sprout/
-          cat > site/index.html << 'EOF'
-          <!doctype html><meta charset="utf-8">
-          <meta http-equiv="refresh" content="0; url=/sprout/">
-          <link rel="canonical" href="/sprout/">
-          EOF
+          cp -r website/build/sprout/* site/
+          mkdir -p site/tests site/coverage
+          cp -r build/reports/tests/test/* site/tests/
+          cp -r build/reports/jacoco/html/* site/coverage/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
