@@ -43,6 +43,11 @@ jobs:
           mkdir -p site/tests site/coverage
           cp -r build/reports/tests/test/* site/tests/
           cp -r build/reports/jacoco/html/* site/coverage/
+
+          # 한국어 버전용 리포트 복사
+          mkdir -p site/ko/tests site/ko/coverage
+          cp -r build/reports/tests/test/* site/ko/tests/
+          cp -r build/reports/jacoco/html/* site/ko/coverage/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
