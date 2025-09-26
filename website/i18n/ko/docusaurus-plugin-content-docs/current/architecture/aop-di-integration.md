@@ -314,6 +314,101 @@ public class BeanMethodInterceptor implements MethodInterceptor {
 3. **지연 생성**: MethodInvocation은 필요한 경우에만 생성
 4. **직접 호출**: CGLIB의 MethodProxy.invoke()로 성능 최적화
 
+
+## 프록시 전략: 위임형 vs 단일 인스턴스형
+
+Sprout AOP에서 프록시 생성은 크게 두 가지 전략으로 나뉩니다.
+
+### 1. 위임형(Delegating Proxy)
+
+- **구조**: 원본 인스턴스를 먼저 생성하고, 프록시는 단순히 호출을 위임
+- **인터셉터 동작**: `proxy.invoke(target, args)`
+- **특징**:
+    - 원본과 프록시가 모두 존재
+    - 원본의 생성자 부작용이 두 번 발생할 수 있음 (원본 생성 + 프록시 생성)
+    - Objenesis를 사용하여 프록시 생성자의 실행을 건너뛰어 “2중 생성” 문제를 방지
+- **사용 시점**: 원본 인스턴스의 상태나 생성자 로직을 반드시 살려야 할 때
+
+### 2. 단일 인스턴스형(Subclassing Proxy)
+
+- **구조**: CGLIB이 원본 클래스를 상속한 서브클래스를 생성, 이것이 곧 빈
+- **인터셉터 동작**: `proxy.invokeSuper(this, args)`
+- **특징**:
+    - 별도의 원본 인스턴스는 없음
+    - 프록시 생성 시 선택된 생성자를 한 번만 호출하므로 “2중 생성” 문제가 발생하지 않음
+    - DI는 프록시 인스턴스 자체에 수행됨 (생성자/필드/세터 모두 프록시가 대상)
+- **사용 시점**: 프록시가 곧 빈 역할을 하고, 원본 객체를 따로 관리할 필요가 없을 때
+
+### Sprout의 선택
+
+Sprout은 **단일 인스턴스형** 전략을 기본으로 채택했습니다.
+
+이는 구조적으로 단순하고, “생성자 2번 호출” 문제를 제거하며, DI 컨테이너와도 자연스럽게 통합됩니다.
+
+즉:
+
+- **Aspect 클래스**는 일반 빈으로 DI 완료 후 레지스트리에 등록
+- **애플리케이션 빈**은 프록시 인스턴스로 생성자 DI를 한 번만 수행
+- 순환 참조가 발생하면 `getBean()` 재진입을 통해 해결
+
+이를 통해 개발자는 프록시 존재 여부에 신경 쓰지 않고, 평범한 빈처럼 의존성을 주입받고 사용할 수 있습니다.
+
+## Objenesis Fallback: 래핑 AOP 지원 전략
+
+Sprout은 기본적으로 **단일 인스턴스형(Subclassing Proxy)** 모델을 채택합니다. 그러나 향후 **래핑(Delegating) AOP**를 지원해야 할 경우, 별도의 **Objenesis 기반 fallback 경로**가 필요합니다.
+
+### 왜 Objenesis가 필요한가
+
+- 위임형에서는 프록시 생성 시 원본 인스턴스를 이미 갖고 있음
+- 만약 `enhancer.create(..)`를 그대로 사용하면:
+    - 프록시 인스턴스 생성 과정에서 슈퍼 생성자가 다시 호출
+    - 결과적으로 원본 생성자 로직이 **2번 실행**됨 (원본 + 프록시)
+- 이는 부작용 발생, final 필드 재할당, 리소스 이중 초기화 문제를 야기할 수 있음
+- 따라서 **생성자 호출을 건너뛰고 빈 인스턴스를 만드는 기술**이 필요 → Objenesis 활용
+
+### Fallback 경로 예시
+
+```java
+@Component
+public class CglibProxyFactory implements ProxyFactory, InfrastructureBean {
+
+    @Override
+    public Object createProxy(Class<?> targetClass, Object target, AdvisorRegistry registry, CtorMeta meta) {
+        Enhancer e = new Enhancer();
+        e.setSuperclass(targetClass);
+
+        if (target != null) {
+            //  Delegating Proxy 경로: 이미 target이 존재 → Objenesis로 ctor skip
+            e.setCallbackType(MethodInterceptor.class);
+            Class<?> proxyClass = e.createClass();
+            Object proxy = objenesis.newInstance(proxyClass);   // 생성자 호출 생략
+            ((Factory) proxy).setCallback(0, new BeanMethodInterceptor(target, registry));
+            return proxy;
+        } else {
+            //  Subclassing Proxy 경로: 프록시가 곧 빈 → ctor 정상 호출
+            e.setCallback(new BeanMethodInterceptor(null, registry));
+            return e.create(meta.paramTypes(), meta.args());
+        }
+    }
+}
+
+```
+
+### 전략 요약
+
+- **SubClassing(단일 인스턴스형)**: 기본 경로. 프록시 = 빈, ctor 정상 호출, 주입 그대로 반영.
+- **Delegating(래핑형)**: Fallback 경로. 원본 별도 존재 → 프록시는 Objenesis로 생성, ctor 생략.
+
+### 적용 시 고려사항
+
+1. **DI 일관성**: Delegating 모델에서는 원본 객체에 DI가 이미 완료되어야 함. 프록시는 단순 위임자.
+2. **캐싱 전략**: `(targetClass, advisorsSignature)`를 키로 프록시 클래스를 캐싱, Objenesis 인스턴스화 비용 최소화.
+3. **순환 참조 처리**: 원본과 Aspect가 서로 참조하는 경우, 컨테이너의 `getBean()` 재진입 구조로 해결 가능.
+4. **테스트 권장 시나리오**:
+    - 원본 생성자 부작용이 1회만 발생하는지
+    - final 필드나 리소스 핸들러가 안전하게 유지되는지
+    - Delegating/Subclassing 두 경로가 동시에 섞여도 문제없는지
+
 ## MethodInvocation 체인 실행 시스템
 
 ### 1. MethodInvocationImpl: 체인 오브 리스펀서빌리티 구현

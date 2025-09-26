@@ -314,6 +314,87 @@ public class BeanMethodInterceptor implements MethodInterceptor {
 3.  **Lazy Creation**: `MethodInvocation` is created only when needed.
 4.  **Direct Invocation**: CGLIB's `MethodProxy.invoke()` provides optimized performance.
 
+## Proxy Strategies: Delegating vs. Subclassing
+
+In Sprout AOP, proxy creation follows two main strategies.
+
+### 1. Delegating Proxy
+
+- **Structure**: The original instance is created first, and the proxy simply delegates calls to it
+- **Interceptor behavior**: `proxy.invoke(target, args)`
+- **Characteristics**:
+    - Both the original object and the proxy exist
+    - The constructor of the original may run twice (original creation + proxy creation)
+    - Objenesis is used to skip proxy constructor execution, preventing the “double instantiation” issue
+- **When to use**: When the original object’s state or constructor logic must be preserved
+
+### 2. Subclassing Proxy
+
+- **Structure**: CGLIB generates a subclass of the original class, and this subclass *is* the bean
+- **Interceptor behavior**: `proxy.invokeSuper(this, args)`
+- **Characteristics**:
+    - No separate original instance exists
+    - The chosen constructor is called only once when creating the proxy, so the “double instantiation” problem does not occur
+    - Dependency injection (DI) is applied directly to the proxy instance (constructor/field/setter all target the proxy)
+- **When to use**: When the proxy itself should serve as the bean, and the original object does not need to be managed separately
+
+### Sprout’s Choice
+
+Sprout adopts the **Subclassing Proxy** strategy as the default.
+
+This approach is structurally simple, removes the “constructor called twice” problem, and integrates naturally with the DI container.
+
+Specifically:
+
+- **Aspect classes** are registered in the registry as regular beans with DI already completed
+- **Application beans** are proxy instances, with constructor DI performed only once
+- If circular dependencies arise, they are resolved by re-entering `getBean()`
+
+This allows developers to inject dependencies transparently, without worrying about whether a bean is proxied.
+
+---
+
+## Objenesis Fallback: Supporting Delegating AOP
+
+Sprout uses the **Subclassing Proxy** model by default. However, to support **Delegating AOP** in the future, an **Objenesis-based fallback path** is required.
+
+### Why Objenesis?
+
+- In the delegating model, the proxy already has a reference to the original instance
+- If `enhancer.create(..)` is used directly:
+    - The proxy’s creation process will trigger the superclass constructor again
+    - This results in the original constructor running **twice** (once for the original + once for the proxy)
+- This can lead to unwanted side effects, reinitialization of final fields, or duplicated resource setup
+- Therefore, a mechanism is needed to create a bean **without calling its constructor** → Objenesis
+
+### Example Fallback Path
+
+```java
+@Component
+public class CglibProxyFactory implements ProxyFactory, InfrastructureBean {
+
+    @Override
+    public Object createProxy(Class<?> targetClass, Object target, AdvisorRegistry registry, CtorMeta meta) {
+        Enhancer e = new Enhancer();
+        e.setSuperclass(targetClass);
+
+        if (target != null) {
+            // Delegating Proxy path: target already exists → use Objenesis to skip ctor
+            e.setCallbackType(MethodInterceptor.class);
+            Class<?> proxyClass = e.createClass();
+            Object proxy = objenesis.newInstance(proxyClass);   // Skip constructor
+            ((Factory) proxy).setCallback(0, new BeanMethodInterceptor(target, registry));
+            return proxy;
+        } else {
+            // Subclassing Proxy path: proxy itself is the bean → normal constructor call
+            e.setCallback(new BeanMethodInterceptor(null, registry));
+            return e.create(meta.paramTypes(), meta.args());
+        }
+    }
+}
+
+```
+
 ## `MethodInvocation` Chain Execution System
 
 ### 1\. `MethodInvocationImpl`: Implementing the Chain of Responsibility
