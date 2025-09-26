@@ -20,6 +20,9 @@ const sidebars: SidebarsConfig = {
         'architecture/mvc-controller-mapping',
         'architecture/mvc-argument-resolution',
         'architecture/http-message-parsing',
+        'architecture/request-dispatching',
+        'architecture/aop-advice-advisor',
+        'architecture/aop-di-integration',
       ],
     },
     {

@@ -8,8 +8,6 @@ Sprout is a comprehensive web framework that implements the core concepts of mod
 
 **Educational Purpose**: Understanding how frameworks like Spring work internally by building similar functionality from scratch.
 
-**Production Ready**: Despite its educational origins, Sprout includes production-grade features like NIO servers, comprehensive testing (575 tests, 85% line coverage), and security systems.
-
 **Focused Scope**: Intentionally focused on container/AOP/web/server internals. A full ORM is out of scope for v1.0 to keep the surface area manageable and the code easy to audit.
 
 ## Key Features
