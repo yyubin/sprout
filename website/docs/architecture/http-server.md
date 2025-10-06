@@ -579,7 +579,7 @@ public final class HttpUtils {
 ### Pure NIO Mode
 
 **Best For:**
-- Maximum scalability (100k+ connections)
+- Maximum scalability
 - Low-latency requirements
 - Resource-constrained environments
 
@@ -677,15 +677,9 @@ public class ServerShutdownHook {
 ## Performance Characteristics
 
 ### Virtual Thread Mode
-- **Throughput**: 50k-100k req/s (single machine)
-- **Memory**: ~1KB per connection
-- **Latency**: Low (< 1ms overhead)
 - **Scalability**: Excellent for high connection count
 
 ### Platform Thread Pool Mode
-- **Throughput**: 10k-30k req/s (depends on pool size)
-- **Memory**: ~1MB per thread (platform thread stack)
-- **Latency**: Very low (no context switching)
 - **Scalability**: Limited by thread pool size
 
 ### NIO vs Hybrid
