@@ -17,6 +17,8 @@ const sidebars: SidebarsConfig = {
       label: 'Architecture',
       items: [
         'architecture/ioc-container',
+        'architecture/http-server',
+        'architecture/websocket',
         'architecture/mvc-controller-mapping',
         'architecture/mvc-argument-resolution',
         'architecture/http-message-parsing',
