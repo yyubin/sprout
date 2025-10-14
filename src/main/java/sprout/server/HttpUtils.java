@@ -5,6 +5,7 @@ import sprout.mvc.http.ResponseEntity;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 public final class HttpUtils {
     private HttpUtils() {}
@@ -175,18 +176,55 @@ public final class HttpUtils {
     public static ByteBuffer createResponseBuffer(ResponseEntity<?> res) {
         if (res == null) return null;
 
-        String body = res.getBody() != null ? res.getBody().toString() : "";
+        // Body를 바이트로 변환 (UTF-8)
+        byte[] bodyBytes = res.getBody() != null
+            ? res.getBody().toString().getBytes(StandardCharsets.UTF_8)
+            : new byte[0];
 
-        String responseString = "HTTP/1.1 " + res.getStatusCode().getCode() + " " + res.getStatusCode().getMessage() + "\r\n";
-        responseString += "Content-Type: " + res.getContentType() + "\r\n";
-        responseString += "Content-Length: " + body.getBytes(StandardCharsets.UTF_8).length + "\r\n";
+        // HTTP 헤더 작성
+        StringBuilder header = new StringBuilder();
+        header.append("HTTP/1.1 ")
+              .append(res.getStatusCode().getCode())
+              .append(" ")
+              .append(res.getStatusCode().getMessage())
+              .append("\r\n");
+
+        // Content-Type
+        header.append("Content-Type: ")
+              .append(res.getContentType())
+              .append("\r\n");
+
+        // Content-Length (바이트 단위로 정확히)
+        header.append("Content-Length: ")
+              .append(bodyBytes.length)
+              .append("\r\n");
+
+        // Connection 헤더: keep-alive 활성화 (HTTP/1.1 기본)
+        header.append("Connection: keep-alive\r\n");
+        header.append("Keep-Alive: timeout=5, max=1000\r\n");
+
+        // Custom headers
         if (res.getHeaders() != null) {
-            for (String header : res.getHeaders().keySet()) {
-                responseString += header + ": " + res.getHeaders().get(header) + "\r\n";
+            for (Map.Entry<String, String> entry : res.getHeaders().entrySet()) {
+                header.append(entry.getKey())
+                      .append(": ")
+                      .append(entry.getValue())
+                      .append("\r\n");
             }
         }
-        responseString += "\r\n";
-        responseString += body;
-        return ByteBuffer.wrap(responseString.getBytes(StandardCharsets.UTF_8));
+
+        // 헤더 끝
+        header.append("\r\n");
+
+        // 헤더 바이트
+        byte[] headerBytes = header.toString().getBytes(StandardCharsets.UTF_8);
+
+        // 전체 응답 버퍼 생성 (헤더 + 바디)
+        ByteBuffer buffer = ByteBuffer.allocate(headerBytes.length + bodyBytes.length);
+        buffer.put(headerBytes);
+        buffer.put(bodyBytes);
+        buffer.flip();
+
+        return buffer;
     }
 }

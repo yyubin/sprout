@@ -2,16 +2,20 @@ package sprout.server.builtins;
 
 import sprout.server.RequestExecutorService;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 public class RequestExecutorPoolService implements RequestExecutorService {
 
     private final ExecutorService pool;
 
     public RequestExecutorPoolService(int threadPoolSize) {
-        this.pool = Executors.newFixedThreadPool(threadPoolSize);
+        this.pool = new ThreadPoolExecutor(
+                threadPoolSize,
+                threadPoolSize,
+                60L, TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(threadPoolSize * 100),
+                new ThreadPoolExecutor.CallerRunsPolicy()
+        );
     }
 
     @Override

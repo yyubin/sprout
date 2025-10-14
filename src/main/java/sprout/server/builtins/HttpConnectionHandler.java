@@ -113,8 +113,15 @@ public class HttpConnectionHandler implements ReadableHandler, WritableHandler {
 
         if (!writeBuffer.hasRemaining()) {
             // 버퍼의 모든 데이터를 전송 완료
-            this.currentState = HttpConnectionStatus.DONE;
-            closeConnection(key);
+            this.currentState = HttpConnectionStatus.READING;
+            this.writeBuffer = null;
+
+            // keep-alive 지원: 다음 요청을 기다리기 위해 READ 모드로 전환
+            key.interestOps(SelectionKey.OP_READ);
+            selector.wakeup();
+
+            // readBuffer 초기화 (다음 요청 수신 준비)
+            readBuffer.clear();
         }
         // 버퍼에 데이터가 남아있다면 아무것도 하지 않음
         // 채널이 다시 쓸 준비가 되면 셀렉터가 알려줄 것

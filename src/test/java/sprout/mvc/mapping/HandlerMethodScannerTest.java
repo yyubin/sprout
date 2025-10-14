@@ -212,9 +212,6 @@ class HandlerMethodScannerTest {
     @Test
     @DisplayName("클래스 경로와 메서드 경로를 올바르게 결합해야 한다.")
     void combinePaths_correctlyCombines() throws NoSuchMethodException {
-        // combinePaths는 private 메서드이므로, 리플렉션으로 호출하거나 (비추천)
-        // 아니면 scanControllers를 통해 간접적으로만 테스트해야 합니다.
-        // 여기서는 가독성을 위해 별도의 테스트 메서드로 직접 호출하는 방식을 사용합니다.
         Method combineMethod = null;
         try {
             combineMethod = HandlerMethodScanner.class.getDeclaredMethod("combinePaths", String.class, String.class);

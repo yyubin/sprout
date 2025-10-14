@@ -38,24 +38,44 @@ public class BioHttpProtocolHandler implements AcceptableProtocolHandler {
         Socket socket = channel.socket();
 
         requestExecutorService.execute(() -> {
-            System.out.println("Worker Thread for http allocated!");
             try (InputStream in = socket.getInputStream();
-                BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()))) {
+                 OutputStream out = socket.getOutputStream()) {
 
-                String raw = readRawRequest(initialBuffer, in);
-                System.out.println("Received request: " + raw);
+                ByteBuffer currentBuffer = initialBuffer;
 
-                if (raw.isBlank()) return;
+                // HTTP/1.1 keep-alive 처리: 같은 연결에서 여러 요청을 순차 처리
+                while (!socket.isClosed()) {
+                    String raw = readRawRequest(currentBuffer, in);
 
-                HttpRequest<?> req = parser.parse(raw);
-                HttpResponse res = new HttpResponse();
+                    // 요청이 없거나 연결이 끊긴 경우
+                    if (raw.isBlank()) break;
 
-                dispatcher.dispatch(req, res);
+                    HttpRequest<?> req = parser.parse(raw);
+                    HttpResponse res = new HttpResponse();
 
-                writeResponse(out, res.getResponseEntity());
+                    dispatcher.dispatch(req, res);
+
+                    // Connection 헤더 확인
+                    String connectionHeader = req.getHeaders().getOrDefault("Connection", "keep-alive");
+                    boolean shouldClose = "close".equalsIgnoreCase(connectionHeader);
+
+                    writeResponse(out, res.getResponseEntity(), shouldClose);
+
+                    // Content-Length가 없거나 Connection: close 요청이면 종료
+                    if (shouldClose) {
+                        break;
+                    }
+
+                    // 다음 요청을 위해 버퍼 초기화
+                    currentBuffer = null;
+                }
 
             } catch (Exception e) {
                 e.printStackTrace();
+            } finally {
+                try {
+                    socket.close();
+                } catch (IOException ignored) {}
             }
         });
     }
@@ -73,27 +93,56 @@ public class BioHttpProtocolHandler implements AcceptableProtocolHandler {
         }
     }
 
-    private void writeResponse(BufferedWriter out, ResponseEntity<?> res) throws IOException {
+    private void writeResponse(OutputStream out, ResponseEntity<?> res, boolean shouldClose) throws IOException {
         if (res == null) return;
 
-        String body = res.getBody() != null ? res.getBody().toString() : "";
-        out.write("HTTP/1.1 " + res.getStatusCode().getCode() + " " + res.getStatusCode().getMessage() + "\r\n");
+        // Body를 바이트로 변환 (UTF-8)
+        byte[] bodyBytes = res.getBody() != null
+            ? res.getBody().toString().getBytes(StandardCharsets.UTF_8)
+            : new byte[0];
+
+        // HTTP 헤더 작성
+        StringBuilder header = new StringBuilder();
+        header.append("HTTP/1.1 ")
+              .append(res.getStatusCode().getCode())
+              .append(" ")
+              .append(res.getStatusCode().getMessage())
+              .append("\r\n");
 
         // Content-Type
-        out.write("Content-Type: " + res.getContentType() + "\r\n");
+        header.append("Content-Type: ")
+              .append(res.getContentType())
+              .append("\r\n");
 
-        // Content-Length
-        out.write("Content-Length: " + body.getBytes(StandardCharsets.UTF_8).length + "\r\n");
+        // Content-Length (바이트 단위로 정확히)
+        header.append("Content-Length: ")
+              .append(bodyBytes.length)
+              .append("\r\n");
+
+        // Connection 헤더: keep-alive 활성화 (HTTP/1.1 기본)
+        if (shouldClose) {
+            header.append("Connection: close\r\n");
+        } else {
+            header.append("Connection: keep-alive\r\n");
+            header.append("Keep-Alive: timeout=5, max=1000\r\n");
+        }
 
         // Custom headers
         if (res.getHeaders() != null) {
-            for (Map.Entry<String, String> header : res.getHeaders().entrySet()) {
-                out.write(header.getKey() + ": " + header.getValue() + "\r\n");
+            for (Map.Entry<String, String> entry : res.getHeaders().entrySet()) {
+                header.append(entry.getKey())
+                      .append(": ")
+                      .append(entry.getValue())
+                      .append("\r\n");
             }
         }
 
-        out.write("\r\n");
-        out.write(body);
+        // 헤더 끝
+        header.append("\r\n");
+
+        // 헤더 + 바디를 바이트 단위로 전송
+        out.write(header.toString().getBytes(StandardCharsets.UTF_8));
+        out.write(bodyBytes);
         out.flush();
     }
 

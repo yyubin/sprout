@@ -102,21 +102,31 @@ class HttpConnectionHandlerTest {
     }
 
     @Test
-    @DisplayName("WRITE: 전체 전송 완료 시 DONE & close")
-    void write_flushAll_then_close() throws Exception {
+    @DisplayName("WRITE: 전체 전송 완료 시 READ 상태로 전환하고 버퍼 초기화")
+    void write_flushAll_then_readyForNextRequest() throws Exception {
+        // given: 응답 준비 완료 상태
         prepStateToWriting("HTTP/1.1 200 OK\r\n\r\nhello");
 
         when(channel.write(any(ByteBuffer.class))).thenAnswer(inv -> {
             ByteBuffer buf = inv.getArgument(0);
-            int r = buf.remaining();
-            buf.position(buf.limit());
-            return r;
+            int remaining = buf.remaining();
+            buf.position(buf.limit()); // 모두 전송한 것으로 처리
+            return remaining;
         });
 
+        // when
         handler.write(key);
 
-        verify(key).cancel();
-        verify(channel).close();
+        // then
+        verify(channel).write(any(ByteBuffer.class));
+
+        // keep-alive 동작 검증
+        verify(key).interestOps(SelectionKey.OP_READ);
+        verify(selector).wakeup();
+
+        // close()는 호출되지 않아야 함
+        verify(channel, never()).close();
+        verify(key, never()).cancel();
     }
 
     @Test

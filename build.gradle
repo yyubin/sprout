@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'jacoco'
+    id 'io.gatling.gradle' version '3.11.5.2'
 }
 
 java {
@@ -25,6 +26,10 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
     testImplementation 'org.assertj:assertj-core:3.22.0'
+
+    // Gatling dependencies
+    gatling 'io.gatling.highcharts:gatling-charts-highcharts:3.11.5'
+    gatling 'io.gatling:gatling-app:3.11.5'
 
 
     implementation 'net.bytebuddy:byte-buddy:1.14.5'
@@ -102,4 +107,9 @@ jacocoTestReport {
             ])
         }))
     }
+}
+
+// Gatling configuration
+gatling {
+    // Gatling simulations are in src/gatling/scala
 }

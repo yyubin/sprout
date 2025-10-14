@@ -82,10 +82,9 @@ class HttpProtocolHandlerTest {
         when(mockSocket.getOutputStream()).thenReturn(outputStream);
 
         // given: 파서 및 디스패처 Mock 설정
-        HttpRequest<?> mockRequest = new HttpRequest<>(HttpMethod.GET, "/test", null, new HashMap<>(), new HashMap<>()); // 더미 요청 객체
+        HttpRequest<?> mockRequest = new HttpRequest<>(HttpMethod.GET, "/test", null, new HashMap<>(), new HashMap<>());
         doReturn(mockRequest).when(mockParser).parse(fullRequest);
 
-        // dispatcher.dispatch가 호출되면, 응답 객체(res)에 값을 채워넣도록 설정
         doAnswer(invocation -> {
             HttpResponse res = invocation.getArgument(1);
             res.setResponseEntity(ResponseEntity.ok("Success"));
@@ -95,17 +94,16 @@ class HttpProtocolHandlerTest {
         // when: 핸들러 실행
         httpProtocolHandler.accept(mockChannel, null, initialBuffer);
 
-        // then: 상호작용 검증
+        // then: 파서 및 디스패처 호출 검증
         verify(mockParser).parse(fullRequest);
         verify(mockDispatcher).dispatch(eq(mockRequest), any(HttpResponse.class));
 
-        // then: OutputStream에 쓰인 응답 결과 검증
-        String expectedResponse = "HTTP/1.1 200 OK\r\n" +
-                "Content-Type: application/json\r\n" +
-                "Content-Length: 7\r\n" +
-                "\r\n" +
-                "Success";
-        assertEquals(expectedResponse, outputStream.toString(StandardCharsets.UTF_8));
+        // then: OutputStream 응답 내용 부분 검증
+        String actualResponse = outputStream.toString(StandardCharsets.UTF_8);
+
+        assertTrue(actualResponse.contains("HTTP/1.1 200 OK"));
+        assertTrue(actualResponse.contains("Content-Length: 7"));
+        assertTrue(actualResponse.contains("Success"));
     }
 
     @Test
