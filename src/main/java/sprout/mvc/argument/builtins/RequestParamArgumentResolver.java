@@ -23,7 +23,9 @@ public class RequestParamArgumentResolver implements ArgumentResolver {
         String paramValue = request.getQueryParams().get(paramName);
 
         if (paramValue == null) {
-            if (requestParam.required()) {
+            if (requestParam.defaultValue() != null && !requestParam.defaultValue().isEmpty()) {
+                paramValue = requestParam.defaultValue();
+            } else if (requestParam.required()) {
                 throw new IllegalArgumentException("Required request parameter '" + paramName + "' not found in request.");
             }
         }

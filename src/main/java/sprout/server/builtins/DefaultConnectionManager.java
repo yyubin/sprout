@@ -60,7 +60,6 @@ public class DefaultConnectionManager implements ConnectionManager {
 
         for (ProtocolHandler handler : handlers) {
             if (handler.supports(detectedProtocol)) {
-                System.out.println("Handling connection with " + handler.getClass().getSimpleName() + " for protocol " + detectedProtocol);
                 if (handler instanceof AcceptableProtocolHandler) {
                     ((AcceptableProtocolHandler) handler).accept(clientChannel, selector, buffer);
                     return; // 핸들러를 찾았으므로 종료

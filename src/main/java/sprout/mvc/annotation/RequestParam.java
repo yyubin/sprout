@@ -10,4 +10,5 @@ import java.lang.annotation.Target;
 public @interface RequestParam {
     String value() default "";
     boolean required() default true;
+    String defaultValue() default "";
 }
