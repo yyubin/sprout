@@ -1,6 +1,7 @@
 package sprout.data.orm.action.internal;
 
 import sprout.data.orm.action.Executable;
+import sprout.data.orm.engine.ComparableExecutable;
 import sprout.data.orm.engine.Parameter;
 
 import java.sql.Connection;
@@ -25,6 +26,11 @@ public class InsertAction extends Action{
     }
 
     @Override
+    public Type getActionType() {
+        return null;
+    }
+
+    @Override
     void execute(Connection connection) throws SQLException {
 
     }
@@ -42,6 +48,11 @@ public class InsertAction extends Action{
     @Override
     public String getSecondarySort() {
         return "";
+    }
+
+    @Override
+    public List<ComparableExecutable> getDependencies() {
+        return List.of();
     }
 
     @Override
