@@ -1,5 +1,5 @@
 server:
-  execution-mode: nio
+  execution-mode: nio # 실행 모드: nio 또는 hybrid
   thread-type: virtual  # 스레드 종류: virtual 또는 platform
   thread-pool-size: 150 # platform 스레드일 경우 사용할 스레드 풀 크기
 

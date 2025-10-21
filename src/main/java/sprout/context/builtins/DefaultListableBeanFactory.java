@@ -1,16 +1,12 @@
 package sprout.context.builtins;
 
-import net.sf.cglib.proxy.Enhancer;
-import sprout.beans.BeanCreationMethod;
 import sprout.beans.BeanDefinition;
-import sprout.beans.ConstructorBeanDefinition;
 import sprout.beans.annotation.Order;
+import sprout.beans.instantiation.*;
+import sprout.beans.matching.BeanTypeMatchingService;
 import sprout.beans.processor.BeanPostProcessor;
 import sprout.context.*;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -25,8 +21,27 @@ public class DefaultListableBeanFactory implements BeanFactory, BeanDefinitionRe
 
     private List<BeanPostProcessor> beanPostProcessors = new ArrayList<>();
 
+    // 전략 패턴 적용
+    private final List<BeanInstantiationStrategy> instantiationStrategies;
+    private final DependencyResolver dependencyResolver;
+    private final BeanTypeMatchingService typeMatchingService;
+
     public DefaultListableBeanFactory() {
         registerCoreSingleton("beanFactory", this);
+
+        // 타입 매칭 서비스 초기화
+        this.typeMatchingService = new BeanTypeMatchingService(beanDefinitions, singletons);
+
+        // 의존성 해결 전략 초기화 (체인 순서가 중요)
+        List<DependencyTypeResolver> typeResolvers = new ArrayList<>();
+        typeResolvers.add(new ListBeanDependencyResolver(pendingListInjections));
+        typeResolvers.add(new SingleBeanDependencyResolver(this));
+        this.dependencyResolver = new CompositeDependencyResolver(typeResolvers);
+
+        // 인스턴스화 전략 초기화
+        this.instantiationStrategies = new ArrayList<>();
+        this.instantiationStrategies.add(new ConstructorBasedInstantiationStrategy());
+        this.instantiationStrategies.add(new FactoryMethodBasedInstantiationStrategy());
     }
 
     @Override
@@ -124,36 +139,11 @@ public class DefaultListableBeanFactory implements BeanFactory, BeanDefinitionRe
     }
 
     private Set<String> candidateNamesForType(Class<?> type) {
-        Set<String> names = new HashSet<>();
-        // 1) 이미 등록된 싱글턴
-        for (Map.Entry<String, Object> e : singletons.entrySet()) {
-            if (type.isAssignableFrom(e.getValue().getClass())) names.add(e.getKey());
-        }
-        // 2) 아직 안만든 정의
-        for (Map.Entry<String, BeanDefinition> e : beanDefinitions.entrySet()) {
-            if (type.isAssignableFrom(e.getValue().getType())) names.add(e.getKey());
-        }
-        return names;
+        return typeMatchingService.findCandidateNamesForType(type);
     }
 
     private String choosePrimary(Class<?> requiredType, Set<String> candidates) {
-        // BeanDefinition 중 primary=true 인 애만 필터
-        List<String> primaries = candidates.stream()
-                .filter(name -> {
-                    BeanDefinition d = beanDefinitions.get(name);
-                    return d != null && d.isPrimary();
-                })
-                .toList();
-
-        if (primaries.size() == 1) return primaries.get(0);
-        if (primaries.size() > 1)
-            throw new RuntimeException("@Primary beans conflict for type " + requiredType.getName() + ": " + primaries);
-
-        // 기존 primaryTypeToNameMap fallback
-        String mapped = primaryTypeToNameMap.get(requiredType);
-        if (mapped != null && candidates.contains(mapped)) return mapped;
-
-        return null;
+        return typeMatchingService.choosePrimary(requiredType, candidates, primaryTypeToNameMap);
     }
 
     private Object createIfNecessary(String name) {
@@ -213,42 +203,27 @@ public class DefaultListableBeanFactory implements BeanFactory, BeanDefinitionRe
         }
     }
 
-    protected Object createBean(BeanDefinition def) {
+    public Object createBean(BeanDefinition def) {
         if (singletons.containsKey(def.getName())) return singletons.get(def.getName());
         System.out.println("instantiating primary: " + def.getType().getName());
 
-        Object beanInstance;
         try {
-            Object[] deps;
-            Parameter[] methodParams;
-            if (def.getCreationMethod() == BeanCreationMethod.CONSTRUCTOR) {
-                Constructor<?> constructor = def.getConstructor();
-                methodParams = constructor.getParameters();
-
-                if (def instanceof ConstructorBeanDefinition && ((ConstructorBeanDefinition) def).getConstructorArguments() != null) {
-                    deps = ((ConstructorBeanDefinition) def).getConstructorArguments();
-                } else {
-                    deps = resolveDependencies(def.getConstructorArgumentTypes(), methodParams, def.getType());
-                }
-                if (def.isConfigurationClassProxyNeeded()) {
-                    Enhancer enhancer = new Enhancer();
-                    enhancer.setSuperclass(def.getType());
-                    enhancer.setCallback(new ConfigurationMethodInterceptor(this));
-                    beanInstance = enhancer.create(def.getConstructorArgumentTypes(), deps);
-                } else {
-                    beanInstance = def.getConstructor().newInstance(deps);
-                }
-            } else if (def.getCreationMethod() == BeanCreationMethod.FACTORY_METHOD) {
-                Object factoryBean = getBean(def.getFactoryBeanName());
-                Method factoryMethod = def.getFactoryMethod();
-                deps = resolveDependencies(def.getFactoryMethodArgumentTypes(), factoryMethod.getParameters(), def.getType());
-                beanInstance = def.getFactoryMethod().invoke(factoryBean, deps);
-            } else {
-                throw new IllegalArgumentException("Unsupported bean creation method: " + def.getCreationMethod());
+            // 적절한 인스턴스화 전략 선택
+            BeanInstantiationStrategy strategy = findStrategy(def);
+            if (strategy == null) {
+                throw new IllegalArgumentException("No BeanInstantiationStrategy found for creation method: " + def.getCreationMethod());
             }
 
-            ctorCache.put(beanInstance, new CtorMeta(def.getConstructorArgumentTypes(), deps));
+            // 전략을 사용하여 빈 생성
+            Object beanInstance = strategy.instantiate(def, dependencyResolver, this);
 
+            // 생성자 메타 정보 캐싱
+            Class<?>[] argTypes = def.getCreationMethod() == sprout.beans.BeanCreationMethod.CONSTRUCTOR
+                    ? def.getConstructorArgumentTypes()
+                    : def.getFactoryMethodArgumentTypes();
+            ctorCache.put(beanInstance, new CtorMeta(argTypes, new Object[0])); // deps는 나중에 필요시 수정
+
+            // BeanPostProcessor 처리
             Object processedBean = beanInstance;
             for (BeanPostProcessor processor : beanPostProcessors) {
                 Object result = processor.postProcessBeforeInitialization(def.getName(), processedBean);
@@ -259,6 +234,7 @@ public class DefaultListableBeanFactory implements BeanFactory, BeanDefinitionRe
                 if (result != null) processedBean = result;
             }
 
+            // 싱글톤 등록
             registerInternal(def.getName(), processedBean);
             return processedBean;
 
@@ -267,23 +243,14 @@ public class DefaultListableBeanFactory implements BeanFactory, BeanDefinitionRe
         }
     }
 
-    private Object[] resolveDependencies(Class<?>[] dependencyTypes, Parameter[] params, Class<?> currentBeanType) {
-        Object[] deps = new Object[dependencyTypes.length];
-        for (int i = 0; i < dependencyTypes.length; i++) {
-            Class<?> paramType = dependencyTypes[i];
-            if (List.class.isAssignableFrom(paramType)) {
-                List<Object> emptyList = new ArrayList<>();
-                deps[i] = emptyList;
-
-                var genericType = (Class<?>) ((java.lang.reflect.ParameterizedType) params[i].getParameterizedType())
-                        .getActualTypeArguments()[0];
-
-                pendingListInjections.add(new PendingListInjection(null, emptyList, genericType));
-            } else {
-                deps[i] = getBean(paramType); // 단일 빈 의존성 주입
+    // 빈 정의에 맞는 인스턴스화 전략 찾기
+    private BeanInstantiationStrategy findStrategy(BeanDefinition def) {
+        for (BeanInstantiationStrategy strategy : instantiationStrategies) {
+            if (strategy.supports(def.getCreationMethod())) {
+                return strategy;
             }
         }
-        return deps;
+        return null;
     }
 
     public void registerSingletonInstance(String name, Object instance) {
@@ -308,7 +275,7 @@ public class DefaultListableBeanFactory implements BeanFactory, BeanDefinitionRe
         }
     }
 
-    protected void postProcessListInjections() {
+    public void postProcessListInjections() {
         System.out.println("--- Post-processing List Injections ---");
         for (PendingListInjection pending : pendingListInjections) {
             Set<Object> uniqueBeansForList = new HashSet<>();

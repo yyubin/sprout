@@ -4,15 +4,14 @@ import org.reflections.scanners.Scanners;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 import org.reflections.util.FilterBuilder;
-import sprout.aop.AspectPostProcessor;
 import sprout.aop.annotation.Aspect;
 import sprout.beans.BeanDefinition;
 import sprout.beans.InfrastructureBean;
 import sprout.beans.annotation.*;
-import sprout.beans.internal.BeanGraph;
 import sprout.beans.processor.BeanDefinitionRegistrar;
 import sprout.beans.processor.BeanPostProcessor;
 import sprout.context.*;
+import sprout.context.lifecycle.*;
 import sprout.mvc.advice.annotation.ControllerAdvice;
 import sprout.scan.ClassPathScanner;
 import sprout.server.websocket.annotation.WebSocketHandler;
@@ -26,6 +25,7 @@ public class SproutApplicationContext implements ApplicationContext {
     private final DefaultListableBeanFactory beanFactory;
     private final List<String> basePackages;
     private final ClassPathScanner scanner;
+    private final BeanLifecycleManager lifecycleManager;
 
     private List<BeanDefinition> infraDefs;
     private List<BeanDefinition> appDefs;
@@ -35,6 +35,14 @@ public class SproutApplicationContext implements ApplicationContext {
         this.basePackages = List.of(basePackages);
         this.scanner = new ClassPathScanner();
         this.beanFactory.registerCoreSingleton("applicationContext", this);
+
+        // BeanLifecycleManager 초기화
+        List<BeanLifecyclePhase> phases = new ArrayList<>();
+        phases.add(new InfrastructureBeanPhase());
+        phases.add(new BeanPostProcessorRegistrationPhase());
+        phases.add(new ApplicationBeanPhase());
+        phases.add(new ContextInitializerPhase());
+        this.lifecycleManager = new BeanLifecycleManager(phases);
     }
 
     private void scanBeanDefinitions() throws NoSuchMethodException {
@@ -91,44 +99,20 @@ public class SproutApplicationContext implements ApplicationContext {
         this.appDefs = appDefs;
     }
 
-    private void instantiateGroup(List<BeanDefinition> defs) {
-        List<BeanDefinition> order = new BeanGraph(defs).topologicallySorted();
-        order.forEach(beanFactory::createBean);
-        beanFactory.postProcessListInjections();
-    }
-
-    private void instantiateInfrastructureBeans() {
-        instantiateGroup(infraDefs);
-        List<PostInfrastructureInitializer> initializers = beanFactory.getAllBeans(PostInfrastructureInitializer.class);
-        System.out.println("initializers: " + initializers);
-        for (PostInfrastructureInitializer initializer : initializers) {
-            initializer.afterInfrastructureSetup(beanFactory, basePackages);
-        }
-    }
-
-    private void instantiateAllSingletons() {
-        registerBeanPostProcessors();
-        instantiateGroup(appDefs);
-    }
-
-    private void registerBeanPostProcessors() {
-        List<BeanPostProcessor> allBeanPostProcessor = beanFactory.getAllBeans(BeanPostProcessor.class);
-
-        for (BeanPostProcessor beanPostProcessor : allBeanPostProcessor) {
-            beanFactory.addBeanPostProcessor(beanPostProcessor);
-        }
-    }
-
     @Override
     public void refresh() throws Exception {
+        // 1. 빈 정의 스캔
         scanBeanDefinitions();
-        instantiateInfrastructureBeans();
-        instantiateAllSingletons();
 
-        List<ContextInitializer> contextInitializers = getAllBeans(ContextInitializer.class);
-        for (ContextInitializer initializer : contextInitializers) {
-            initializer.initializeAfterRefresh(this);
-        }
+        // 2. BeanLifecycleManager를 통한 단계별 실행
+        BeanLifecyclePhase.PhaseContext context = new BeanLifecyclePhase.PhaseContext(
+                beanFactory,
+                infraDefs,
+                appDefs,
+                basePackages
+        );
+
+        lifecycleManager.executePhases(context);
     }
 
     @Override

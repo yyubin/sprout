@@ -2,6 +2,7 @@ package sprout.beans.internal;
 
 import sprout.beans.BeanCreationMethod;
 import sprout.beans.BeanDefinition;
+import sprout.beans.matching.BeanTypeMatchingService;
 
 import java.lang.reflect.Modifier;
 import java.util.*;
@@ -11,6 +12,7 @@ public class BeanGraph {
     private final Map<String, BeanDefinition> nodeMap = new HashMap<>();
     private final Map<String, List<String>> edges = new HashMap<>();
     private final Map<String, Integer> indegree = new HashMap<>();
+    private final BeanTypeMatchingService typeMatchingService;
 
     public BeanGraph(Collection<BeanDefinition> definitions) {
         definitions.forEach(d -> {
@@ -19,6 +21,10 @@ public class BeanGraph {
             // 초기 indegree는 0으로 설정
             indegree.putIfAbsent(d.getName(), 0);
         });
+
+        // 타입 매칭 서비스 초기화 (BeanGraph는 싱글톤이 아니므로 빈 Map 전달)
+        this.typeMatchingService = new BeanTypeMatchingService(nodeMap, Collections.emptyMap());
+
         buildEdges();
         System.out.println(indegree);
     }
@@ -103,13 +109,7 @@ public class BeanGraph {
     }
 
     private Set<String> getBeanNamesForType(Class<?> type) {
-        Set<String> names = new HashSet<>();
-        for (BeanDefinition beanDef : nodeMap.values()) {
-            if (type.isAssignableFrom(beanDef.getType())) {
-                names.add(beanDef.getName());
-            }
-        }
-        return names;
+        return typeMatchingService.getBeanNamesForType(type);
     }
 
     public static class CircularDependencyException extends RuntimeException {
