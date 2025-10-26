@@ -227,4 +227,52 @@ public final class HttpUtils {
 
         return buffer;
     }
+
+    public static ByteBuffer createResponseBuffer(ResponseEntity<?> res, ByteBufferPool pool) {
+        if (res == null) return null;
+
+        byte[] bodyBytes = res.getBody() != null
+                ? res.getBody().toString().getBytes(StandardCharsets.UTF_8)
+                : new byte[0];
+
+        StringBuilder header = new StringBuilder();
+        header.append("HTTP/1.1 ")
+                .append(res.getStatusCode().getCode())
+                .append(" ")
+                .append(res.getStatusCode().getMessage())
+                .append("\r\n");
+
+        header.append("Content-Type: ")
+                .append(res.getContentType())
+                .append("\r\n");
+
+        header.append("Content-Length: ")
+                .append(bodyBytes.length)
+                .append("\r\n");
+
+        header.append("Connection: keep-alive\r\n");
+        header.append("Keep-Alive: timeout=5, max=1000\r\n");
+
+        if (res.getHeaders() != null) {
+            for (Map.Entry<String, String> entry : res.getHeaders().entrySet()) {
+                header.append(entry.getKey())
+                        .append(": ")
+                        .append(entry.getValue())
+                        .append("\r\n");
+            }
+        }
+
+        header.append("\r\n");
+
+        byte[] headerBytes = header.toString().getBytes(StandardCharsets.UTF_8);
+        int totalSize = headerBytes.length + bodyBytes.length;
+
+        // 풀에서 버퍼 대여
+        ByteBuffer buffer = pool.acquire(totalSize);
+        buffer.put(headerBytes);
+        buffer.put(bodyBytes);
+        buffer.flip();
+        return buffer;
+    }
+
 }

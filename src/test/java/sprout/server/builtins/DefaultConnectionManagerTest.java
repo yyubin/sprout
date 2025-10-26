@@ -7,6 +7,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import sprout.server.AcceptableProtocolHandler;
+import sprout.server.ByteBufferPool;
 import sprout.server.ProtocolDetector;
 
 import java.nio.ByteBuffer;
@@ -37,12 +38,14 @@ class DefaultConnectionManagerTest {
     private ServerSocketChannel mockServerChannel;
     @Mock
     private SocketChannel mockClientChannel;
+    @Mock
+    private ByteBufferPool mockByteBufferPool;
 
     private DefaultConnectionManager connectionManager;
 
     @BeforeEach
     void setUp() {
-        connectionManager = new DefaultConnectionManager(List.of(mockDetector), List.of(mockHandler));
+        connectionManager = new DefaultConnectionManager(List.of(mockDetector), List.of(mockHandler), mockByteBufferPool);
     }
 
     @Test

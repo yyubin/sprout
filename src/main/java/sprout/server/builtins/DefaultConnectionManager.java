@@ -1,10 +1,7 @@
 package sprout.server.builtins;
 
 import sprout.beans.annotation.Component;
-import sprout.server.AcceptableProtocolHandler;
-import sprout.server.ConnectionManager;
-import sprout.server.ProtocolDetector;
-import sprout.server.ProtocolHandler;
+import sprout.server.*;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
@@ -18,10 +15,12 @@ public class DefaultConnectionManager implements ConnectionManager {
 
     private final List<ProtocolDetector> detectors;
     private final List<ProtocolHandler> handlers;
+    private final ByteBufferPool bufferPool;
 
-    public DefaultConnectionManager(List<ProtocolDetector> detectors, List<ProtocolHandler> handlers) {
+    public DefaultConnectionManager(List<ProtocolDetector> detectors, List<ProtocolHandler> handlers, ByteBufferPool bufferPool) {
         this.detectors = detectors;
         this.handlers = handlers;
+        this.bufferPool = bufferPool;
     }
 
     @Override
@@ -30,10 +29,11 @@ public class DefaultConnectionManager implements ConnectionManager {
         SocketChannel clientChannel = serverChannel.accept();
         clientChannel.configureBlocking(false);
 
-        ByteBuffer buffer = ByteBuffer.allocate(2048);
+        ByteBuffer buffer = bufferPool.acquire(ByteBufferPool.SMALL_BUFFER_SIZE);
         int bytesRead = clientChannel.read(buffer);
 
         if (bytesRead <= 0) {
+            bufferPool.release(buffer);
             clientChannel.close();
             return;
         }
@@ -54,6 +54,7 @@ public class DefaultConnectionManager implements ConnectionManager {
 
         if ("UNKNOWN".equals(detectedProtocol) || detectedProtocol == null) {
             System.err.println("Unknown protocol detected. Closing socket: " + clientChannel.socket());
+            bufferPool.release(buffer);
             clientChannel.close();
             return;
         }
@@ -64,9 +65,10 @@ public class DefaultConnectionManager implements ConnectionManager {
                     ((AcceptableProtocolHandler) handler).accept(clientChannel, selector, buffer);
                     return; // 핸들러를 찾았으므로 종료
                 }
-                break;
+
             }
         }
 
+        bufferPool.release(buffer);
     }
 }

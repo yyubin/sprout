@@ -20,17 +20,22 @@ public class HttpConnectionHandler implements ReadableHandler, WritableHandler {
     private final RequestDispatcher dispatcher;
     private final HttpRequestParser parser;
     private final RequestExecutorService requestExecutorService;
+    private final ByteBufferPool bufferPool;
 
-    private final ByteBuffer readBuffer = ByteBuffer.allocate(8192);
+    private final ByteBuffer readBuffer;
     private volatile ByteBuffer writeBuffer;
     private HttpConnectionStatus currentState = HttpConnectionStatus.READING;
 
-    public HttpConnectionHandler(SocketChannel channel, Selector selector, RequestDispatcher dispatcher, HttpRequestParser parser, RequestExecutorService requestExecutorService, ByteBuffer initialBuffer) {
+    public HttpConnectionHandler(SocketChannel channel, Selector selector, RequestDispatcher dispatcher, HttpRequestParser parser, RequestExecutorService requestExecutorService, ByteBufferPool bufferPool, ByteBuffer initialBuffer) {
         this.channel = channel;
         this.selector = selector;
         this.dispatcher = dispatcher;
         this.parser = parser;
         this.requestExecutorService = requestExecutorService;
+        this.bufferPool = bufferPool;
+
+        // 버퍼 풀에서 8KB 버퍼 대여
+        this.readBuffer = bufferPool.acquire(ByteBufferPool.MEDIUM_BUFFER_SIZE);
 
         if (initialBuffer != null && initialBuffer.hasRemaining()) {
             this.readBuffer.put(initialBuffer);
@@ -43,6 +48,7 @@ public class HttpConnectionHandler implements ReadableHandler, WritableHandler {
     public void read(SelectionKey key) throws Exception {
         System.out.println("Try to read from " + channel.socket() + " with current state: " + currentState + " and buffer size: " + readBuffer.remaining() + " bytes");
         if (currentState != HttpConnectionStatus.READING) return;
+
         System.out.println("Read from " + channel.socket() + " with current state: " + currentState + " and buffer size: " + readBuffer.remaining() + " bytes");
         int bytesRead = channel.read(readBuffer);
         if (bytesRead == -1) {
@@ -77,7 +83,7 @@ public class HttpConnectionHandler implements ReadableHandler, WritableHandler {
                     dispatcher.dispatch(req, res);
 
                     // 5. 응답 준비 및 쓰기 상태 전환
-                    this.writeBuffer = HttpUtils.createResponseBuffer(res.getResponseEntity());
+                    this.writeBuffer = HttpUtils.createResponseBuffer(res.getResponseEntity(), bufferPool);
                     this.currentState = HttpConnectionStatus.WRITING;
 
                     // 6. Selector에 쓰기 이벤트 감지 요청
@@ -92,6 +98,9 @@ public class HttpConnectionHandler implements ReadableHandler, WritableHandler {
 
             // 버퍼 초기화 (다음 요청을 위해)
             readBuffer.clear();
+        } else {
+            // 아직 요청이 완전하지 않으면 다음 read 대기
+            readBuffer.compact();
         }
 
     }
@@ -102,6 +111,11 @@ public class HttpConnectionHandler implements ReadableHandler, WritableHandler {
             channel.close();
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            bufferPool.release(readBuffer);
+            if (writeBuffer != null) {
+                bufferPool.release(writeBuffer);
+            }
         }
     }
 
@@ -114,6 +128,8 @@ public class HttpConnectionHandler implements ReadableHandler, WritableHandler {
         if (!writeBuffer.hasRemaining()) {
             // 버퍼의 모든 데이터를 전송 완료
             this.currentState = HttpConnectionStatus.READING;
+
+            bufferPool.release(writeBuffer);
             this.writeBuffer = null;
 
             // keep-alive 지원: 다음 요청을 기다리기 위해 READ 모드로 전환
