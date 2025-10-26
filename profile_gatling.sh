@@ -21,7 +21,7 @@ fi
 
 echo "1) Gatling 부하테스트 시작..."
 ./gradlew gatlingRun --simulation=$SIMULATION_CLASS &
-GATLING_PID=$!
+GATLING_PID=$! 
 
 sleep 3
 
