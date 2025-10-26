@@ -1,6 +1,6 @@
 # 🌱 **Sprout**
 
-**English** | [한국어](#korean) | [📖 Documentation](https://yyubin.github.io/sprout/)
+**English** | [한국어](https://github.com/yyubin/sprout/blob/main/README_ko.md) | [📖 Documentation](https://yyubin.github.io/sprout/)
 
 *A lightweight Java web framework built from scratch to demystify how Spring works under the hood.*
 Now with **fully working NIO & hybrid servers** and an **async WebSocket stack**. Still opinionated about **clarity · hackability · extensibility**.
