@@ -12,6 +12,7 @@ import sprout.mvc.http.HttpRequest;
 import sprout.mvc.http.HttpResponse;
 import sprout.mvc.http.ResponseEntity;
 import sprout.mvc.http.parser.HttpRequestParser;
+import sprout.server.ByteBufferPool;
 import sprout.server.HttpConnectionStatus;
 import sprout.server.HttpUtils;
 import sprout.server.RequestExecutorService;
@@ -39,6 +40,7 @@ class HttpConnectionHandlerTest {
     @Mock RequestDispatcher dispatcher;
     @Mock HttpRequestParser parser;
     @Mock RequestExecutorService executor;
+    @Mock ByteBufferPool byteBufferPool;
 
     // interestOps 상태 흉내
     private final AtomicInteger opsHolder = new AtomicInteger();
@@ -57,7 +59,10 @@ class HttpConnectionHandlerTest {
 
         // 기본적으로 read()가 호출될 때 READING 상태여야 하므로 초기 상태 그대로 사용
         // initialBuffer 는 필요 시 각 테스트에서 주입
-        handler = new HttpConnectionHandler(channel, selector, dispatcher, parser, executor, /*initial*/ null);
+        ByteBuffer mockBuffer = ByteBuffer.allocate(8192);
+        when(byteBufferPool.acquire(anyInt())).thenReturn(mockBuffer);
+
+        handler = new HttpConnectionHandler(channel, selector, dispatcher, parser, executor, byteBufferPool, /*initial*/ null);
     }
 
     @Test
@@ -67,6 +72,9 @@ class HttpConnectionHandlerTest {
 
         // channel.read 가 데이터를 넣도록
         when(channel.read(any(ByteBuffer.class))).thenAnswer(putBytes(rawReq));
+
+        ByteBuffer mockBuffer = ByteBuffer.allocate(8192);
+        when(byteBufferPool.acquire(anyInt())).thenReturn(mockBuffer);
 
         // HttpUtils 정적 모킹
         try (MockedStatic<HttpUtils> ms = mockStatic(HttpUtils.class)) {
@@ -106,6 +114,9 @@ class HttpConnectionHandlerTest {
     void write_flushAll_then_readyForNextRequest() throws Exception {
         // given: 응답 준비 완료 상태
         prepStateToWriting("HTTP/1.1 200 OK\r\n\r\nhello");
+
+        ByteBuffer mockBuffer = ByteBuffer.allocate(8192);
+        when(byteBufferPool.acquire(anyInt())).thenReturn(mockBuffer);
 
         when(channel.write(any(ByteBuffer.class))).thenAnswer(inv -> {
             ByteBuffer buf = inv.getArgument(0);
@@ -150,6 +161,9 @@ class HttpConnectionHandlerTest {
     @Test
     @DisplayName("READ: -1 이면 연결 종료")
     void read_remoteClosed_closesChannel() throws Exception {
+        ByteBuffer mockBuffer = ByteBuffer.allocate(8192);
+        when(byteBufferPool.acquire(anyInt())).thenReturn(mockBuffer);
+
         when(channel.read(any(ByteBuffer.class))).thenReturn(-1);
 
         handler.read(key);
@@ -163,7 +177,10 @@ class HttpConnectionHandlerTest {
     void initialBuffer_alreadyContainsFullRequest() throws Exception {
         // 초기 버퍼에 리퀘스트를 담아서 전달
         ByteBuffer initial = ByteBuffer.wrap("GET / HTTP/1.1\r\nHost:a\r\n\r\n".getBytes(StandardCharsets.UTF_8));
-        handler = new HttpConnectionHandler(channel, selector, dispatcher, parser, executor, initial);
+        handler = new HttpConnectionHandler(channel, selector, dispatcher, parser, executor, byteBufferPool, initial);
+
+        ByteBuffer mockBuffer = ByteBuffer.allocate(8192);
+        when(byteBufferPool.acquire(anyInt())).thenReturn(mockBuffer);
 
         // channel.read 는 0 (추가로 안 읽어도 됨)
         when(channel.read(any(ByteBuffer.class))).thenReturn(0);

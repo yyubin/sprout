@@ -7,6 +7,7 @@ import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import sprout.mvc.dispatcher.RequestDispatcher;
 import sprout.mvc.http.parser.HttpRequestParser;
+import sprout.server.ByteBufferPool;
 import sprout.server.RequestExecutorService;
 
 import java.nio.ByteBuffer;
@@ -28,6 +29,7 @@ class NioHttpProtocolHandlerTest {
     @Mock SocketChannel channel;
     @Mock Selector selector;
     @Mock SelectionKey selectionKey;
+    @Mock ByteBufferPool byteBufferPool;
 
     @Captor ArgumentCaptor<Object> attachmentCaptor;
 
@@ -36,11 +38,14 @@ class NioHttpProtocolHandlerTest {
     void accept_registers_channel_with_handler() throws Exception {
         // given
         NioHttpProtocolHandler handler =
-                new NioHttpProtocolHandler(dispatcher, parser, executor);
+                new NioHttpProtocolHandler(dispatcher, parser, executor, byteBufferPool);
 
         // register 스텁 (final이면 mockito-inline 필요)
         when(channel.register(eq(selector), eq(OP_READ), any()))
                 .thenReturn(selectionKey);
+
+        ByteBuffer mockBuffer = ByteBuffer.allocate(8192);
+        when(byteBufferPool.acquire(anyInt())).thenReturn(mockBuffer);
 
         // when
         handler.accept(channel, selector, ByteBuffer.allocate(0));
@@ -55,7 +60,7 @@ class NioHttpProtocolHandlerTest {
     @DisplayName("supports()는 HTTP/1.1만 true")
     void supports_only_http11() {
         NioHttpProtocolHandler handler =
-                new NioHttpProtocolHandler(dispatcher, parser, executor);
+                new NioHttpProtocolHandler(dispatcher, parser, executor, byteBufferPool);
 
         assertThat(handler.supports("HTTP/1.1")).isTrue();
         assertThat(handler.supports("HTTP/2")).isFalse();

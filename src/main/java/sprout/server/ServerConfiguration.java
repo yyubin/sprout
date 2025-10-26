@@ -28,13 +28,13 @@ public class ServerConfiguration {
     }
 
     @Bean
-    public AcceptableProtocolHandler httpProtocolHandler(AppConfig appConfig, RequestDispatcher requestDispatcher, HttpRequestParser httpRequestParser, RequestExecutorService executorService) {
+    public AcceptableProtocolHandler httpProtocolHandler(AppConfig appConfig, RequestDispatcher requestDispatcher, HttpRequestParser httpRequestParser, RequestExecutorService executorService, ByteBufferPool byteBufferPool) {
         String executionMode = appConfig.getStringProperty("server.execution-mode", "hybrid");
         if (executionMode.equals("hybrid")) {
             System.out.println("Execution mode is hybrid");
             return new BioHttpProtocolHandler(requestDispatcher, httpRequestParser, executorService);
         }
         System.out.println("Execution mode is NIO");
-        return new NioHttpProtocolHandler(requestDispatcher, httpRequestParser, executorService);
+        return new NioHttpProtocolHandler(requestDispatcher, httpRequestParser, executorService, byteBufferPool);
     }
 }

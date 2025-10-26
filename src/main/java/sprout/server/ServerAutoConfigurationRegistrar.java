@@ -46,7 +46,7 @@ public class ServerAutoConfigurationRegistrar implements BeanDefinitionRegistrar
     }
 
     private Collection<BeanDefinition> registerNioServerBeans(Collection<BeanDefinition> existingDefs) throws NoSuchMethodException {
-        Constructor<?> constructor = NioHttpProtocolHandler.class.getConstructor(RequestDispatcher.class, HttpRequestParser.class, RequestExecutorService.class);
+        Constructor<?> constructor = NioHttpProtocolHandler.class.getConstructor(RequestDispatcher.class, HttpRequestParser.class, RequestExecutorService.class, ByteBufferPool.class);
         return List.of(registerThreadTypeBean(existingDefs), createBeanDefinition("httpProtocolHandler", NioHttpProtocolHandler.class, constructor));
     }
 

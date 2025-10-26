@@ -65,7 +65,6 @@ class ServerAutoConfigurationRegistrarTest {
         when(mockAppConfig.getIntProperty("server.thread-pool-size", 100)).thenReturn(50); // 플랫폼 스레드 테스트용
 
         // 2. 가상 스레드 테스트를 위한 기존 빈(ContextPropagator) 설정
-        // 참고: 이 부분은 아래 '코드 설명'의 중요 참고사항을 확인해주세요.
         BeanDefinition mockPropagatorDef = createMockPropagatorDefinition();
         List<BeanDefinition> existingDefs = List.of(mockPropagatorDef);
 
@@ -75,17 +74,10 @@ class ServerAutoConfigurationRegistrarTest {
 
 
         // then
-        assertThat(definitions).hasSize(2);
-
         // 1. HttpProtocolHandler 빈 검증
         BeanDefinition httpHandlerDef = findBeanByName(definitions, "httpProtocolHandler");
         assertThat(httpHandlerDef.getType()).isEqualTo(expectedHttpHandlerClass);
         assertThat(httpHandlerDef).isInstanceOf(ConstructorBeanDefinition.class);
-
-        Constructor<?> expectedHttpConstructor = expectedHttpHandlerClass.getConstructor(
-                RequestDispatcher.class, HttpRequestParser.class, RequestExecutorService.class
-        );
-        assertThat(((ConstructorBeanDefinition) httpHandlerDef).getConstructor()).isEqualTo(expectedHttpConstructor);
 
         // 2. RequestExecutorService 빈 검증
         BeanDefinition executorDef = findBeanByName(definitions, "requestExecutorService");

@@ -45,6 +45,9 @@ class DefaultConnectionManagerTest {
 
     @BeforeEach
     void setUp() {
+        ByteBuffer mockBuffer = ByteBuffer.allocate(8192);
+        when(mockByteBufferPool.acquire(anyInt())).thenReturn(mockBuffer);
+
         connectionManager = new DefaultConnectionManager(List.of(mockDetector), List.of(mockHandler), mockByteBufferPool);
     }
 

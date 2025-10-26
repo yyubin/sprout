@@ -41,7 +41,6 @@ public class HttpConnectionHandler implements ReadableHandler, WritableHandler {
             this.readBuffer.put(initialBuffer);
         }
 
-        System.out.println("connection established from " + channel.socket() + " with initial buffer size: " + readBuffer.remaining() + " bytes");
     }
 
     @Override

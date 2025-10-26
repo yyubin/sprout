@@ -1,5 +1,5 @@
 #!/bin/bash
-# Sprout 서버 부하테스트 + Async Profiler 통합 스크립트
+# Sprout 서버 부하테스트 + Async Profiler 통합 스크립트 (CPU / Alloc / Wall)
 
 SERVER_PORT=8080
 DURATION=30
@@ -20,19 +20,35 @@ if [ ! -f "$ASPROF" ]; then
 fi
 
 echo "1) Gatling 부하테스트 시작..."
-./gradlew gatlingRun --simulation=benchmark.HelloWorldSimulation &
+./gradlew gatlingRun --simulation=$SIMULATION_CLASS &
 GATLING_PID=$!
 
 sleep 3
 
 echo "2) Async Profiler로 $DURATION초간 프로파일링..."
-env DYLD_LIBRARY_PATH=$ASYNC_PROFILER_HOME/lib $ASPROF -d $DURATION -e cpu   -o flamegraph -f cpu-flamegraph.html   $PID
-env DYLD_LIBRARY_PATH=$ASYNC_PROFILER_HOME/lib $ASPROF -d $DURATION -e alloc -o flamegraph -f alloc-flamegraph.html $PID
+
+# CPU
+env DYLD_LIBRARY_PATH=$ASYNC_PROFILER_HOME/lib $ASPROF \
+  -d $DURATION -e cpu -o flamegraph -f cpu-flamegraph.html $PID
+
+# Allocation
+env DYLD_LIBRARY_PATH=$ASYNC_PROFILER_HOME/lib $ASPROF \
+  -d $DURATION -e alloc -o flamegraph -f alloc-flamegraph.html $PID
+
+# Wall-clock
+env DYLD_LIBRARY_PATH=$ASYNC_PROFILER_HOME/lib $ASPROF \
+  -d $DURATION -e wall -o flamegraph -f wall-flamegraph.html $PID
 
 wait $GATLING_PID
 
-echo "완료! 결과 파일"
-echo " - cpu-flamegraph.html"
-echo " - alloc-flamegraph.html"
+echo ""
+echo "프로파일링 완료!"
+echo "생성된 결과 파일:"
+echo " - cpu-flamegraph.html   (CPU 사용 분석)"
+echo " - alloc-flamegraph.html (힙 메모리 할당 분석)"
+echo " - wall-flamegraph.html  (실제 wall-clock 병목 분석)"
+echo ""
+
 open cpu-flamegraph.html
 open alloc-flamegraph.html
+open wall-flamegraph.html
