@@ -109,7 +109,14 @@ jacocoTestReport {
     }
 }
 
-// Gatling configuration
 gatling {
-    // Gatling simulations are in src/gatling/scala
+
+}
+
+jar {
+    manifest {
+        attributes(
+                'Main-Class': 'Main'
+        )
+    }
 }

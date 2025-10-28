@@ -91,66 +91,155 @@ public final class HttpUtils {
     }
 
     public static String readRawRequest(ByteBuffer initial, InputStream in) throws IOException {
+        // BufferedInputStream을 한 번만 생성하여 재사용 (데이터 손실 방지)
+        BufferedInputStream bin = new BufferedInputStream(in);
+
+        // Phase 1: 헤더만 먼저 읽기 (메서드 분리)
+        String headerPart = readHeadersFromStream(initial, bin);
+
+        // Phase 2: 조기 리턴 - 헤더가 불완전한 경우
+        int headerEnd = headerPart.indexOf("\r\n\r\n");
+        if (headerEnd < 0) {
+            return headerPart; // 잘못된 요청
+        }
+
+        String headers = headerPart.substring(0, headerEnd);
+        String bodyStart = headerPart.substring(headerEnd + 4);
+
+        // Phase 2: 조기 리턴 - Content-Length 케이스 (대부분의 HTTP 요청, 80%+)
+        int contentLength = parseContentLength(headers);
+        if (contentLength > 0) {
+            String body = readBodyWithContentLength(bin, contentLength, bodyStart);
+            return headers + "\r\n\r\n" + body;
+        }
+
+        // Content-Length: 0인 경우 (바디 없는 POST 등)
+        if (contentLength == 0) {
+            return headers + "\r\n\r\n" + bodyStart;
+        }
+
+        // Phase 2: 조기 리턴 - Chunked 케이스 (10% 미만)
+        if (isChunked(headers)) {
+            String chunkedBody = readChunkedBody(bin);
+            return headers + "\r\n\r\n" + bodyStart + chunkedBody;
+        }
+
+        // Phase 2: 조기 리턴 - 바디가 없는 케이스 (GET 등)
+        return headers + "\r\n\r\n" + bodyStart;
+    }
+
+    private static String readHeadersFromStream(ByteBuffer initial, BufferedInputStream bin) throws IOException {
         StringBuilder sb = new StringBuilder();
 
-        // 1) initial buffer
+        // 1) initial buffer 처리
         if (initial != null && initial.hasRemaining()) {
             byte[] arr = new byte[initial.remaining()];
             initial.get(arr);
             sb.append(new String(arr, StandardCharsets.UTF_8));
         }
 
-        // 2) 헤더 끝까지 읽기
-        BufferedInputStream bin = new BufferedInputStream(in);
+        // 2) 헤더 끝(\r\n\r\n)까지 읽기
         while (!sb.toString().contains("\r\n\r\n")) {
             int ch = bin.read();
             if (ch == -1) break; // 연결 끊김
             sb.append((char) ch);
         }
 
-        // 파싱해서 Content-Length or chunked 확인
-        String headerPart = sb.toString();
-        int headerEnd = headerPart.indexOf("\r\n\r\n");
-        if (headerEnd < 0) return headerPart; // 잘못된 요청
+        return sb.toString();
+    }
 
-        String headers = headerPart.substring(0, headerEnd);
-        String bodyStart = headerPart.substring(headerEnd + 4);
+    private static String readBodyWithContentLength(BufferedInputStream bin, int contentLength, String bodyStart) throws IOException {
+        int alreadyRead = bodyStart.getBytes(StandardCharsets.UTF_8).length;
+        int remaining = contentLength - alreadyRead;
 
-        int contentLength = parseContentLength(headers); // 없으면 -1
-        boolean chunked = isChunked(headers);
-
-        if (chunked) {
-            // TODO: chunked 디코딩
-            bodyStart += readChunkedBody(bin);
-        } else if (contentLength > -1) {
-            int alreadyRead = bodyStart.getBytes(StandardCharsets.UTF_8).length;
-            int remaining = contentLength - alreadyRead;
-            if (remaining > 0) {
-                byte[] bodyBytes = bin.readNBytes(remaining);
-                bodyStart += new String(bodyBytes, StandardCharsets.UTF_8);
-            }
+        if (remaining <= 0) {
+            return bodyStart;
         }
 
-        return headers + "\r\n\r\n" + bodyStart;
+        byte[] bodyBytes = bin.readNBytes(remaining);
+        return bodyStart + new String(bodyBytes, StandardCharsets.UTF_8);
     }
 
     private static int parseContentLength(String headers) {
-        for (String line : headers.split("\r\n")) {
-            if (line.toLowerCase().startsWith("content-length:")) {
-                return Integer.parseInt(line.split(":")[1].trim());
+        int pos = 0;
+        int headersLength = headers.length();
+
+        while (pos < headersLength) {
+            int lineEnd = headers.indexOf("\r\n", pos);
+            if (lineEnd < 0) {
+                lineEnd = headersLength; // 마지막 줄
             }
+
+            // "content-length:" 대소문자 무시 비교 (15자)
+            if (regionMatchesIgnoreCase(headers, pos, "content-length:", 15)) {
+                int colonIdx = headers.indexOf(':', pos);
+                if (colonIdx < 0 || colonIdx >= lineEnd) {
+                    pos = lineEnd + 2;
+                    continue;
+                }
+
+                // 콜론 다음부터 값 시작 (공백 제거)
+                int valueStart = colonIdx + 1;
+                while (valueStart < lineEnd && headers.charAt(valueStart) == ' ') {
+                    valueStart++;
+                }
+
+                // 값 끝 (공백 제거)
+                int valueEnd = lineEnd;
+                while (valueEnd > valueStart && headers.charAt(valueEnd - 1) == ' ') {
+                    valueEnd--;
+                }
+
+                try {
+                    return Integer.parseInt(headers.substring(valueStart, valueEnd));
+                } catch (NumberFormatException e) {
+                    return -1;
+                }
+            }
+
+            pos = lineEnd + 2; // \r\n 스킵
         }
         return -1;
     }
 
     private static boolean isChunked(String headers) {
-        for (String line : headers.split("\r\n")) {
-            if (line.toLowerCase().startsWith("transfer-encoding:")
-                    && line.toLowerCase().contains("chunked")) {
-                return true;
+        int pos = 0;
+        int headersLength = headers.length();
+
+        while (pos < headersLength) {
+            int lineEnd = headers.indexOf("\r\n", pos);
+            if (lineEnd < 0) {
+                lineEnd = headersLength; // 마지막 줄
             }
+
+            // "transfer-encoding:" 대소문자 무시 비교 (18자)
+            if (regionMatchesIgnoreCase(headers, pos, "transfer-encoding:", 18)) {
+                // 해당 줄에서 "chunked" 찾기 (대소문자 무시)
+                for (int i = pos + 18; i <= lineEnd - 7; i++) {
+                    if (regionMatchesIgnoreCase(headers, i, "chunked", 7)) {
+                        return true;
+                    }
+                }
+            }
+
+            pos = lineEnd + 2; // \r\n 스킵
         }
         return false;
+    }
+
+    private static boolean regionMatchesIgnoreCase(String str, int offset, String target, int length) {
+        if (offset + length > str.length() || length != target.length()) {
+            return false;
+        }
+
+        for (int i = 0; i < length; i++) {
+            char c1 = str.charAt(offset + i);
+            char c2 = target.charAt(i);
+            if (c1 != c2 && Character.toLowerCase(c1) != Character.toLowerCase(c2)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static String readChunkedBody(InputStream in) throws IOException {
