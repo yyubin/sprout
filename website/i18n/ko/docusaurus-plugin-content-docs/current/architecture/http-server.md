@@ -4,7 +4,7 @@ HTTP 서버는 Tomcat의 핵심 기능을 재현한 Sprout의 임베디드 서�
 
 ## 개요
 
-Sprout의 HTTP 서버는 다음을 제공합니다:
+Sprout의 HTTP 서버는 다음을 제공합니다
 - **NIO 기반 이벤트 루프**: Java NIO Selector를 사용한 고성능 논블로킹 I/O
 - **하이브리드 BIO/NIO 모드**: 프로토콜 핸들러별 유연한 I/O 전략 선택
 - **가상 스레드 지원**: Java 21의 가상 스레드를 활용한 현대적인 동시성 처리
@@ -16,7 +16,7 @@ Sprout의 HTTP 서버는 다음을 제공합니다:
 
 ### 핵심 컴포넌트
 
-HTTP 서버는 다음의 주요 컴포넌트로 구성됩니다:
+HTTP 서버는 다음의 주요 컴포넌트로 구성됩니다
 
 - `HttpServer`: 라이프사이클 관리를 구현하는 메인 서버 파사드
 - `ServerStrategy`: 플러그인형 서버 전략 인터페이스 (NIO 이벤트 루프)
@@ -48,7 +48,7 @@ public class SproutApplication {
 
 ### 가상 스레드 모드 (기본값)
 
-가상 스레드는 높은 처리량의 애플리케이션을 위한 경량 동시성을 제공합니다:
+가상 스레드는 높은 처리량의 애플리케이션을 위한 경량 동시성을 제공합니다
 
 ```java
 @Configuration
@@ -89,7 +89,7 @@ public class VirtualRequestExecutorService implements RequestExecutorService {
 }
 ```
 
-**주요 기능:**
+**주요 기능**
 - 작업당 새로운 가상 스레드 생성
 - 최소한의 메모리 공간 (~1KB per thread)
 - 자식 스레드로의 자동 컨텍스트 전파
@@ -97,8 +97,7 @@ public class VirtualRequestExecutorService implements RequestExecutorService {
 
 ### 플랫폼 스레드 풀 모드
 
-호환성을 위한 전통적인 고정 크기 스레드 풀:
-
+호환성을 위한 전통적인 고정 크기 스레드 풀
 ```java
 public class RequestExecutorPoolService implements RequestExecutorService {
     private final ExecutorService pool;
@@ -114,14 +113,14 @@ public class RequestExecutorPoolService implements RequestExecutorService {
 }
 ```
 
-**설정:**
+**설정**
 ```properties
 # application.properties
 server.thread-type=platform
 server.thread-pool-size=200
 ```
 
-**주요 기능:**
+**주요 기능**
 - 고정된 수의 플랫폼 스레드
 - 예측 가능한 리소스 사용
 - 모든 Java 버전과 호환
@@ -131,7 +130,7 @@ server.thread-pool-size=200
 
 ### 하이브리드 모드 (BIO with NIO Accept)
 
-연결 수락을 위한 NIO와 요청 처리를 위한 BIO를 결합:
+연결 수락을 위한 NIO와 요청 처리를 위한 BIO를 결합
 
 ```java
 public class BioHttpProtocolHandler implements AcceptableProtocolHandler {
@@ -173,20 +172,20 @@ public class BioHttpProtocolHandler implements AcceptableProtocolHandler {
 }
 ```
 
-**흐름:**
+**흐름**
 1. NIO Selector가 연결 수락
 2. 초기 바이트를 읽어 프로토콜 감지
 3. 채널을 블로킹 모드로 전환
 4. Selector에서 분리하고 워커 스레드에 위임
 5. 워커 스레드에서 블로킹 I/O로 요청/응답 처리
 
-**장점:**
+**장점**
 - 간단한 프로그래밍 모델 (블로킹 I/O)
 - 가상 스레드와 잘 작동
 - 순수 NIO보다 낮은 복잡도
 - 가상 스레드 executor와 함께 좋은 처리량
 
-**설정:**
+**설정**
 ```properties
 server.execution-mode=hybrid
 server.thread-type=virtual
@@ -194,7 +193,7 @@ server.thread-type=virtual
 
 ### 순수 NIO 모드
 
-최대 확장성을 위한 완전한 논블로킹 I/O:
+최대 확장성을 위한 완전한 논블로킹 I/O
 
 ```java
 public class NioHttpProtocolHandler implements AcceptableProtocolHandler {
@@ -298,20 +297,20 @@ public class HttpConnectionHandler implements ReadableHandler, WritableHandler {
 }
 ```
 
-**상태 머신:**
+**상태 머신**
 ```
 READING → PROCESSING → WRITING → DONE
    ↑                                 ↓
    └─────────── (close/reset) ──────┘
 ```
 
-**장점:**
+**장점**
 - 최대 확장성 (단일 스레드가 수천 개의 연결 처리)
 - 최소한의 스레드 컨텍스트 스위칭
 - 효율적인 리소스 활용
 - 높은 동시성 시나리오에 최적
 
-**설정:**
+**설정**
 ```properties
 server.execution-mode=nio
 server.thread-type=platform
@@ -322,7 +321,7 @@ server.thread-pool-size=100
 
 ### NioHybridServerStrategy
 
-메인 이벤트 루프 구현:
+메인 이벤트 루프 구현
 
 ```java
 @Component
@@ -395,7 +394,7 @@ public class NioHybridServerStrategy implements ServerStrategy {
 }
 ```
 
-**이벤트 루프 책임:**
+**이벤트 루프 책임**
 - `ConnectionManager`를 통한 새로운 연결 수락
 - `ReadableHandler`로 READ 이벤트 위임
 - `WritableHandler`로 WRITE 이벤트 위임
@@ -494,7 +493,7 @@ public class HttpProtocolDetector implements ProtocolDetector {
 }
 ```
 
-**감지 프로세스:**
+**감지 프로세스**
 1. 연결에서 처음 바이트 읽기 (비파괴적)
 2. HTTP 메서드 키워드 확인
 3. 감지된 프로토콜 또는 "UNKNOWN" 반환
@@ -542,7 +541,7 @@ public final class HttpUtils {
 }
 ```
 
-**완료 기준:**
+**완료 기준**
 - **헤더**: `\r\n\r\n` 포함해야 함
 - **Content-Length**: 본문 바이트가 선언된 길이와 일치해야 함
 - **Chunked**: 마지막 청크는 `0\r\n\r\n`이어야 함
@@ -552,12 +551,12 @@ public final class HttpUtils {
 
 ### 하이브리드 모드 (BIO + 가상 스레드)
 
-**최적 사용 시나리오:**
+**최적 사용 시나리오**
 - 간단한 코드로 높은 처리량
 - Java 21+ 프로젝트
 - 적당한 요청 처리 시간을 가진 애플리케이션
 
-**아키텍처:**
+**아키텍처**
 ```
 [NIO Selector] → Accept → [Detect Protocol] → [Switch to BIO]
                                                      ↓
@@ -566,36 +565,36 @@ public final class HttpUtils {
                                            [Blocking Read/Write]
 ```
 
-**장점:**
+**장점**
 - 간단하고 읽기 쉬운 코드
 - 자동 백프레셔
 - 가상 스레드와 잘 작동
 - 디버깅 용이
 
-**단점:**
+**단점**
 - 순수 NIO보다 연결당 메모리 사용량 높음
 - 스레드 전환 오버헤드
 
 ### 순수 NIO 모드
 
-**최적 사용 시나리오:**
+**최적 사용 시나리오**
 - 최대 확장성
 - 낮은 지연시간 요구사항
 - 리소스가 제한된 환경
 
-**아키텍처:**
+**아키텍처**
 ```
 [NIO Selector] → Accept → [Detect Protocol] → [Register READ]
        ↑                                              ↓
        └──────────[Write Complete]───[Process in Pool Thread]
 ```
 
-**장점:**
+**장점**
 - 단일 스레드가 수천 개의 연결 처리
 - 최소 메모리 공간
 - 낮은 지연시간
 
-**단점:**
+**단점**
 - 복잡한 상태 머신
 - 디버깅 어려움
 - 세심한 버퍼 관리 필요
@@ -640,7 +639,7 @@ server.thread-type=platform
 
 ### 2. 컨텍스트 전파
 
-가상 스레드 executor는 자동으로 컨텍스트를 전파합니다:
+가상 스레드 executor는 자동으로 컨텍스트를 전파합니다
 
 ```java
 public class VirtualRequestExecutorService {
@@ -719,3 +718,5 @@ public class CustomProtocolDetector implements ProtocolDetector {
     }
 }
 ```
+
+> 성능 최적화 과정과 벤치마크 결과는 [성능 테스트 및 최적화](./performance-optimization.md) 문서를 참조하세요.

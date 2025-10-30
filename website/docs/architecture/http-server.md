@@ -719,3 +719,4 @@ public class CustomProtocolDetector implements ProtocolDetector {
     }
 }
 ```
+> Refer to the [Performance Test and Optimization] (./performance-optimization.md ) document for performance optimization process and benchmark results.
