@@ -53,24 +53,19 @@ public class WebSocketBenchmarkHandler {
         error.printStackTrace();
     }
 
-    /**
-     * Echo: 받은 메시지를 그대로 반환
-     */
     @MessageMapping("/echo")
     public void handleEcho(WebSocketSession session, @Payload String message) throws IOException {
         totalMessagesReceived++;
         session.sendText(createResponse("/echo", message));
+        System.out.println("[WebSocket Benchmark] Echo: " + message);
         totalMessagesSent++;
     }
 
-    /**
-     * Broadcast: 모든 연결된 클라이언트에 메시지 전송
-     */
     @MessageMapping("/broadcast")
     public void handleBroadcast(WebSocketSession session, @Payload String message) throws IOException {
         totalMessagesReceived++;
         String response = createResponse("/broadcast", "From " + session.getId() + ": " + message);
-
+        System.out.println("[WebSocket Benchmark] Broadcast: " + message);
         for (WebSocketSession s : sessions.values()) {
             if (s.isOpen()) {
                 try {
@@ -83,9 +78,6 @@ public class WebSocketBenchmarkHandler {
         }
     }
 
-    /**
-     * Chat: 채팅 메시지 처리
-     */
     @MessageMapping("/chat")
     public void handleChat(WebSocketSession session, @Payload String message) throws IOException {
         totalMessagesReceived++;
@@ -96,6 +88,7 @@ public class WebSocketBenchmarkHandler {
         }
 
         String chatMessage = username + ": " + message;
+        System.out.println("[WebSocket Benchmark] Chat: " + chatMessage);
         String response = createResponse("/chat", chatMessage);
 
         // 채팅방의 모든 사용자에게 전송
@@ -111,21 +104,18 @@ public class WebSocketBenchmarkHandler {
         }
     }
 
-    /**
-     * Ping-Pong: 간단한 응답
-     */
     @MessageMapping("/ping")
-    public void handlePing(WebSocketSession session, String message) throws IOException {
+    public void handlePing(WebSocketSession session, @Payload String message) throws IOException {
         totalMessagesReceived++;
-        session.sendText(createResponse("/pong", "pong"));
+        // 실제 WebSocket Ping 프레임 전송 (브라우저가 자동으로 Pong 응답)
+        byte[] pingData = "ping".getBytes();
+        session.sendPing(pingData);
+        System.out.println("[WebSocket Benchmark] Sent Ping frame to client: " + session.getId());
         totalMessagesSent++;
     }
 
-    /**
-     * Stats: 통계 정보 반환
-     */
     @MessageMapping("/stats")
-    public void handleStats(WebSocketSession session, String message) throws IOException {
+    public void handleStats(WebSocketSession session, @Payload String message) throws IOException {
         totalMessagesReceived++;
         String stats = String.format(
             "연결: %d, 수신: %d, 송신: %d, 누적 연결: %d",
@@ -135,18 +125,12 @@ public class WebSocketBenchmarkHandler {
         totalMessagesSent++;
     }
 
-    /**
-     * JSON 응답 메시지 생성
-     */
     private String createResponse(String destination, String payload) {
         // JSON 형식: {"destination": "...", "payload": "..."}
         return String.format("{\"destination\":\"%s\",\"payload\":\"%s\"}",
                            destination, escapeJson(payload));
     }
 
-    /**
-     * JSON 문자열 이스케이프
-     */
     private String escapeJson(String str) {
         if (str == null) return "";
         return str.replace("\\", "\\\\")
@@ -156,14 +140,12 @@ public class WebSocketBenchmarkHandler {
                   .replace("\t", "\\t");
     }
 
-    // 통계 초기화 (테스트용)
     public static void resetStats() {
         totalMessagesReceived = 0;
         totalMessagesSent = 0;
         totalConnections = 0;
     }
 
-    // 통계 조회 (테스트용)
     public static String getStats() {
         return String.format(
             "Sessions: %d, Received: %d, Sent: %d, Total Connections: %d",

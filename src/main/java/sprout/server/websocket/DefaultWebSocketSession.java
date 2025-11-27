@@ -181,17 +181,29 @@ public class DefaultWebSocketSession implements WebSocketSession, WritableHandle
 
     private void processFrame(WebSocketFrame frame) throws Exception {
         if (WebSocketFrameDecoder.isCloseFrame(frame)) {
-            callOnCloseMethod(WebSocketFrameDecoder.getCloseCode(frame.getPayloadBytes()));
+            byte[] payload = frame.getPayloadBytes();
+            System.out.printf("[DEBUG] Close frame - Payload length: %d%n", payload.length);
+            if (payload.length >= 2) {
+                int code = ((payload[0] & 0xFF) << 8) | (payload[1] & 0xFF);
+                System.out.printf("[DEBUG] Close code: %d (0x%X)%n", code, code);
+            }
+            callOnCloseMethod(WebSocketFrameDecoder.getCloseCode(payload));
             return;
         } else if (WebSocketFrameDecoder.isPingFrame(frame)) {
-            System.out.println("Received Ping frame from client " + id);
-            sendPong(frame.getPayloadBytes());
+            byte[] payload = frame.getPayloadBytes();
+            System.out.printf("[DEBUG] Received Ping frame from client %s (payload: %d bytes)%n", id, payload.length);
+            sendPong(payload);
+            return;
         } else if (WebSocketFrameDecoder.isPongFrame(frame)) {
-            System.out.println("Received Pong frame from client " + id);
+            byte[] payload = frame.getPayloadBytes(); // 반드시 스트림을 소비해야 함!
+            System.out.printf("[DEBUG] Received Pong frame from client %s (payload: %d bytes)%n", id, payload.length);
+            return;
         } else if (WebSocketFrameDecoder.isDataFrame(frame)) {
             dispatchMessage(frame);
         } else {
-            System.err.println("Unknown or unsupported WebSocket opcode: " + frame.getOpcode());
+            System.err.printf("[ERROR] Unknown WebSocket opcode: 0x%X%n", frame.getOpcode());
+            // 알 수 없는 opcode의 경우에도 payload를 소비해야 함
+            frame.getPayloadBytes();
             callOnErrorMethod(new WebSocketException("Unknown WebSocket opcode: " + frame.getOpcode()));
         }
     }
