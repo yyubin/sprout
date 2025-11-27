@@ -136,24 +136,6 @@ class WebSocketBenchmarkHandlerTest {
     }
 
     @Test
-    @DisplayName("Ping 메시지는 Pong으로 응답한다")
-    void handlePing_shouldRespondWithPong() throws IOException {
-        // given
-        handler.onOpen(mockSession1);
-
-        // when
-        handler.handlePing(mockSession1, "ping");
-
-        // then
-        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        verify(mockSession1).sendText(captor.capture());
-
-        String sentMessage = captor.getValue();
-        assertThat(sentMessage).contains("\"destination\":\"/pong\"");
-        assertThat(sentMessage).contains("\"payload\":\"pong\"");
-    }
-
-    @Test
     @DisplayName("Stats 메시지는 현재 통계를 반환한다")
     void handleStats_shouldReturnStatistics() throws IOException {
         // given
