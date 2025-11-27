@@ -65,4 +65,75 @@ class HttpProtocolDetectorTest {
         assertEquals("UNKNOWN", detectedProtocol);
         assertEquals(initialPosition, buffer.position());
     }
+
+    @Test
+    @DisplayName("WebSocket Upgrade 요청은 UNKNOWN을 반환한다 (WebSocketProtocolDetector가 처리하도록)")
+    void should_return_unknown_for_websocket_upgrade_request() throws Exception {
+        // given
+        String websocketRequest = "GET /ws/benchmark HTTP/1.1\r\n" +
+                                 "Host: localhost:8080\r\n" +
+                                 "Upgrade: websocket\r\n" +
+                                 "Connection: Upgrade\r\n" +
+                                 "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n" +
+                                 "Sec-WebSocket-Version: 13\r\n\r\n";
+        ByteBuffer buffer = ByteBuffer.wrap(websocketRequest.getBytes(StandardCharsets.UTF_8));
+        int initialPosition = buffer.position();
+
+        // when
+        String detectedProtocol = detector.detect(buffer);
+
+        // then
+        assertEquals("UNKNOWN", detectedProtocol, "WebSocket 요청은 UNKNOWN을 반환해야 합니다");
+        assertEquals(initialPosition, buffer.position(), "버퍼 위치가 복원되어야 합니다");
+    }
+
+    @Test
+    @DisplayName("대소문자 구분 없이 Upgrade: WebSocket 헤더도 UNKNOWN을 반환한다")
+    void should_return_unknown_for_websocket_with_capital_letters() throws Exception {
+        // given
+        String websocketRequest = "GET /ws HTTP/1.1\r\n" +
+                                 "Host: example.com\r\n" +
+                                 "Upgrade: WebSocket\r\n" +
+                                 "Connection: Upgrade\r\n\r\n";
+        ByteBuffer buffer = ByteBuffer.wrap(websocketRequest.getBytes(StandardCharsets.UTF_8));
+
+        // when
+        String detectedProtocol = detector.detect(buffer);
+
+        // then
+        assertEquals("UNKNOWN", detectedProtocol);
+    }
+
+    @Test
+    @DisplayName("일반 HTTP 요청 (Upgrade 헤더 없음)은 HTTP/1.1을 반환한다")
+    void should_return_http_for_normal_http_request() throws Exception {
+        // given
+        String normalHttpRequest = "GET /api/users HTTP/1.1\r\n" +
+                                   "Host: example.com\r\n" +
+                                   "Accept: application/json\r\n\r\n";
+        ByteBuffer buffer = ByteBuffer.wrap(normalHttpRequest.getBytes(StandardCharsets.UTF_8));
+
+        // when
+        String detectedProtocol = detector.detect(buffer);
+
+        // then
+        assertEquals("HTTP/1.1", detectedProtocol, "일반 HTTP 요청은 HTTP/1.1을 반환해야 합니다");
+    }
+
+    @Test
+    @DisplayName("Connection 헤더에 다중 값이 있는 WebSocket 요청은 UNKNOWN을 반환한다")
+    void should_return_unknown_for_websocket_with_multiple_connection_values() throws Exception {
+        // given
+        String websocketRequest = "GET /ws HTTP/1.1\r\n" +
+                                 "Host: localhost:8080\r\n" +
+                                 "Connection: keep-alive, Upgrade\r\n" +
+                                 "Upgrade: websocket\r\n\r\n";
+        ByteBuffer buffer = ByteBuffer.wrap(websocketRequest.getBytes(StandardCharsets.UTF_8));
+
+        // when
+        String detectedProtocol = detector.detect(buffer);
+
+        // then
+        assertEquals("UNKNOWN", detectedProtocol);
+    }
 }

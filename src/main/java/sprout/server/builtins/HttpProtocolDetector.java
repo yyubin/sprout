@@ -21,19 +21,28 @@ public class HttpProtocolDetector implements ProtocolDetector {
         // 버퍼의 현재 위치를 기록
         buffer.mark();
 
-        int readLimit = Math.min(buffer.remaining(), HTTP_HEADER_LENGTH);
-        byte[] headerBytes = new byte[readLimit];
-        buffer.get(headerBytes);
+        // 전체 헤더 읽기 (WebSocket 감지를 위해)
+        byte[] fullHeaderBytes = new byte[buffer.remaining()];
+        buffer.get(fullHeaderBytes);
 
         // 버퍼의 위치를 원래대로 되돌림
         buffer.reset();
 
-        String prefix = new String(headerBytes, StandardCharsets.UTF_8);
+        String fullHeader = new String(fullHeaderBytes, StandardCharsets.UTF_8);
 
-        if (HTTP_METHODS.stream().anyMatch(prefix::startsWith)) {
-            return "HTTP/1.1";
+        // HTTP 메서드 체크
+        if (!HTTP_METHODS.stream().anyMatch(fullHeader::startsWith)) {
+            return "UNKNOWN";
         }
 
-        return "UNKNOWN";
+        System.out.println("full header is " + fullHeader);
+
+        // WebSocket Upgrade 요청은 UNKNOWN 반환 (WebSocketProtocolDetector가 처리하도록)
+        if (fullHeader.contains("Upgrade: websocket") ||
+            fullHeader.contains("Upgrade: WebSocket")) {
+            return "UNKNOWN";
+        }
+
+        return "HTTP/1.1";
     }
 }

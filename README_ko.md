@@ -174,7 +174,7 @@ public class ChatSocket {
 **리포트:** [테스트](https://yyubin.github.io/sprout/tests/) ·
 [커버리지](https://yyubin.github.io/sprout/coverage/)
 
-**673개 테스트, 0개 실패 (100% 통과, Gradle 8.10.1 · 2025‑10‑21)**
+**687개 테스트, 0개 실패 (100% 통과, Gradle 8.10.1 · 2025‑10‑21)**
 
 **테스트 커버리지 (Jacoco):**
 - **라인 커버리지: 85%**

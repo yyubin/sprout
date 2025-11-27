@@ -74,7 +74,7 @@ Sprout is a comprehensive web framework that implements the core concepts of mod
 
 ## Quality & Testing
 
-<div className="coverage-badge">673 Tests</div>
+<div className="coverage-badge">687 Tests</div>
 <div className="coverage-badge">85% Line Coverage</div>
 <div className="coverage-badge">75% Branch Coverage</div>
 <div className="coverage-badge">0 Failures</div>

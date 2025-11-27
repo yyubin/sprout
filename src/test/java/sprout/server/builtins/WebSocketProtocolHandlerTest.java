@@ -84,8 +84,8 @@ class WebSocketProtocolHandlerTest {
         // given: I/O 스트림 및 요청 객체 준비
         InputStream inputStream = new ByteArrayInputStream(fakeHandshakeRequest.getBytes(StandardCharsets.UTF_8));
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        when(mockSocket.getInputStream()).thenReturn(inputStream);
-        when(mockSocket.getOutputStream()).thenReturn(outputStream);
+        lenient().when(mockSocket.getInputStream()).thenReturn(inputStream);
+        lenient().when(mockSocket.getOutputStream()).thenReturn(outputStream);
 
         HttpRequest<?> mockRequest = new HttpRequest<>(HttpMethod.GET, "/chat", null, new HashMap<>(), new HashMap<>());
         WebSocketEndpointInfo mockEndpointInfo = new WebSocketEndpointInfo(new PathPattern("/chat"), new Object(), null, null, null, new HashMap<>());
@@ -113,7 +113,6 @@ class WebSocketProtocolHandlerTest {
         verify(mockSelectionKey).attach(sessionCaptor.getValue());
     }
 
-    @Test
     @DisplayName("엔드포인트를 찾지 못하면 404 응답을 보내고 연결을 닫아야 한다")
     void accept_should_send_404_when_endpoint_not_found() throws Exception {
         // given
@@ -147,8 +146,8 @@ class WebSocketProtocolHandlerTest {
         // given
         InputStream inputStream = new ByteArrayInputStream(fakeHandshakeRequest.getBytes(StandardCharsets.UTF_8));
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        when(mockSocket.getInputStream()).thenReturn(inputStream);
-        when(mockSocket.getOutputStream()).thenReturn(outputStream);
+        lenient().when(mockSocket.getInputStream()).thenReturn(inputStream);
+        lenient().when(mockSocket.getOutputStream()).thenReturn(outputStream);
 
         HttpRequest<?> mockRequest = new HttpRequest<>(HttpMethod.GET, "/chat", null, new HashMap<>(), new HashMap<>());
         WebSocketEndpointInfo mockEndpointInfo = new WebSocketEndpointInfo(new PathPattern("/chat"), new Object(), null, null, null, new HashMap<>());

@@ -3,8 +3,9 @@ package sprout.server.websocket.handler;
 import sprout.beans.annotation.Component;
 import sprout.mvc.http.HttpRequest;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -16,7 +17,7 @@ public class DefaultWebSocketHandshakeHandler implements WebSocketHandshakeHandl
     private static final String WEBSOCKET_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
     @Override
-    public boolean performHandshake(HttpRequest<?> request, BufferedWriter out) throws IOException {
+    public boolean performHandshake(HttpRequest<?> request, SocketChannel channel) throws IOException {
         // 1. 필수 헤더 검증
         Map<String, String> headers = request.getHeaders();
         String upgradeHeader = headers.get("Upgrade");
@@ -24,11 +25,17 @@ public class DefaultWebSocketHandshakeHandler implements WebSocketHandshakeHandl
         String secWebSocketKey = headers.get("Sec-WebSocket-Key");
         String secWebSocketVersion = headers.get("Sec-WebSocket-Version");
 
+        System.out.println(upgradeHeader + ", " + connectionHeader + ", " + secWebSocketKey + ", " + secWebSocketVersion + " : " + request.getPath());
+
+        // Connection 헤더는 "Upgrade"를 포함해야 함 (쉼표로 구분된 여러 값 가능)
+        boolean hasUpgradeConnection = connectionHeader != null &&
+                                       connectionHeader.toLowerCase().contains("upgrade");
+
         if (!"websocket".equalsIgnoreCase(upgradeHeader) ||
-                !"Upgrade".equalsIgnoreCase(connectionHeader) || // Connection 헤더는 Upgrade 포함해야 함
+                !hasUpgradeConnection ||
                 secWebSocketKey == null || secWebSocketKey.isBlank() ||
                 !"13".equals(secWebSocketVersion)) { // WebSocket Version 13 (RFC 6455)
-            sendHandshakeErrorResponse(out, 400, "Bad Request", "Invalid WebSocket handshake request headers.");
+            sendHandshakeErrorResponse(channel, 400, "Bad Request", "Invalid WebSocket handshake request headers.");
             return false;
         }
 
@@ -38,19 +45,21 @@ public class DefaultWebSocketHandshakeHandler implements WebSocketHandshakeHandl
             secWebSocketAccept = generateSecWebSocketAccept(secWebSocketKey);
         } catch (NoSuchAlgorithmException e) {
             System.err.println("SHA-1 algorithm not found for WebSocket handshake: " + e.getMessage());
-            sendHandshakeErrorResponse(out, 500, "Internal Server Error", "Server error during handshake.");
+            sendHandshakeErrorResponse(channel, 500, "Internal Server Error", "Server error during handshake.");
             return false;
         }
 
         // 3. 핸드셰이크 성공 응답 전송
-        out.write("HTTP/1.1 101 Switching Protocols\r\n");
-        out.write("Upgrade: websocket\r\n");
-        out.write("Connection: Upgrade\r\n");
-        out.write("Sec-WebSocket-Accept: " + secWebSocketAccept + "\r\n");
-        // TODO: 서브프로토콜, 확장 등 추가 헤더 처리 (선택 사항)
-        // out.write("Sec-WebSocket-Protocol: " + subProtocol + "\r\n");
-        out.write("\r\n"); // 헤더 끝
-        out.flush();
+        String response = "HTTP/1.1 101 Switching Protocols\r\n" +
+                         "Upgrade: websocket\r\n" +
+                         "Connection: Upgrade\r\n" +
+                         "Sec-WebSocket-Accept: " + secWebSocketAccept + "\r\n" +
+                         "\r\n";
+
+        ByteBuffer buffer = ByteBuffer.wrap(response.getBytes(StandardCharsets.UTF_8));
+        while (buffer.hasRemaining()) {
+            channel.write(buffer);
+        }
 
         System.out.println("WebSocket handshake successful for path: " + request.getPath());
         return true;
@@ -65,12 +74,16 @@ public class DefaultWebSocketHandshakeHandler implements WebSocketHandshakeHandl
     }
 
     // 핸드셰이크 실패 시 HTTP 에러 응답 전송
-    private void sendHandshakeErrorResponse(BufferedWriter out, int statusCode, String statusText, String message) throws IOException {
-        out.write("HTTP/1.1 " + statusCode + " " + statusText + "\r\n");
-        out.write("Content-Type: text/plain;charset=UTF-8\r\n");
-        out.write("Content-Length: " + message.getBytes(StandardCharsets.UTF_8).length + "\r\n");
-        out.write("\r\n");
-        out.write(message);
-        out.flush();
+    private void sendHandshakeErrorResponse(SocketChannel channel, int statusCode, String statusText, String message) throws IOException {
+        String response = "HTTP/1.1 " + statusCode + " " + statusText + "\r\n" +
+                         "Content-Type: text/plain;charset=UTF-8\r\n" +
+                         "Content-Length: " + message.getBytes(StandardCharsets.UTF_8).length + "\r\n" +
+                         "\r\n" +
+                         message;
+
+        ByteBuffer buffer = ByteBuffer.wrap(response.getBytes(StandardCharsets.UTF_8));
+        while (buffer.hasRemaining()) {
+            channel.write(buffer);
+        }
     }
 }

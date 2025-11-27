@@ -16,8 +16,6 @@ import sprout.server.websocket.message.WebSocketMessageDispatcher;
 import sprout.server.websocket.message.WebSocketMessageParser;
 
 import java.io.*;
-import java.lang.reflect.Method;
-import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -72,32 +70,29 @@ public class WebSocketProtocolHandler implements AcceptableProtocolHandler {
 
     @Override
     public void accept(SocketChannel channel, Selector selector, ByteBuffer byteBuffer) throws Exception {
-        Socket socket = channel.socket();
-
-        BufferedReader httpReader = new BufferedReader(new InputStreamReader(socket.getInputStream())); // 초기 HTTP 파싱용
-        BufferedWriter httpWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-
         // 1. 초기 HTTP 요청 파싱 (웹소켓 핸드셰이크 요청)
-        String rawHttpRequest = readRawHttpRequestContent(httpReader);
+        // ByteBuffer를 사용하여 NIO non-blocking 방식으로 읽기
+        String rawHttpRequest = readRawHttpRequestContent(channel, byteBuffer);
         HttpRequest<?> request = httpRequestParser.parse(rawHttpRequest);
         if (!request.isValid()) {
             System.out.println("Empty or invalid HTTP request for websocket handshake. Closing socket.");
-            socket.close();
+            channel.close();
             return;
         }
 
         // 2. 웹소켓 엔드포인트 찾기
         String requestPath = request.getPath();
+        System.out.println("WebSocket handshake request received for path: " + requestPath + ". Trying to find matching endpoint.");
         WebSocketEndpointInfo endpointInfo = endpointRegistry.getEndpointInfo(requestPath);
 
         if (endpointInfo == null) {
-            sendHttpResponse(httpWriter, 404, "Not Found", "No WebSocket endpoint found for " + requestPath);
-            socket.close();
+            sendHttpResponse(channel, 404, "Not Found", "No WebSocket endpoint found for " + requestPath);
+            channel.close();
             return;
         }
 
         // 3. 핸드셰이크 수행
-        boolean handshakeSuccess = handshakeHandler.performHandshake(request, httpWriter); // httpWriter 사용
+        boolean handshakeSuccess = handshakeHandler.performHandshake(request, channel);
         if (!handshakeSuccess) {
             System.out.println("WebSocket handshake failed. Closing socket.");
             channel.close();
@@ -117,56 +112,76 @@ public class WebSocketProtocolHandler implements AcceptableProtocolHandler {
         wsSession.callOnOpenMethod();
     }
 
-    private String readRawHttpRequestContent(BufferedReader in) throws IOException {
+    private String readRawHttpRequestContent(SocketChannel channel, ByteBuffer buffer) throws IOException {
         StringBuilder sb = new StringBuilder();
-        String line;
-        int contentLength = 0;
-        // 헤더 끝을 나타내는 플래그
-        boolean headersDone = false;
 
-        // HTTP 요청 라인 + 헤더 읽기
-        // readLine()이 null을 반환하면 클라이언트가 연결을 끊은 것
-        // line.isEmpty()는 헤더 끝의 빈 줄을 의미
-        while ((line = in.readLine()) != null) {
-            if (line.isEmpty()) { // 빈 줄은 헤더의 끝을 의미 (CRLFCRLF 또는 LF LF)
-                headersDone = true;
-                break;
-            }
-            sb.append(line).append("\r\n"); // HTTP 규격에 맞게 CRLF 추가
-            if (line.toLowerCase().startsWith("content-length:")) {
-                try {
-                    contentLength = Integer.parseInt(line.substring(line.indexOf(':') + 1).trim());
-                } catch (NumberFormatException e) {
-                    System.err.println("Warning: Invalid Content-Length header: " + line);
-                    contentLength = 0; // 파싱 실패 시 0으로 설정
+        // 1) 이미 읽은 buffer의 데이터를 먼저 추가
+        if (buffer != null && buffer.hasRemaining()) {
+            byte[] arr = new byte[buffer.remaining()];
+            buffer.get(arr);
+            sb.append(new String(arr, StandardCharsets.UTF_8));
+        }
+
+        // 2) 이미 완전한 HTTP 요청인지 확인
+        String current = sb.toString();
+        if (current.contains("\r\n\r\n")) {
+            return current;
+        }
+
+        // 3) 불완전한 경우, 추가로 읽기 (blocking 모드로 전환)
+        boolean wasBlocking = channel.isBlocking();
+        try {
+            channel.configureBlocking(true);
+
+            ByteBuffer readBuffer = ByteBuffer.allocate(8192);
+
+            // HTTP 헤더 끝(\r\n\r\n)까지 읽기
+            while (!sb.toString().contains("\r\n\r\n")) {
+                readBuffer.clear();
+                int bytesRead = channel.read(readBuffer);
+
+                if (bytesRead == -1) {
+                    return ""; // 연결 종료
+                }
+
+                if (bytesRead == 0) {
+                    break;
+                }
+
+                readBuffer.flip();
+                byte[] bytes = new byte[readBuffer.remaining()];
+                readBuffer.get(bytes);
+                sb.append(new String(bytes, StandardCharsets.UTF_8));
+
+                // 너무 큰 요청은 거부 (10KB 제한)
+                if (sb.length() > 10240) {
+                    throw new IOException("HTTP request too large");
                 }
             }
-        }
-        sb.append("\r\n"); // 헤더와 바디 구분자 (readLine()이 빈 줄을 이미 제거했을 수도 있지만, 안전을 위해 추가)
 
-        // HTTP 바디 읽기 (Content-Length가 있고, 헤더가 끝났을 경우에만)
-        if (contentLength > 0 && headersDone) {
-            char[] body = new char[contentLength];
-            int totalRead = 0;
-            int read;
-            // Content-Length만큼 정확히 읽으려고 시도
-            // read()는 모든 바이트를 한 번에 읽지 않을 수 있으므로 루프 필요
-            while (totalRead < contentLength && (read = in.read(body, totalRead, contentLength - totalRead)) != -1) {
-                totalRead += read;
+            return sb.toString();
+
+        } finally {
+            // 원래 blocking 모드로 복원
+            if (!wasBlocking) {
+                channel.configureBlocking(false);
             }
-            sb.append(body, 0, totalRead); // 읽은 만큼만 추가
         }
-        return sb.toString();
     }
 
+    /**
+     * NIO 방식으로 HTTP 응답 전송
+     */
+    private void sendHttpResponse(SocketChannel channel, int statusCode, String statusText, String message) throws IOException {
+        String response = "HTTP/1.1 " + statusCode + " " + statusText + "\r\n" +
+                         "Content-Type: text/plain;charset=UTF-8\r\n" +
+                         "Content-Length: " + message.getBytes(StandardCharsets.UTF_8).length + "\r\n" +
+                         "\r\n" +
+                         message;
 
-    // HTTP 응답을 보내는 헬퍼 메서드 (핸드셰이크 실패 또는 엔드포인트 없을 때)
-    private void sendHttpResponse(BufferedWriter out, int statusCode, String statusText, String message) throws IOException {
-        out.write("HTTP/1.1 " + statusCode + " " + statusText + "\r\n");
-        out.write("Content-Type: text/plain;charset=UTF-8\r\n");
-        out.write("Content-Length: " + message.getBytes(StandardCharsets.UTF_8).length + "\r\n");
-        out.write("\r\n");
-        out.write(message);
-        out.flush();
+        ByteBuffer buffer = ByteBuffer.wrap(response.getBytes(StandardCharsets.UTF_8));
+        while (buffer.hasRemaining()) {
+            channel.write(buffer);
+        }
     }
 }
