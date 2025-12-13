@@ -140,30 +140,61 @@ sprout:
 
 ---
 
-## 🔌 WebSocket Example (NIO)
+## 🎥 WebSocket Demo & Benchmark
 
+[![Sprout WebSocket Demo](https://img.youtube.com/vi/7ypz7RCcZps/0.jpg)](https://www.youtube.com/watch?v=7ypz7RCcZps)
+
+This video demonstrates Sprout’s **fully non-blocking NIO WebSocket stack** in action.
+
+**What’s shown in the demo:**
+- NIO-based WebSocket handshake & frame processing
+- Concurrent client connections
+- Echo, broadcast, chat-style messaging
+- Ping/Pong frames
+- Graceful close handling
+- Non-blocking write queue with OP_WRITE toggling
+
+The handler used in the video is a real application-level WebSocket handler built on Sprout’s APIs (see below).
+
+---
+
+## 🧩 WebSocket Example
 ```java
-@WebSocketEndpoint("/ws/chat")
-public class ChatSocket {
+@Component
+@WebSocketHandler("/ws/benchmark")
+public class WebSocketBenchmarkHandler {
+
+    private static final Map<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
 
     @OnOpen
     public void onOpen(WebSocketSession session) {
-        System.out.println("WebSocket opened: " + session.getId());
-    }
-
-    @MessageMapping("/chat.send")
-    public void handleMessage(WebSocketSession session, @RequestBody ChatMessage msg) {
-        System.out.println("Message from " + session.getId() + ": " + msg.getText());
+        sessions.put(session.getId(), session);
     }
 
     @OnClose
-    public void onClose(WebSocketSession session) {
-        System.out.println("WebSocket closed: " + session.getId());
+    public void onClose(WebSocketSession session, CloseCode code) {
+        sessions.remove(session.getId());
+    }
+
+    @MessageMapping("/echo")
+    public void echo(WebSocketSession session, @Payload String msg) throws IOException {
+        session.sendText(msg);
+    }
+
+    @MessageMapping("/broadcast")
+    public void broadcast(WebSocketSession session, @Payload String msg) throws IOException {
+        for (WebSocketSession s : sessions.values()) {
+            if (s.isOpen()) s.sendText(msg);
+        }
+    }
+
+    @MessageMapping("/ping")
+    public void ping(WebSocketSession session, @Payload String ignored) throws IOException {
+        session.sendPing("ping".getBytes());
     }
 }
 ```
-
-**Annotations such as `@WebSocketEndpoint` and `@MessageMapping` are provided by Sprout (not JSR-356).**
+> Runs on Sprout’s NIO selector loop with non-blocking writes and frame-level control.
 
 ---
 
@@ -195,7 +226,7 @@ Tooling & style:
 * Selector/`interestOps` state fakes to validate NIO behavior without real sockets
 * Build report: `build/reports/tests/test/index.html`
 
-> Want to help? Add black-box integration tests that spin up the NIO server and hit it with a real HTTP/WebSocket client.
+--- 
 
 ## 🗺️ Roadmap
 
