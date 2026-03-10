@@ -236,7 +236,7 @@ Tooling & style:
 | **v0.3** | ✅ Middleware & Global Interceptors         | Filters + Interceptors chain                    |
 | **v0.4** | ✅ Data Access & Security Core              | `JdbcTemplate`, `@Transactional`, AuthN/AuthZ   |
 | **v0.5** | ✅ **NIO & Hybrid Server**, Async WebSocket | Selector loop, OP\_WRITE mgmt, graceful close   |
-| **v1.0** | 🎯 **Stable API & Framework Maturity**     | Ready for production use, comprehensive docs    |
+| **v1.0** | 🎯 **Stable API & Framework Maturity**     | comprehensive docs    |
 
 **Post v1.0 Roadmap:**  
 
